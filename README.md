@@ -164,6 +164,10 @@ git clone https://github.com/Terryc21/radar-suite.git
 cp -r radar-suite/skills/* ~/.claude/skills/
 ```
 
+## Support
+
+If these skills save you time, consider [sponsoring](https://github.com/sponsors/Terryc21) further development.
+
 ## Author
 
 Created by **Terry Nyberg** ([Coffee & Code LLC](https://stuffolio.app))
