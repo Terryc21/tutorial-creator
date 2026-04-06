@@ -1,5 +1,7 @@
 # code-smarter
 
+![Visitors](https://komarev.com/ghpvc/?username=Terryc21&repo=code-smarter&label=visitors&color=blue) ![GitHub stars](https://img.shields.io/github/stars/Terryc21/code-smarter?style=flat) ![GitHub forks](https://img.shields.io/github/forks/Terryc21/code-smarter?style=flat)
+
 Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
 
 **Claude Code skills that help you work smarter -- auto-fix your prompts, generate personalized coding lessons from your own codebase, and more.**
