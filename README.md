@@ -10,7 +10,7 @@ Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management 
 
 | Skill | Command | Description |
 |-------|---------|-------------|
-| **create-tutorial** | `/skill create-tutorial [topic] [source]` | Generate personalized coding lessons from your own codebase |
+| **tutorial-creator** | `/skill tutorial-creator [topic] [source]` | Generate personalized coding lessons from your own codebase |
 | **prompter** | `/skill prompter` | Rewrite prompts for clarity and actionability before execution |
 
 ## Install
@@ -25,7 +25,7 @@ cp -r code-smarter/skills/* /path/to/your/project/.claude/skills/
 
 ---
 
-## create-tutorial
+## tutorial-creator
 
 **Learn to read code by reading *your* code -- not textbook examples.**
 
@@ -53,12 +53,12 @@ Plus cumulative tracking:
 
 ```bash
 # First run -- setup wizard configures your learning environment
-/skill create-tutorial closures src/utils/helpers.ts
+/skill tutorial-creator closures src/utils/helpers.ts
 
 # Subsequent runs
-/skill create-tutorial hooks src/components/Dashboard.tsx
-/skill create-tutorial error handling src/api/client.rs
-/skill create-tutorial protocols Sources/Protocols/BackupManaging.swift
+/skill tutorial-creator hooks src/components/Dashboard.tsx
+/skill tutorial-creator error handling src/api/client.rs
+/skill tutorial-creator protocols Sources/Protocols/BackupManaging.swift
 ```
 
 If you don't specify a source file, the skill finds one in your project that demonstrates the topic.

@@ -1,5 +1,5 @@
 ---
-name: create-tutorial
+name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase -- builds incremental learning with vocabulary tracking, pre/post tests, and gap analysis
 ---
 
@@ -10,14 +10,14 @@ Generate annotated code reading tutorials using real code from your project. Eac
 ## Usage
 
 ```
-/skill create-tutorial [topic] [source file or component]
+/skill tutorial-creator [topic] [source file or component]
 ```
 
 **Examples:**
-- `/skill create-tutorial closures src/utils/helpers.ts`
-- `/skill create-tutorial optional chaining Sources/Models/User.swift`
-- `/skill create-tutorial hooks src/components/Dashboard.tsx`
-- `/skill create-tutorial ownership src/main.rs`
+- `/skill tutorial-creator closures src/utils/helpers.ts`
+- `/skill tutorial-creator optional chaining Sources/Models/User.swift`
+- `/skill tutorial-creator hooks src/components/Dashboard.tsx`
+- `/skill tutorial-creator ownership src/main.rs`
 
 If no source file is given, find one in the project that best demonstrates the topic.
 
@@ -26,7 +26,7 @@ If no source file is given, find one in the project that best demonstrates the t
 On first invocation, check for `.claude/tutorial-config.yaml` in the project root. If it doesn't exist, run the setup wizard:
 
 ```
-Welcome to create-tutorial! Let's set up your learning environment.
+Welcome to tutorial-creator! Let's set up your learning environment.
 ```
 
 Ask these questions using AskUserQuestion:
