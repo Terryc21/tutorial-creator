@@ -33,7 +33,7 @@ cp -r code-smarter/skills/* /path/to/your/project/.claude/skills/
 
 **Learn to read code by reading *your* code -- not textbook examples.**
 
-Most coding tutorials use toy examples (`let x = 5`). You learn the syntax but can't connect it to real code. This skill flips that -- it takes a file from your project and annotates it line by line, explaining each concept in context. Each lesson is tailored to your experience level and tracks what you've already learned.
+If you're using Claude Code while still building fluency in the language it's generating, this skill is for you. It takes a file from your own project and turns it into an annotated lesson -- the same code you're already working with, explained line by line. You pick up the language naturally, in the context of something real, while Claude keeps shipping. Each tutorial is tailored to your experience level and tracks what you've already learned, so the next lesson starts where the last one left off. Most coding tutorials use toy examples (`let x = 5`); you learn the syntax but can't connect it to real code. This skill flips that.
 
 ### What You Get
 
@@ -127,6 +127,8 @@ conditional, and how to give users visual hints that something is tappable.
 **Auto-fix your prompts before Claude Code acts on them.**
 
 Typos, vague wording, and ambiguous references slow down AI interactions. Prompter fixes them automatically -- it rewrites your prompt for clarity, shows you the rewrite, and waits for approval before proceeding.
+
+It's also surprisingly fun to use. Watching how your prompts get sharpened — what got cut, what got clarified — becomes a quiet feedback loop on prompt quality. Over time you internalize what a good prompt looks like, just by seeing how Prompter improves yours.
 
 ### Usage
 
