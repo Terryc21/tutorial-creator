@@ -154,7 +154,7 @@ These skills were built during development of [Stuffolio](https://stuffolio.app)
 
 - [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
 - [workflow-audit](https://github.com/Terryc21/workflow-audit) -- 5-layer audit of SwiftUI user workflows; finds dead ends, broken promises, and missing data wiring
-- [radar-suite](https://github.com/Terryc21/radar-suite) -- 6-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: traces data through real user flows and reasons about runtime behavior instead of matching surface patterns, so it catches bugs that pattern matchers miss
+- [radar-suite](https://github.com/Terryc21/radar-suite) -- 6-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
 
 ## Support
 
