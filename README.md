@@ -2,6 +2,10 @@
 
 ![Visitors](https://komarev.com/ghpvc/?username=Terryc21&repo=code-smarter&label=visitors&color=blue) ![GitHub stars](https://img.shields.io/github/stars/Terryc21/code-smarter?style=flat) ![GitHub forks](https://img.shields.io/github/forks/Terryc21/code-smarter?style=flat)
 
+<a href="https://buymeacoffee.com/stuffolio">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="150">
+</a>
+
 Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
 
 **Claude Code skills that help you work smarter -- auto-fix your prompts, generate personalized coding lessons from your own codebase, and more.**
@@ -146,10 +150,11 @@ These skills were built during development of [Stuffolio](https://stuffolio.app)
 
 14 tutorials later (with 134 tracked vocabulary terms), the approach proved effective enough to generalize.
 
-## See Also
+## Other Claude Code skills I have built
 
-- [Radar Suite](https://github.com/Terryc21/radar-suite) -- 7 behavioral audit skills that trace data through complete user flows
-- [Workflow Audit](https://github.com/Terryc21/workflow-audit) -- 5-layer behavioral audit of SwiftUI user journeys
+- [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
+- [workflow-audit](https://github.com/Terryc21/workflow-audit) -- 5-layer audit of SwiftUI user workflows; finds dead ends, broken promises, and missing data wiring
+- [radar-suite](https://github.com/Terryc21/radar-suite) -- 6-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: traces data through real user flows and reasons about runtime behavior instead of matching surface patterns, so it catches bugs that pattern matchers miss
 
 ## Support
 
