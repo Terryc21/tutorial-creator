@@ -1,14 +1,14 @@
 # code-smarter
 
-![Visitors](https://komarev.com/ghpvc/?username=Terryc21&repo=code-smarter&label=visitors&color=blue) ![GitHub stars](https://img.shields.io/github/stars/Terryc21/code-smarter?style=flat) ![GitHub forks](https://img.shields.io/github/forks/Terryc21/code-smarter?style=flat)
+Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
+
+**Claude Code skills that help you work smarter -- auto-fix your prompts, generate personalized coding lessons from your own codebase, and more.**
+
+If these skills save you time, a [coffee](https://buymeacoffee.com/stuffolio) is appreciated. [Sponsoring](https://github.com/sponsors/Terryc21) supports further development.
 
 <a href="https://buymeacoffee.com/stuffolio">
   <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="150">
 </a>
-
-Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app.
-
-**Claude Code skills that help you work smarter -- auto-fix your prompts, generate personalized coding lessons from your own codebase, and more.**
 
 ## Skills
 
@@ -157,10 +157,6 @@ These skills were built during development of [Stuffolio](https://stuffolio.app)
 - [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
 - [workflow-audit](https://github.com/Terryc21/workflow-audit) -- 5-layer audit of SwiftUI user workflows; finds dead ends, broken promises, and missing data wiring
 - [radar-suite](https://github.com/Terryc21/radar-suite) -- 6-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
-
-## Support
-
-If these skills save you time, consider [sponsoring](https://github.com/sponsors/Terryc21) further development.
 
 ## Author
 
