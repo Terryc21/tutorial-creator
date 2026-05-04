@@ -99,7 +99,9 @@ If so, it proposes gap-filling tutorials (numbered as Day N.5) to bridge the pre
 
 ### Example Output
 
-Here's what a generated tutorial looks like (Swift example):
+A complete sample tutorial (full file, not a snippet) is at [`skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md`](skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md). It walks through a real 75-line Swift extension and shows every required section (Vocabulary, Pre-Test, Core Pattern, annotated Real Code, Common Mistakes, Post-Test, Answer Key).
+
+For a quick taste, here's the header of a typical tutorial:
 
 ```markdown
 # Day 9: Making Views Actionable -- Buttons, Gestures, and Conditional Interactivity
@@ -144,6 +146,10 @@ On first run, it asks how long to stay active:
 
 Once active, every prompt you type gets rewritten and shown for approval before execution. Permission responses (yes/no) and option selections are skipped automatically.
 
+### Example Rewrites
+
+A sample of typical Prompter rewrites — typos, ambiguous references, vague verbs, multi-question prompts, and the cases where Prompter deliberately *doesn't* rewrite — is at [`skills/prompter/examples/Prompter-Examples.md`](skills/prompter/examples/Prompter-Examples.md). Worth skimming before turning Prompter on so you know what to expect.
+
 ---
 
 ## Origin
@@ -156,7 +162,7 @@ These skills were built during development of [Stuffolio](https://stuffolio.app)
 
 - [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
 - [workflow-audit](https://github.com/Terryc21/workflow-audit) -- 5-layer audit of SwiftUI user workflows; finds dead ends, broken promises, and missing data wiring
-- [radar-suite](https://github.com/Terryc21/radar-suite) -- 6-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
+- [radar-suite](https://github.com/Terryc21/radar-suite) -- 8-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
 
 ## Author
 
