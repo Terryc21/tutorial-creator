@@ -133,13 +133,7 @@ This prevents the common experience of:
 ### Progressive Fluency
 
 # Usage
-### # First run
-### /skill tutorial-creator closures src/utils/helpers.ts
 
-### # Additional tutorials
-### /skill tutorial-creator protocols Sources/Protocols/BackupManaging.swift
-### /skill tutorial-creator hooks src/components/Dashboard.tsx
-### /skill tutorial-creator error-handling src/api/client.rs
 If no source file is specified, the skill searches your project for a good example of the requested topic.
 
 # First-Run Setup
@@ -187,7 +181,7 @@ Small prompt problems create surprisingly large downstream problems:
 Over time, this becomes a subtle feedback loop: you start internalizing what makes prompts effective simply by watching them improve.
 
 # Usage
-### /skill prompter
+### skill prompter
 Activation modes:
 * Current session only
 * Persist via CLAUDE.md
@@ -225,19 +219,19 @@ These skills are designed to help close that gap.
 
 # Other Claude Code Skills
 Additional repositories built during development of Stuffolio:
-* ~[bug-echo](https://github.com/Terryc21/bug-echo)~ — after fixing a bug, locate and rate similar patterns elsewhere in the codebase
-* ~[workflow-audit](https://github.com/Terryc21/workflow-audit)~ — multi-layer behavioral audit of SwiftUI user workflows
-* ~[radar-suite](https://github.com/Terryc21/radar-suite)~ — behavioral audit suite for iOS/macOS Swift projects
+* [bug-echo](https://github.com/Terryc21/bug-echo)~ — after fixing a bug, locate and rate similar patterns elsewhere in the codebase
+* [workflow-audit](https://github.com/Terryc21/workflow-audit)~ — multi-layer behavioral audit of SwiftUI user workflows
+* [radar-suite](https://github.com/Terryc21/radar-suite)~ — behavioral audit suite for iOS/macOS Swift projects
 
 ⠀These tools focus on workflow behavior and user experience — not just static code inspection.
 
 # Install
 ### git clone https://github.com/Terryc21/code-smarter.git
 
-### # Global install
+### Global install
 ### cp -r code-smarter/skills/* ~/.claude/skills/
 
-### # Project-specific install
+### Project-specific install
 ### cp -r code-smarter/skills/* /path/to/project/.claude/skills/
 
 # Author
