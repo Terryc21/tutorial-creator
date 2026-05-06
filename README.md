@@ -159,7 +159,7 @@ Custom learning progressions can also be defined.
 
 # Example Tutorial
 A complete generated tutorial example is included here:
-### ~skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md~
+### skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md
 It demonstrates:
 * vocabulary tracking
 * annotated production Swift code
@@ -198,7 +198,7 @@ Activation modes:
 
 # Example Rewrites
 A larger collection of example rewrites is available here:
-### ~skills/prompter/examples/Prompter-Examples.md~
+### skills/prompter/examples/Prompter-Examples.md
 
 # Philosophy
 Many AI coding tools optimize for:
@@ -219,9 +219,9 @@ These skills are designed to help close that gap.
 
 # Other Claude Code Skills
 Additional repositories built during development of Stuffolio:
-* [bug-echo](https://github.com/Terryc21/bug-echo)~ — after fixing a bug, locate and rate similar patterns elsewhere in the codebase
-* [workflow-audit](https://github.com/Terryc21/workflow-audit)~ — multi-layer behavioral audit of SwiftUI user workflows
-* [radar-suite](https://github.com/Terryc21/radar-suite)~ — behavioral audit suite for iOS/macOS Swift projects
+* [bug-echo](https://github.com/Terryc21/bug-echo) — after fixing a bug, locate and rate similar patterns elsewhere in the codebase
+* [workflow-audit](https://github.com/Terryc21/workflow-audit) — multi-layer behavioral audit of SwiftUI user workflows
+* [radar-suite](https://github.com/Terryc21/radar-suite) — behavioral audit suite for iOS/macOS Swift projects
 
 ⠀These tools focus on workflow behavior and user experience — not just static code inspection.
 
@@ -229,13 +229,13 @@ Additional repositories built during development of Stuffolio:
 ### git clone https://github.com/Terryc21/code-smarter.git
 
 ### Global install
-### cp -r code-smarter/skills/* ~/.claude/skills/
+### cp -r code-smarter/skills/* /.claude/skills/
 
 ### Project-specific install
 ### cp -r code-smarter/skills/* /path/to/project/.claude/skills/
 
 # Author
-Created by **Terry Nyberg** ~[Coffee & Code LLC](https://stuffolio.app/)~
+Created by **Terry Nyberg** [Coffee & Code LLC](https://stuffolio.app/)
 
 # License
-Apache 2.0 — see ~LICENSE~
+Apache 2.0 — see LICENSE
