@@ -28,7 +28,7 @@ Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management 
 
 ### ---
 
-### # Why This Exists
+### Why This Exists
 
 ### While building Stuffolio, I realized something uncomfortable:
 
@@ -36,7 +36,7 @@ Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management 
 
 ### Traditional tutorials taught syntax using toy examples:
 
-### ```swift
+### swift
 ### let x = 5
 But real projects don’t look like that.
 Real projects contain:
