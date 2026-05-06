@@ -145,11 +145,13 @@ Built-in learning progressions exist for:
 
 Custom learning progressions can also be defined.
 
-### Example tutorial
+### Example tutorials
 
-A complete generated tutorial example is included: [skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md](skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md).
+Two complete generated tutorials are included, showing how the skill scales from a beginner's first SwiftUI view to an advanced bug-driven case study.
 
-It demonstrates vocabulary tracking, annotated production Swift code, testing, progressive learning structure, and gap analysis.
+**Starter:** [Day 3 -- ScoutResultsLookupView.swift](skills/tutorial-creator/examples/Day3-ScoutResultsLookupView-Annotated.md). A reader's first SwiftUI view. Walks through `struct ... : View`, `@Environment`, `@Query`, key paths, `NavigationStack`, toolbars, and platform conditionals -- with vocabulary scaffolding and a pre/post-test pair.
+
+**Advanced:** [Day 16 -- Captured-Self Staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md). Built around a real production bug where a SwiftUI macOS app's window vanished on save. Walks through value-vs-reference closure capture, body-local `let` snapshots, and how a small fix prevents an entire class of macOS dismiss bug. Demonstrates the full format: vocabulary, pre-test, core pattern, annotated source, common mistakes, post-test, answer key, and connections back to earlier tutorials. The gap analysis shown in the screenshot above came from this tutorial's session.
 
 ---
 
