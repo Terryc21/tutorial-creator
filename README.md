@@ -9,165 +9,246 @@ If these skills save you time, a [coffee](https://buymeacoffee.com/stuffolio) is
 <a href="https://buymeacoffee.com/stuffolio">
   <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="150">
 </a>
+### **Claude Code skills focused on developer understanding — not just code generation.**
 
-## Skills
+### Most AI coding tools optimize for speed:
+### - generate code faster
+### - scaffold features faster
+### - ship faster
 
-| Skill | Command | Description |
-|-------|---------|-------------|
-| **tutorial-creator** | `/skill tutorial-creator [topic] [source]` | Generate personalized coding lessons from your own codebase |
-| **prompter** | `/skill prompter` | Rewrite prompts for clarity and actionability before execution |
+### But many developers are now generating code faster than they can comfortably *read* or *understand* it.
 
-## Install
+### `code-smarter` explores a different idea:
 
-```bash
-git clone https://github.com/Terryc21/code-smarter.git
-cp -r code-smarter/skills/* ~/.claude/skills/
+### > AI should help developers build fluency and understanding — not just produce more code.
 
-# Or for a specific project
-cp -r code-smarter/skills/* /path/to/your/project/.claude/skills/
-```
+### These skills:
+### - generate personalized coding lessons from your own codebase
+### - improve prompt clarity before execution
+### - help you learn naturally while continuing to ship real software
 
----
+### If these skills save you time, a [coffee](https://buymeacoffee.com/stuffolio) is appreciated. [Sponsoring](https://github.com/sponsors/Terryc21) supports further development.
 
-## tutorial-creator
+### <a href="https://buymeacoffee.com/stuffolio">
+###   <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="150">
+### </a>
 
-**Learn to read code by reading *your* code -- not textbook examples.**
+### ---
 
-If you're using Claude Code while still building fluency in the language it's generating, this skill is for you. It takes a file from your own project and turns it into an annotated lesson -- the same code you're already working with, explained line by line. You pick up the language naturally, in the context of something real, while Claude keeps shipping. Each tutorial is tailored to your experience level and tracks what you've already learned, so the next lesson starts where the last one left off. Most coding tutorials use toy examples (`let x = 5`); you learn the syntax but can't connect it to real code. This skill flips that.
+### # Why This Exists
 
-### What You Get
+### While building Stuffolio, I realized something uncomfortable:
 
-Each tutorial includes:
+### Claude Code was helping me generate Swift code faster than I was developing fluency reading it.
 
-- **Vocabulary table** -- new terms introduced (only new ones, not repeats)
-- **Pre-test** -- do you already know this? (5-8 questions)
-- **Core pattern** -- the concept explained simply before real code
-- **Annotated real code** -- your actual source file with inline explanations
-- **Common mistakes** -- what goes wrong and how to fix it
-- **Post-test** -- can you apply this? (5-8 harder questions)
-- **Answer key** -- full explanations for both tests
+### Traditional tutorials taught syntax using toy examples:
 
-Plus cumulative tracking:
+### ```swift
+### let x = 5
+But real projects don’t look like that.
+Real projects contain:
+* async workflows
+* state management
+* dependency injection
+* conditional rendering
+* architectural patterns
+* edge cases
+* accumulated design decisions
 
-- **VOCABULARY.md** -- every term from every tutorial, in order
-- **PROGRESS.md** -- score log, concepts checklist, learning progression
-- **Gap analysis** -- after each tutorial, identifies prerequisite concepts you might be missing
+⠀I didn’t want to stop building and go study disconnected tutorial exercises.
+I wanted to learn from the actual code appearing in my own project every day.
+So I built a Claude Code skill that turns real project files into personalized annotated lessons.
 
-### Usage
+# Skills
+| **Skill** | **Command** | **Purpose** |
+|:-:|:-:|:-:|
+| **tutorial-creator** | /skill tutorial-creator [topic] [source] | Learn programming concepts from your own codebase |
+| **prompter** | /skill prompter | Rewrite prompts for clarity before execution |
 
-```bash
-# First run -- setup wizard configures your learning environment
-/skill tutorial-creator closures src/utils/helpers.ts
+# tutorial-creator
+# Learn to read code by readingyour code
+Most coding tutorials teach concepts in isolation.
+### tutorial-creator teaches concepts using the actual files you already work with every day.
+Instead of:
+* disconnected exercises
+* toy snippets
+* abstract examples
 
-# Subsequent runs
-/skill tutorial-creator hooks src/components/Dashboard.tsx
-/skill tutorial-creator error handling src/api/client.rs
-/skill tutorial-creator protocols Sources/Protocols/BackupManaging.swift
-```
+⠀you learn directly from:
+* your SwiftUI views
+* your React components
+* your Rust APIs
+* your Django models
+* your real architecture
 
-If you don't specify a source file, the skill finds one in your project that demonstrates the topic.
+⠀The result is a very different kind of learning:
+* contextual
+* cumulative
+* project-aware
+* immediately practical
 
-### First-Run Setup
+⠀While Claude continues helping you build, you gradually develop the fluency to review, understand, and challenge the code it generates.
 
-On first use, the skill asks:
+# What You Get
+Each generated tutorial includes:
+* **Vocabulary table** — only new terms, no repetitive definitions
+* **Pre-test** — determine what you already know
+* **Core pattern explanation** — simple conceptual overview first
+* **Annotated real code** — inline explanations of your actual source file
+* **Common mistakes** — realistic failure modes and fixes
+* **Post-test** — apply the concepts at a deeper level
+* **Answer key** — full explanations for both tests
 
-1. **Where to save tutorials** (default: `./tutorials/`)
-2. **Your language/framework** (auto-detected from project files)
-3. **Your experience level** (beginner / intermediate / advanced)
-4. **Your project directory** (default: current directory)
+⠀Plus cumulative tracking across tutorials:
+* VOCABULARY.md
+* PROGRESS.md
+* concept progression tracking
+* learning gap analysis
 
-Config saved to `.claude/tutorial-config.yaml`. Edit anytime to adjust.
+⠀
+# Gap Analysis
+After each tutorial, the skill asks:
+“Does this lesson depend on concepts that haven’t been taught yet?”
+If so, it proposes prerequisite tutorials automatically.
+This prevents the common experience of:
+* understanding Tutorial 1
+* surviving Tutorial 2
+* getting completely lost in Tutorial 3
 
-### Supported Languages
+⠀
+# Traditional Tutorials vs tutorial-creator
+| **Traditional Tutorials** | **tutorial-creator** |
+|:-:|:-:|
+| Toy examples | Your real codebase |
+| Static curriculum | Adaptive progression |
+| Generic vocabulary | Vocabulary from your project |
+| No continuity | Persistent progress tracking |
+| Assumes prerequisites | Detects missing concepts |
+| Separate from production work | Integrated into active development |
 
-Built-in learning progressions for:
-
-| Language | Phases |
-|----------|--------|
-| **Swift/SwiftUI** | Utilities -> Models -> ViewModels -> Views -> Managers -> Serialization |
-| **TypeScript/React** | Utilities -> Hooks -> Components -> State Management -> API Layer -> Testing |
-| **Python/Django** | Utilities -> Models -> Views -> Serializers -> Middleware -> Testing |
-| **Rust** | Ownership -> Traits -> Error Handling -> Async -> Unsafe -> Architecture |
-
-Custom progressions can be defined in the config file. The skill works with any language -- these are just default phase orderings.
-
+# Example Workflow
+### Your Swift File
+###        ↓
+### tutorial-creator
+###        ↓
+### Annotated Lesson
+###        ↓
+### Vocabulary Tracking
+###        ↓
 ### Gap Analysis
+###        ↓
+### Progressive Fluency
 
-After creating each tutorial, the skill checks: *"Does this tutorial use concepts not covered by any earlier tutorial?"*
+# Usage
+### # First run
+### /skill tutorial-creator closures src/utils/helpers.ts
 
-If so, it proposes gap-filling tutorials (numbered as Day N.5) to bridge the prerequisite knowledge. This prevents the "I understood Day 3 but Day 4 lost me" problem.
+### # Additional tutorials
+### /skill tutorial-creator protocols Sources/Protocols/BackupManaging.swift
+### /skill tutorial-creator hooks src/components/Dashboard.tsx
+### /skill tutorial-creator error-handling src/api/client.rs
+If no source file is specified, the skill searches your project for a good example of the requested topic.
 
-### Example Output
+# First-Run Setup
+On first use, the skill asks:
+1. Where to save tutorials
+2. Your language/framework
+3. Your experience level
+4. Your project directory
 
-A complete sample tutorial (full file, not a snippet) is at [`skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md`](skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md). It walks through a real 75-line Swift extension and shows every required section (Vocabulary, Pre-Test, Core Pattern, annotated Real Code, Common Mistakes, Post-Test, Answer Key).
+⠀Configuration is saved to:
+### .claude/tutorial-config.yaml
+Edit anytime to adjust progression or preferences.
 
-For a quick taste, here's the header of a typical tutorial:
+# Supported Languages
+Built-in learning progressions exist for:
+| **Language** | **Progression** |
+|:-:|:-:|
+| **Swift / SwiftUI** | Utilities → Models → ViewModels → Views → Managers |
+| **TypeScript / React** | Utilities → Hooks → Components → State Management |
+| **Python / Django** | Utilities → Models → Views → Serializers |
+| **Rust** | Ownership → Traits → Error Handling → Async |
+Custom learning progressions can also be defined.
 
-```markdown
-# Day 9: Making Views Actionable -- Buttons, Gestures, and Conditional Interactivity
+# Example Tutorial
+A complete generated tutorial example is included here:
+### ~skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md~
+It demonstrates:
+* vocabulary tracking
+* annotated production Swift code
+* testing
+* progressive learning structure
+* gap analysis
 
-*Source: `Sources/Views/Detail/EnhancedItemDetailView+Helpers.swift` (DetailKeyValueRow)*
-*Day 9 -- April 5, 2026 -- Views (Phase 3)*
+⠀
+# prompter
+# Improve prompts before Claude acts on them
+Small prompt problems create surprisingly large downstream problems:
+* ambiguity
+* vague references
+* overloaded requests
+* unclear goals
+* missing constraints
 
-## What You'll Learn
-How to make any SwiftUI view respond to taps, how to make interactivity
-conditional, and how to give users visual hints that something is tappable.
+⠀prompter intercepts prompts before execution, rewrites them for clarity, then asks for approval before continuing.
+Over time, this becomes a subtle feedback loop: you start internalizing what makes prompts effective simply by watching them improve.
 
-## Vocabulary
-| Term | Quick Definition |
-|------|-----------------|
-| `Button` | A view that performs an action when tapped |
-| `(() -> Void)?` | An optional closure -- a function that might not exist |
-| `.contentShape(Rectangle())` | Makes the entire frame tappable |
-...
-```
+# Usage
+### /skill prompter
+Activation modes:
+* Current session only
+* Persist via CLAUDE.md
+* Remove persistent rewriting
 
----
+⠀
+# Example Rewrite
+### Original
+### fix dashboard thing maybe make it cleaner
+### Rewritten
+### Refactor the dashboard layout to improve visual hierarchy and reduce clutter.
+### Preserve existing functionality and navigation behavior.
+### Focus specifically on spacing, grouping, and discoverability of primary actions.
 
-## prompter
+# Example Rewrites
+A larger collection of example rewrites is available here:
+### ~skills/prompter/examples/Prompter-Examples.md~
 
-**Auto-fix your prompts before Claude Code acts on them.**
+# Philosophy
+Many AI coding tools optimize for:
+* generation
+* automation
+* acceleration
 
-Typos, vague wording, and ambiguous references slow down AI interactions. Prompter fixes them automatically -- it rewrites your prompt for clarity, shows you the rewrite, and waits for approval before proceeding.
+⠀code-smarter focuses more heavily on:
+* comprehension
+* fluency
+* workflow understanding
+* architectural awareness
+* long-term developer growth
 
-It's also surprisingly fun to use. Watching how your prompts get sharpened — what got cut, what got clarified — becomes a quiet feedback loop on prompt quality. Over time you internalize what a good prompt looks like, just by seeing how Prompter improves yours.
+⠀AI can generate code instantly.
+Understanding it still takes time.
+These skills are designed to help close that gap.
 
-### Usage
+# Other Claude Code Skills
+Additional repositories built during development of Stuffolio:
+* ~[bug-echo](https://github.com/Terryc21/bug-echo)~ — after fixing a bug, locate and rate similar patterns elsewhere in the codebase
+* ~[workflow-audit](https://github.com/Terryc21/workflow-audit)~ — multi-layer behavioral audit of SwiftUI user workflows
+* ~[radar-suite](https://github.com/Terryc21/radar-suite)~ — behavioral audit suite for iOS/macOS Swift projects
 
-```bash
-/skill prompter
-```
+⠀These tools focus on workflow behavior and user experience — not just static code inspection.
 
-On first run, it asks how long to stay active:
+# Install
+### git clone https://github.com/Terryc21/code-smarter.git
 
-- **This session only** -- rewrite prompts for this conversation
-- **Add to CLAUDE.md** -- persist across all future sessions
-- **Remove from CLAUDE.md** -- turn off persistent rewriting
+### # Global install
+### cp -r code-smarter/skills/* ~/.claude/skills/
 
-Once active, every prompt you type gets rewritten and shown for approval before execution. Permission responses (yes/no) and option selections are skipped automatically.
+### # Project-specific install
+### cp -r code-smarter/skills/* /path/to/project/.claude/skills/
 
-### Example Rewrites
+# Author
+Created by **Terry Nyberg** ~[Coffee & Code LLC](https://stuffolio.app/)~
 
-A sample of typical Prompter rewrites — typos, ambiguous references, vague verbs, multi-question prompts, and the cases where Prompter deliberately *doesn't* rewrite — is at [`skills/prompter/examples/Prompter-Examples.md`](skills/prompter/examples/Prompter-Examples.md). Worth skimming before turning Prompter on so you know what to expect.
-
----
-
-## Origin
-
-These skills were built during development of [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app. The developer wanted to build Swift reading fluency to review AI-generated code -- so we built a system that generates tutorials from the actual codebase being worked on.
-
-14 tutorials later (with 134 tracked vocabulary terms), the approach proved effective enough to generalize.
-
-## Other Claude Code skills I have built
-
-- [bug-echo](https://github.com/Terryc21/bug-echo) -- after you fix a bug, finds and rates other instances of the same pattern, then presents options to fix them
-- [workflow-audit](https://github.com/Terryc21/workflow-audit) -- 5-layer audit of SwiftUI user workflows; finds dead ends, broken promises, and missing data wiring
-- [radar-suite](https://github.com/Terryc21/radar-suite) -- 8-skill audit suite for iOS/macOS Swift codebases. Behavioral, not grep-based: grep-based skills are the build inspector who confirms every bolt is torqued to spec; behavioral skills are the test driver who takes it on the road and finds that the GPS routes the user into a lake. Different layer, different bugs -- the two approaches complement each other, and a thorough audit uses both.
-
-## Author
-
-Created by **Terry Nyberg** ([Coffee & Code LLC](https://stuffolio.app))
-
-## License
-
-MIT -- see [LICENSE](LICENSE).
+# License
+Apache 2.0 — see ~LICENSE~
