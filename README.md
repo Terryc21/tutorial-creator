@@ -4,13 +4,6 @@ Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management 
 
 **Claude Code skills that help you work smarter -- auto-fix your prompts, generate personalized coding lessons from your own codebase, and more.**
 
-If these skills save you time, a [coffee](https://buymeacoffee.com/stuffolio) is appreciated. [Sponsoring](https://github.com/sponsors/Terryc21) supports further development.
-
-<a href="https://buymeacoffee.com/stuffolio">
-  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="150">
-</a>
-### **Claude Code skills focused on developer understanding — not just code generation.**
-
 ### Most AI coding tools optimize for speed:
 ### - generate code faster
 ### - scaffold features faster
@@ -20,7 +13,7 @@ If these skills save you time, a [coffee](https://buymeacoffee.com/stuffolio) is
 
 ### `code-smarter` explores a different idea:
 
-### > AI should help developers build fluency and understanding — not just produce more code.
+### AI should help developers build fluency and understanding — not just produce more code.
 
 ### These skills:
 ### - generate personalized coding lessons from your own codebase
