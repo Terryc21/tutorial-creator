@@ -147,11 +147,7 @@ Custom learning progressions can also be defined.
 
 ### Example tutorial
 
-A complete generated tutorial example is included at:
-
-```
-skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md
-```
+A complete generated tutorial example is included: [skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md](skills/tutorial-creator/examples/Day3-ModelContextLogging-Annotated.md).
 
 It demonstrates vocabulary tracking, annotated production Swift code, testing, progressive learning structure, and gap analysis.
 
@@ -189,11 +185,7 @@ Activation modes:
 
 ### Example rewrites
 
-A larger collection of example rewrites is available at:
-
-```
-skills/prompter/examples/Prompter-Examples.md
-```
+A larger collection of example rewrites is available: [skills/prompter/examples/Prompter-Examples.md](skills/prompter/examples/Prompter-Examples.md).
 
 ---
 
