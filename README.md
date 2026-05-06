@@ -72,11 +72,11 @@ After each tutorial, the skill asks: *"Does this lesson depend on concepts that 
 
 This prevents the common experience of understanding Tutorial 1, surviving Tutorial 2, and getting completely lost in Tutorial 3.
 
-**Example output** from a real `tutorial-creator` run:
+A real example. I asked `tutorial-creator` to write Day 16, a tutorial about a SwiftUI captured-`self` staleness bug. After it finished, the skill checked whether the new lesson leaned on anything I hadn't covered in earlier days. It found two prerequisite gaps, ranked which ones to fill first, and named them as half-step tutorials (Day 15.5 and Day 9.5) so they would slot between existing days without renumbering anything:
 
 ![tutorial-creator gap analysis showing prerequisite mapping and proposed bridge tutorials](images/tutorial-creator-gap-analysis.png)
 
-The skill identifies concepts the new tutorial leans on, checks which were covered by earlier days, and proposes numbered bridge tutorials (15.5, 9.5) where prerequisites are missing.
+I wrote both bridge tutorials in the same session. Without the gap analysis I'd have shipped Day 16 with two unstated prerequisites and slowly accumulated learning debt. With it, the curriculum stays self-consistent automatically.
 
 ### Traditional tutorials vs tutorial-creator
 
@@ -141,9 +141,9 @@ Custom learning progressions can also be defined.
 
 Two complete generated tutorials are included, showing how the skill scales from a beginner's first SwiftUI view to an advanced bug-driven case study.
 
-**Starter:** [Day 3 -- ScoutResultsLookupView.swift](skills/tutorial-creator/examples/Day3-ScoutResultsLookupView-Annotated.md). A reader's first SwiftUI view. Walks through `struct ... : View`, `@Environment`, `@Query`, key paths, `NavigationStack`, toolbars, and platform conditionals -- with vocabulary scaffolding and a pre/post-test pair.
+**Starter:** [Day 3 -- ScoutResultsLookupView.swift](skills/tutorial-creator/examples/Day3-ScoutResultsLookupView-Annotated.md). The first SwiftUI view a Stuffolio reader walked through. They could read the file before, but reading it didn't *teach* them anything. The annotated tutorial points at what each line is doing and why, builds a vocabulary table from terms the reader hadn't formally learned (`@Environment`, `@Query`, key paths, `NavigationStack`), and ends with a pre/post-test pair so the reader knows whether the lesson actually landed.
 
-**Advanced:** [Day 16 -- Captured-Self Staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md). Built around a real production bug where a SwiftUI macOS app's window vanished on save. Walks through value-vs-reference closure capture, body-local `let` snapshots, and how a small fix prevents an entire class of macOS dismiss bug. Demonstrates the full format: vocabulary, pre-test, core pattern, annotated source, common mistakes, post-test, answer key, and connections back to earlier tutorials. The gap analysis shown in the screenshot above came from this tutorial's session.
+**Advanced:** [Day 16 -- Captured-Self Staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md). Built around a real production bug where a SwiftUI macOS app's window vanished on save. The bug was three lines and looked dumb in retrospect; the lesson is everything you'd want to know to never write it. Demonstrates the full format: vocabulary, pre-test, core pattern, annotated source, common mistakes, post-test, answer key, and connections back to earlier tutorials. This is also the tutorial whose gap analysis is shown in the screenshot above.
 
 ---
 
