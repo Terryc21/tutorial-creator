@@ -2,6 +2,8 @@
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase -- builds incremental learning with vocabulary tracking, pre/post tests, and gap analysis
 version: 1.1.0
+author: Terry Nyberg, Coffee & Code LLC
+license: Apache-2.0
 ---
 
 # Create Tutorial
