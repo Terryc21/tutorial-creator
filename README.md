@@ -1,4 +1,4 @@
-# code-smarter
+# tutorial-creator
 
 **Generate personalized coding lessons from your own codebase.** A Claude Code skill that turns the files you actually work on every day into annotated tutorials.
 
@@ -16,7 +16,7 @@ Most AI coding tools optimize for speed: generate code faster, scaffold features
 
 But many developers are now generating code faster than they can comfortably *read* or *understand* it.
 
-`code-smarter` explores a different idea: AI should help developers build fluency and understanding, not just produce more code.
+`tutorial-creator` explores a different idea: AI should help developers build fluency and understanding, not just produce more code.
 
 While building Stuffolio, I realized something uncomfortable: Claude Code was helping me generate Swift code faster than I was developing fluency reading it. Traditional tutorials taught syntax using toy examples like `let x = 5`, but real projects don't look like that. Real projects contain async workflows, state management, dependency injection, conditional rendering, architectural patterns, edge cases, and accumulated design decisions.
 
@@ -151,7 +151,7 @@ Two complete generated tutorials are included, showing how the skill scales from
 
 Many AI coding tools optimize for generation, automation, and acceleration.
 
-`code-smarter` focuses more heavily on:
+`tutorial-creator` focuses more heavily on:
 
 - Comprehension
 - Fluency
@@ -166,19 +166,19 @@ AI can generate code instantly. Understanding it still takes time. This skill is
 ## Install
 
 ```bash
-git clone https://github.com/Terryc21/code-smarter.git
+git clone https://github.com/Terryc21/tutorial-creator.git
 ```
 
 **Global install** (all projects):
 
 ```bash
-mkdir -p ~/.claude/skills && cp -r code-smarter/skills/* ~/.claude/skills/
+mkdir -p ~/.claude/skills && cp -r tutorial-creator/skills/* ~/.claude/skills/
 ```
 
 **Project-specific install** (one project only):
 
 ```bash
-mkdir -p /path/to/project/.claude/skills && cp -r code-smarter/skills/* /path/to/project/.claude/skills/
+mkdir -p /path/to/project/.claude/skills && cp -r tutorial-creator/skills/* /path/to/project/.claude/skills/
 ```
 
 ---
@@ -198,7 +198,7 @@ These tools focus on workflow behavior and user experience, not just static code
 
 ## History
 
-This repo originally bundled two skills: `tutorial-creator` and `prompter`. The `prompter` skill was extracted into its own repo at [github.com/Terryc21/prompter](https://github.com/Terryc21/prompter) (with full commit history preserved) so each focused tool can be discovered independently. `code-smarter` is now exclusively the home of `tutorial-creator`.
+This repo (then named `code-smarter`) originally bundled two skills: `tutorial-creator` and `prompter`. The `prompter` skill was extracted into its own repo at [github.com/Terryc21/prompter](https://github.com/Terryc21/prompter) (with full commit history preserved) so each focused tool can be discovered independently. The repo was renamed from `code-smarter` to `tutorial-creator` so the repo name matches the skill name. The old URL still redirects.
 
 ---
 
