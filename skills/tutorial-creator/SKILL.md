@@ -1,6 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase -- builds incremental learning with vocabulary tracking, pre/post tests, and gap analysis
+version: 1.1.0
 ---
 
 # Create Tutorial
@@ -115,13 +116,26 @@ The actual source file, annotated with inline comments explaining each concept. 
 ### Answer Key
 Answers for both pre-test and post-test. Full explanations, not just "true/false".
 
+### New Concepts Introduced
+A summary table at the end listing the new concepts this tutorial taught, anchored to the file with line references where helpful. Format:
+
+```markdown
+| Concept | Where in Code | Key Takeaway |
+|---------|---------------|--------------|
+| [concept name] | [Line N or "throughout"] | [one-sentence summary] |
+```
+
+This table is the reader's quick-reference card after they finish the tutorial. It also feeds the Concepts Mastery Checklist update in PROGRESS.md (see "After Writing" below). Every concept in this table MUST also appear in the Vocabulary table at the top of the tutorial; new entries here without matching vocabulary entries are inconsistent.
+
+The table should be derivable from the tutorial's content -- if a concept isn't taught well enough in the body to summarize in one sentence, either teach it better or remove it from the table. Aim for 6-12 rows depending on the tutorial's depth.
+
 ## After Writing
 
 1. **Save the tutorial** to `{tutorials_dir}/DayN-[Topic]-Annotated.md`
 
 2. **Update PROGRESS.md:**
    - Add a row to the Score Log table with the day number, date, file name, and test counts
-   - Add new concepts to the Concepts Mastery Checklist under the appropriate phase
+   - Add new concepts to the Concepts Mastery Checklist under the appropriate phase. The concepts to add are the ones listed in the tutorial's "New Concepts Introduced" table -- format each as `- [ ] [Concept name] (Day N)`. The brief takeaway from the table can be omitted in PROGRESS.md; readers will follow the day reference back to the tutorial if they need more detail.
 
 3. **Update VOCABULARY.md:**
    - Add a new section for this tutorial's terms (format: `## Day N: [Topic]` with vocabulary table)

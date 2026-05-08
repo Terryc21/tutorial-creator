@@ -327,3 +327,18 @@ Test your understanding after reading. Answers at the bottom.
 - **Day 8** (Sheet vs Inline Navigation): Inline-in-NavigationSplitView is exactly the case where `dismiss()` becomes destructive. This tutorial extends Day 8 with the closure-staleness consequence.
 - **Day 8.5** (Closures as Parameters): `() -> Void` and optional closures with `= nil`. The S12 closure shape is exactly what Day 8.5 set up. The new lesson: **how** the closure captures the surrounding scope determines whether it stays correct across re-renders.
 - **Day 11** (ForEach Identity / UUID Trap): Day 11 was the first time we hit "body runs more often than you think." This tutorial is the same lesson on a different surface: anything that body computes can be re-computed, and any closure body constructs is a snapshot of the moment of construction.
+
+---
+
+## New Concepts Introduced in Day 16
+
+| Concept | Where in Code | Key Takeaway |
+|---------|---------------|--------------|
+| Captured `self` (in struct closures) | Throughout | A closure inside a struct's body holds a copy of `self` and reads its properties when the closure runs, not when it's written. |
+| Stale capture | The bug, lines 124-159 | The captured `self` can become out of date with the live `self` between re-renders, causing closures to see old values. |
+| Eager vs lazy resolution | Pre-Test #5, the fix | Resolving an expression *now* (eager, into a `let`) captures the current state; deferring to closure-call-time (lazy) re-reads through the staleness window. |
+| Body-local `let` | The fix, lines 242-260 | A `let` inside `var body` runs once per body invocation against the current `self`. Use it to snapshot a value before constructing a closure. |
+| `??` constructs the RHS eagerly | Vocabulary, Pre-Test #6 | `optional ?? { closure }` constructs the closure when the surrounding expression is built, not when the result is invoked. The RHS captures `self`. |
+| Re-render value-replacement model | Pre-Test #2, Post-Test #3 | SwiftUI replaces struct view instances on re-render; non-`@State` stored properties are reset from the new instance, leaving captured-`self` references pointing at the old shape. |
+| Sibling bug (and how to find it) | Post-Test #8 | A fix that leaves a distinctive grep-able fingerprint can be templated into a regex and used to find every other instance of the same pattern across the codebase (this is what the bug-echo skill automates). |
+| `dismiss()` platform divergence | Pre-Test #4, Post-Test #5 | On iOS `dismiss()` closes a sheet; on macOS inline in `NavigationSplitView`, it falls through and closes the host window. Same code, dramatically different consequence per platform.
