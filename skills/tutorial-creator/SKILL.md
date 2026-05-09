@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase2
+version: 2.0.0-phase3abc
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -92,11 +92,69 @@ Where does the tutorial start?
 [e] Documentation-grounded   — Apple Developer docs, RFCs, etc.
 ```
 
-### Phase 2 status
+### Implementation status
 
-Only **entry [b] legacy path** (writing-to-learn, topic + file) is implemented. It produces v1.1-shaped output by following the "Tutorial Format" specification below. All other entries return:
+Three writing-to-learn entries are implemented:
 
-> Entry [<letter>] is not yet implemented in v2.0-phase2. Coming in Phase 3 or 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+- **[a] daily progression** — see `## Entry [a] — Daily progression`
+- **[b] topic + file** — see `## Entry [b] — Tutorial Format (topic + file)` (this is also the legacy v1.1 path)
+- **[c] topic only** — see `## Entry [c] — Topic only (skill finds the file)`
+
+These three writing-to-learn entries are not yet implemented:
+
+- **[d] question-led** — Phase 3def
+- **[e] gap-driven** — Phase 3def (depends on Phase 4 vocab status)
+- **[f] external source** — Phase 3def
+
+The audience-facing path (Path 2) is not yet implemented. All five Path 2 entries return a "Phase 7" placeholder. The five entries [a]-[e] under audience-facing share letters with the writing-to-learn entries but are different procedures; do not conflate them.
+
+For unimplemented entries, return:
+
+> Entry `[<letter>]` (under <writing-to-learn|audience-facing>) is not yet implemented in `v2.0-phase3abc`. Coming in <phase>. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+
+## Entry [a] — Daily progression
+
+Use when the user wants the next concept in their learning sequence and doesn't have a specific topic or file in mind.
+
+### Procedure
+
+1. **Read config.** `.claude/tutorial-config.yaml`. Required fields for entry [a]: `language`, `next_day`, `experience_level`, `tutorials_dir`. If `progression_override` is set, use that path; otherwise load `progressions/<language>.yaml` from the skill bundle.
+2. **Determine current phase.** Read `PROGRESS.md`. Look for the most recent Score Log row to find the last-shipped phase number. If PROGRESS.md is empty (first day), current phase = 1.
+3. **Read the active progression.** Parse the matching `progressions/*.yaml`. Extract the current phase's `concepts` list.
+4. **Identify uncovered concepts in this phase.** Cross-reference `concepts` against the Concepts Mastery Checklist in PROGRESS.md (entries marked `- [ ]` or `- [x]`). Concepts NOT yet appearing in the checklist are the candidates.
+5. **Recommend the next concept.** Pick the first uncovered concept in the phase's list (the list order is teaching order). Show the user one candidate with brief reasoning:
+   ```
+   Next in your progression:
+     Concept: <concept name>
+     Phase:   <phase number>. <phase name>
+     Reason:  First uncovered concept in this phase. <covered_in_phase>/<total_in_phase> concepts done.
+   Generate a tutorial for this? [yes / pick different concept / advance to next phase / cancel]
+   ```
+6. **Handle user response.**
+   - `yes`: proceed to step 7
+   - `pick different concept`: list all uncovered concepts in current phase, let user choose
+   - `advance to next phase`: increment phase number; re-run from step 4 with the next phase. If the user is already in the last phase (phase 6 in built-in progressions), say: "You're in the last built-in phase. Use entry [c] (topic only) for advanced topics, or define a custom progression in `tutorial-config.yaml#progression_override`." Stop.
+   - `cancel`: stop without generating
+7. **Find a source file.** With concept chosen, scan the project for files demonstrating it. Use the same ranking heuristic as Entry [c] below ("pedagogical fit beats density"). Show 1-3 candidates; user picks one.
+8. **Generate the tutorial.** Follow the tutorial format in `## Entry [b] — Tutorial Format`. The chosen concept becomes the topic; the chosen file becomes the source.
+
+### Cold-start handling
+
+If `next_day == 1` AND PROGRESS.md doesn't exist yet AND no tutorials have been written:
+
+- The user has just completed first-run setup
+- Phase = 1; pick the first concept of phase 1 ("optionals" for Swift, "basic types" for TypeScript, etc.)
+- Note in the recommendation: "First lesson — picking the foundational concept for your language."
+
+### Honesty rule
+
+If no source file in the project demonstrates the recommended concept (scan returns zero candidates above the quality threshold defined in Entry [c]), say so explicitly:
+
+> No good example of `<concept>` in your codebase. Two options:
+>   1. Pick a different concept from this phase (I can list them)
+>   2. Use audience-facing path [c] (synthesized minimal example) if you want a contrived example
+
+Do not silently fall back to a synthesized example or pick a marginal file. The user's confidence in the recommendation is load-bearing.
 
 ## First-Run Setup
 
@@ -135,9 +193,9 @@ Create initial files:
 
 If `.claude/` doesn't exist, create it.
 
-## Entry [b] — Tutorial Format (legacy v1.1 path)
+## Entry [b] — Tutorial Format (topic + file)
 
-When invoked as entry [b] (topic + file), produce a tutorial with these sections in this order. This is the v1.1 format preserved verbatim.
+When invoked as entry [b] (topic + file), produce a tutorial with these sections in this order. **This is also the legacy v1.1 invocation path** — when the user invokes `/skill tutorial-creator <topic> <source>` with two positional arguments and an existing source file, route here directly without the gateway question. The format is preserved verbatim from v1.1 so existing users see no behavior change.
 
 ### Before Writing
 
@@ -190,6 +248,66 @@ When invoked as entry [b] (topic + file), produce a tutorial with these sections
 3. **Update VOCABULARY.md** — add new section `## Day N: [Topic]`; only genuinely new terms; update Cumulative Count.
 4. **Increment** `next_day` in config.
 5. **Gap analysis** — review the new tutorial; if it depends on uncovered concepts, propose half-step bridge tutorials (e.g., Day 7.5) with topic, what they bridge, and why. Ask whether to create now or defer.
+
+## Entry [c] — Topic only (skill finds the file)
+
+Use when the user has a topic in mind but doesn't have a specific source file. The skill scans the project, ranks candidate files by pedagogical fit, and proposes 1-3 candidates. The user picks one, asks for more, or switches to a synthesized example.
+
+### Procedure
+
+1. **Read config.** Same fields as Entry [a]; also need `project_dir`.
+2. **Scan the project for candidate files.** Walk `project_dir`:
+   - Respect `.gitignore`
+   - Skip these directories regardless of `.gitignore`: `node_modules`, `.git`, `build`, `dist`, `.build`, `DerivedData`, `target`, `__pycache__`, `.venv`, `venv`, `.next`, `.nuxt`, `coverage`, `.pytest_cache`
+   - Include only files matching the configured language: `*.swift` for Swift, `*.ts`/`*.tsx` for TypeScript, `*.py` for Python, `*.rs` for Rust
+   - Exclude test files (heuristic: filename matches `*Tests.swift`, `*.test.ts`, `*.test.tsx`, `*.spec.ts`, `*_test.py`, `tests/*` paths) — tests can be useful for some topics but rarely for first-encounter teaching; show them as fallback only if no non-test candidates exist
+3. **Find topic occurrences.** For each candidate file, search for the topic. Topic-matching heuristic by language:
+   - **Swift attributes** (e.g., `@MainActor`, `@Observable`): grep for the literal `@<name>`
+   - **Swift keywords** (e.g., `guard`, `defer`, `consume`): grep for the keyword as a whole word (`\bguard\b`)
+   - **API names** (e.g., `URLSession`, `useState`): grep for the identifier as a whole word
+   - **Concepts** (e.g., "actor isolation", "render props"): if no direct symbol matches, fall back to filename + comment search; lower confidence
+   - Record per-file: line numbers of matches, total match count, and tightest line range covering 2+ consecutive matches
+4. **Rank by pedagogical fit.** For each file with at least 1 match, compute a score:
+   - **File size** (fewer lines = better, log-scaled): `+ 1.0 / log(line_count + 10)`
+   - **Match concentration** (consecutive matches in tight range = better): `+ 0.5` if 2+ matches within 30 lines of each other; `- 0.3` if matches are scattered across more than 60% of the file
+   - **Match count** (some examples = better than zero, but more is not always better): `+ 0.3` for 2-5 matches, `+ 0.2` for 1 match, `- 0.2` for >10 matches (too noisy)
+   - **Comment ratio** (well-commented files teach better): `+ 0.2` if at least 10% of lines are comments
+   - **Penalty for large files**: `- 0.5` if line_count > 500, `- 1.0` if line_count > 1000
+5. **Show top 1-3 candidates with evidence.** Format:
+   ```
+   I scanned the project for "<topic>". Top candidates:
+
+   1. Sources/Models/AppSchema.swift  (123 lines, 5 matches at lines 42, 47, 89-91)
+      Reason: Compact file with concentrated examples; well-commented.
+   2. Sources/Managers/CloudSyncManager.swift  (340 lines, 7 matches throughout)
+      Reason: More examples but spread across the file; useful if you want to see usage variety.
+   3. Sources/Views/SettingsView.swift  (210 lines, 2 matches at lines 89, 94)
+      Reason: Smaller scope; the two examples are adjacent and tightly coupled.
+
+   [1-3] generate tutorial for that file
+   [more] show 3 more candidates
+   [synthesized] switch to a contrived minimal example (audience-facing path [c])
+   [cancel] stop
+   ```
+6. **Quality threshold for the no-good-example fallback.** If the top candidate's score is below `1.0` (heuristic floor) OR no file has 1+ match, do NOT silently pick the best-of-bad. Instead say:
+   ```
+   No good example of "<topic>" in your codebase. The closest match was
+   <file> with score <N> (threshold is 1.0). Two options:
+
+   [synthesized]  Switch to audience-facing path [c] (contrived minimal example)
+   [different]    Pick a different topic
+   [proceed]      Use <file> anyway (low pedagogical fit; expect a noisier tutorial)
+   [cancel]       Stop
+   ```
+7. **On selection (1-3 or proceed).** Hand off to Entry [b] with the chosen topic + file. The procedure from there is identical to Entry [b]'s.
+
+### Honesty rule
+
+The "Reason" line in step 5's output must reflect the actual ranking signals. Don't write generic reasons like "this is a great example"; say what the heuristic saw. If the file has 1 match, say "single example in scope"; if matches are scattered, say "spread across the file." This keeps the user's mental model of the ranker accurate, which matters when they're deciding whether to trust it.
+
+### Cap on candidate enumeration
+
+If 50+ files match the topic, do not enumerate all of them. Cap at top 3 + offer "more" (next 3). Still rank every match; just present incrementally. Ranking is fast (per-file score is one pass over each file's grep output); enumeration is the expensive part.
 
 ## Vocab surface
 
@@ -312,8 +430,9 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | Phase | Adds | Status |
 |---|---|---|
 | 1 | Externalized progressions, schemas, vocab example | ✅ shipped |
-| 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped (this) |
-| 3 | All six writing-to-learn entry points | ⏳ pending |
+| 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped |
+| 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped (this) |
+| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external (depends on Phase 4) | ⏳ pending |
 | 4 | Full vocab surface (add, list, review, gap radar) | ⏳ pending |
 | 5 | Status dashboard | ⏳ pending |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ⏳ pending |
