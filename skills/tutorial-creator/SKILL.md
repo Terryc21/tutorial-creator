@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase4
+version: 2.0.0-phase3def
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -94,23 +94,20 @@ Where does the tutorial start?
 
 ### Implementation status
 
-Three writing-to-learn entries are implemented:
+**All six writing-to-learn entries are implemented** (Phases 3abc + 3def):
 
 - **[a] daily progression** — see `## Entry [a] — Daily progression`
 - **[b] topic + file** — see `## Entry [b] — Tutorial Format (topic + file)` (this is also the legacy v1.1 path)
 - **[c] topic only** — see `## Entry [c] — Topic only (skill finds the file)`
-
-These three writing-to-learn entries are not yet implemented:
-
-- **[d] question-led** — Phase 3def
-- **[e] gap-driven** — Phase 3def (depends on Phase 4 vocab status)
-- **[f] external source** — Phase 3def
+- **[d] question-led** — see `## Entry [d] — Question-led`
+- **[e] gap-driven** — see `## Entry [e] — Gap-driven`
+- **[f] external source** — see `## Entry [f] — External source`
 
 The audience-facing path (Path 2) is not yet implemented. All five Path 2 entries return a "Phase 7" placeholder. The five entries [a]-[e] under audience-facing share letters with the writing-to-learn entries but are different procedures; do not conflate them.
 
-For unimplemented entries, return:
+For unimplemented Path 2 entries, return:
 
-> Entry `[<letter>]` (under <writing-to-learn|audience-facing>) is not yet implemented in `v2.0-phase3abc`. Coming in <phase>. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+> Entry `[<letter>]` (audience-facing) is not yet implemented in `v2.0-phase3def`. Coming in Phase 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
 
 ## Entry [a] — Daily progression
 
@@ -309,6 +306,171 @@ The "Reason" line in step 5's output must reflect the actual ranking signals. Do
 
 If 50+ files match the topic, do not enumerate all of them. Cap at top 3 + offer "more" (next 3). Still rank every match; just present incrementally. Ranking is fast (per-file score is one pass over each file's grep output); enumeration is the expensive part.
 
+## Entry [d] — Question-led
+
+Use when the user is stuck on something specific and the goal is "the lesson that resolves this question." This is the highest-value, highest-risk entry: most likely to delight when the question maps cleanly to a concept, most likely to disappoint when the question is ambiguous.
+
+The honest-machine voice is load-bearing here. When the skill is uncertain, it must surface the uncertainty rather than pick one interpretation and proceed.
+
+### Procedure
+
+1. **Read config + vocabulary.yaml.** Need `language`, `project_dir`, and the user's existing vocabulary state to assess whether the question has already been addressed in past tutorials.
+2. **Receive the question.** The user provides a free-form question, e.g.:
+   - "Why does my SwiftData fetch sometimes return zero results?"
+   - "How is `@MainActor` different from `@MainActor.assumeIsolated`?"
+   - "What's the difference between `consume` and `borrow`?"
+3. **Extract candidate concepts.** Identify 1-N concepts the question plausibly involves. Use:
+   - Direct identifier matches (e.g., `@MainActor`, `consume`) → high confidence
+   - Concept-noun phrases (e.g., "fetch", "ModelContext") → mid confidence
+   - Generic verbs ("returns", "differs") → ignore
+4. **Match against existing vocabulary.** For each candidate concept, check if it already exists in `vocabulary.yaml`. If a confused-status term matches, prefer it (the user is asking about something they're already tracking).
+5. **Confidence assessment.** One of three outcomes:
+   - **High confidence** — exactly one candidate concept clearly dominates (e.g., the question literally names one identifier). Proceed to step 6.
+   - **Medium confidence** — 2-3 candidate concepts could explain the question. Surface the ambiguity:
+     ```
+     I see two ways to interpret this question. Which fits?
+
+     [1] You're asking about <concept-A>: <one-sentence framing>
+     [2] You're asking about <concept-B>: <one-sentence framing>
+     [3] Something else — let me describe it differently
+     ```
+   - **Low confidence** — no clear concept extraction. Ask the user to refine:
+     ```
+     I'm not sure what concept this question is targeting. A few possibilities:
+       - <vague candidate>
+       - <vague candidate>
+
+     Can you say more about what's confusing you? Or rephrase the question
+     to name the specific feature/keyword/API you're stuck on.
+     ```
+     Do not pick one and proceed. The honest-machine answer is "I don't know yet."
+6. **Find a source file demonstrating the chosen concept.** Use Entry [c]'s ranking heuristic (pedagogical fit beats density). Show 1-3 candidates with evidence; user picks one.
+7. **Frame the lesson around the question.** The tutorial's "What You'll Learn" section should explicitly answer the user's question. The Core Pattern and Real Code sections build toward that answer. The Common Mistakes section includes the specific failure mode the user described, if it's a debugging question.
+8. **Generate via Entry [b]'s format** with the chosen concept as topic and the chosen file as source. Mark the session log with `entry: question-led` and include the original question in the session record (so undo/audit can reconstruct what the user actually asked).
+
+### Honesty rules (load-bearing for entry [d])
+
+- If the question is ambiguous, **always** surface the ambiguity. Never pick one interpretation silently.
+- If no source file demonstrates the concept well, **always** offer the synthesized-example fallback (audience-facing path [c]). Do not generate a tutorial against a marginal file just to satisfy the request.
+- If the question's actual answer is "you can't do this" or "this is the wrong question," say so directly. Do not generate a tutorial that papers over a fundamental misunderstanding.
+
+### Why entry [d] disappoints when it disappoints
+
+The skill is doing concept extraction and file matching with the runtime LLM as the only tool. Both are imperfect. The honesty rules above ensure that imperfect detection produces a *visible* disappointment ("I don't know what concept you mean — clarify?") instead of an *invisible* one (a generated tutorial that's subtly off-topic). Visible disappointment is recoverable; invisible disappointment is not.
+
+## Entry [e] — Gap-driven
+
+Use when the user wants to learn what they're worst at. Read directly from `vocab gap` view and generate a tutorial targeted at one of the user's confused terms.
+
+This entry is the closure of the writing-to-learn loop: terms get tested in `vocab review`, fall to `confused` after repeated partial/wrong results, surface in `vocab gap`, and become the source for new tutorials. Each tutorial that addresses a confused term increases the chance of a correct test result, which shifts the term out of `confused`.
+
+### Procedure
+
+1. **Run `vocab gap` internally.** Produce the same ranked list of confused terms (longest-confused first) that the standalone `vocab gap` command would produce.
+2. **Show the list with selection prompt.** Format identical to standalone `vocab gap` output:
+   ```
+   Confused terms (4):
+
+     1. actor isolation         confused 18 days   (last test: 2026-04-21, partial)
+     2. nonisolated(unsafe)     confused  9 days   (last test: 2026-04-30, wrong)
+     3. consume                 confused  7 days   (last test: 2026-05-02, partial)
+     4. SchemaMigrationPlan     confused  5 days   (last test: 2026-05-04, wrong)
+
+   Which would you like to address? [1-4 / cancel]
+   ```
+3. **On selection:** the chosen term becomes the topic. Hand off to Entry [c]'s file-finding logic (pedagogical fit ranking) to find a source file demonstrating it. Show 1-3 file candidates; user picks one.
+4. **Generate via Entry [b]'s format** with the term as topic and the chosen file as source. The tutorial's framing should acknowledge the gap directly:
+   - "What You'll Learn" section: "You've been getting `<term>` partially right — here's what we'll fix."
+   - Pre-Test should test the *specific aspect* the user has been getting wrong (look at the term's `test_history` for the most recent partial/wrong result; the question that produced it tells you what gap to target).
+5. **Mark the session log** with `entry: gap-driven` and `gap_term: <term>` (per SCHEMAS.md Schema 3).
+
+### Empty-state handling
+
+If `vocab gap` returns zero confused terms:
+```
+No confused vocabulary right now. Two paths:
+
+[review]   Run vocab review to test what you've learned (may surface new gaps)
+[topic]    Switch to entry [c] (topic only) — pick what you want to learn
+[cancel]   Stop
+```
+
+Do not silently fall back. The user invoked `gap` for a reason; if there's no gap, the honest answer is "you have no gap to address — pick a different way in."
+
+### Single-confused-term shortcut
+
+If exactly one term has `status: confused`, skip the selection step and go directly to "I see one confused term: `<term>`. Generate a tutorial for it? [y/n]". One less prompt for the common case.
+
+## Entry [f] — External source
+
+Use when the user has read external content (Apple doc, blog post, GitHub repo, RFC, video transcript) and wants to consolidate their understanding of it through writing-to-learn. The user's project becomes the *consumer* — the tutorial maps the external concepts onto the user's codebase — instead of the *source*.
+
+This entry is the writing-to-learn equivalent of "synthesizing notes after a meeting." The artifact is "what this external thing said + what it left out + what I'd want to verify in my own code."
+
+### Accepted source types
+
+- **URL** — Apple Developer doc, blog post (Medium, Substack, dev.to, personal blog), Stack Overflow answer, GitHub README/wiki/issue, RFC
+- **File path** — local Markdown file, downloaded HTML, PDF (skill notes that PDF parsing is best-effort)
+- **Pasted text** — user pastes the content directly when the source isn't fetchable
+
+### Procedure
+
+1. **Read config.** Need `language`, `project_dir` for the "how this applies to my codebase" mapping step.
+2. **Receive the source.** AskUserQuestion (or plain prompt):
+   ```
+   Where's the external source?
+   [1] URL
+   [2] File path
+   [3] I'll paste the content directly
+   [cancel]
+   ```
+3. **Fetch / read the content.** For URL: use the runtime's available web fetch tool (e.g., WebFetch). For file path: read directly. For pasted: prompt the user to paste, terminate on a sentinel like `END` on its own line.
+4. **Extract key concepts.** From the source content, identify 3-8 concepts that the source teaches or references. Group them:
+   - **Already in your vocabulary** — show terms that already exist in `vocabulary.yaml` (with current status). The tutorial reinforces these.
+   - **New to you** — concepts the source introduces that aren't in your vocabulary yet. The tutorial captures these as new vocab entries.
+5. **Show the extraction with confirmation:**
+   ```
+   This source covers:
+
+   Concepts you already know:
+     - @MainActor (status: mastered) — source touches it briefly
+     - actor isolation (status: confused) — source goes deep on this
+
+   Concepts new to your vocabulary:
+     - GlobalActor protocol — source defines it explicitly
+     - isolation domains — source uses this term but doesn't define it formally
+     - Sendable closures — source has 3 examples
+
+   Generate a writing-to-learn tutorial covering these? [y / pick subset / cancel]
+   ```
+6. **On `pick subset`:** user selects which concepts to include. Default to all.
+7. **Map concepts to the user's codebase.** For each concept, scan `project_dir` (Entry [c]'s heuristic) to find files that demonstrate the concept. Surface 0-1 example file per concept; the tutorial uses these as "here's where this shows up in your code." If no example exists locally, the tutorial says so explicitly ("the source mentions X but there's no example of X in your codebase yet — flagging as a gap").
+8. **Generate the tutorial.** Different shape from Entries [a]-[e] because the source is external:
+   - **Header:** `# Day N: <Source Title> — Notes & Synthesis` with link/path to source
+   - **What You'll Learn:** "Reading [source title] taught me X. After writing this, I should be able to Y."
+   - **Concepts from the source** (replaces "Vocabulary"): table of concepts with brief definitions paraphrased from the source (not verbatim — the user's paraphrase IS the writing-to-learn beat)
+   - **Pre-Test:** 3-5 questions testing what the user thinks they know *before* writing the synthesis
+   - **What the source says:** user's summary of the source's main argument (NOT a copy-paste of the source)
+   - **What the source leaves out:** load-bearing for honest-machine voice. What questions does the source not answer? What edge cases does it skip? What would you need to verify in your own code?
+   - **Where this shows up in my codebase:** for each concept that mapped to a file, annotated example. For concepts that didn't map, "no example here yet — flag as gap."
+   - **What I'd ask to verify:** 3-5 specific things the user would experiment with or test to confirm they understood correctly
+   - **Post-Test:** harder questions that require applying the concept beyond what the source explicitly said
+   - **Answer Key:** explanations for both tests
+   - **New Concepts Introduced:** standard table; concepts from the source feed `vocab add` automatically (skill confirms before writing each one)
+9. **After writing:**
+   - Save to `{tutorials_dir}/DayN-External-<SourceShort>-Annotated.md`
+   - Update PROGRESS.md (Score Log row + concepts added)
+   - For each new concept, write a vocab entry (context: `external source`, source_file: empty, related_terms: extracted from the source if mentioned)
+   - Mark session log with `entry: external-source` and the source URL/path
+
+### Honesty rule (cross-cutting)
+
+The "What the source leaves out" section is non-negotiable. If the user can't think of anything the source left out, the skill prompts: "Every source leaves something out. What's an edge case the source didn't address? What audience is this NOT written for? What does it assume you already know?" The act of identifying gaps is the writing-to-learn beat; without it, the artifact is a passive recap, not a synthesis.
+
+### Pasted-content size limit
+
+If the user pastes content longer than ~50,000 characters, suggest they save it to a local file first and pass the file path instead. Long inline pastes consume the context window and reduce the skill's ability to reason about the user's codebase.
+
 ## Vocab surface
 
 Routes to `VOCAB.md`. **Phase 4 — fully implemented.** Subcommands:
@@ -433,8 +595,8 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 1 | Externalized progressions, schemas, vocab example | ✅ shipped |
 | 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped |
 | 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped |
-| 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped (this) |
-| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ⏳ pending |
+| 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped |
+| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped (this) |
 | 5 | Status dashboard | ⏳ pending |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ⏳ pending |
 | 7 | Audience-facing path with 6 venue templates | ⏳ pending |
