@@ -1,0 +1,67 @@
+# Python / Django learning progression
+# Used by tutorial-creator entry [a] (daily progression) to recommend the next
+# concept based on the user's current phase.
+
+language: python
+framework: django
+
+phases:
+  - number: 1
+    name: Utilities
+    concepts:
+      - type hints
+      - decorators
+      - generators
+      - context managers (with statement)
+      - dataclasses
+      - f-strings and formatting
+
+  - number: 2
+    name: Models
+    concepts:
+      - Django ORM basics
+      - migrations
+      - relationships (ForeignKey, ManyToMany, OneToOne)
+      - custom managers
+      - querysets and lazy evaluation
+      - select_related and prefetch_related
+
+  - number: 3
+    name: Views
+    concepts:
+      - function-based views
+      - class-based views
+      - generic views (ListView, DetailView, etc.)
+      - mixins
+      - permissions and authentication
+      - URL routing
+
+  - number: 4
+    name: Serializers
+    concepts:
+      - DRF serializers
+      - validation (field-level, object-level)
+      - nested serialization
+      - custom create and update methods
+      - SerializerMethodField
+      - hyperlinked vs primary-key relations
+
+  - number: 5
+    name: Middleware
+    concepts:
+      - request/response processing
+      - authentication middleware
+      - CORS configuration
+      - custom middleware patterns
+      - signals (pre_save, post_save)
+      - caching strategies
+
+  - number: 6
+    name: Testing
+    concepts:
+      - pytest basics
+      - fixtures
+      - factories (factory_boy)
+      - mocking (unittest.mock, pytest-mock)
+      - Django test client
+      - integration tests with database

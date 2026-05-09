@@ -1,0 +1,67 @@
+# Rust learning progression
+# Used by tutorial-creator entry [a] (daily progression) to recommend the next
+# concept based on the user's current phase.
+
+language: rust
+
+phases:
+  - number: 1
+    name: Ownership
+    concepts:
+      - ownership rules
+      - borrowing (& and &mut)
+      - lifetimes (basic syntax)
+      - moves vs copies
+      - clone and Copy trait
+      - String vs &str
+
+  - number: 2
+    name: Traits
+    concepts:
+      - trait definitions
+      - trait implementations
+      - trait objects (dyn Trait)
+      - trait bounds (T: Trait)
+      - associated types
+      - default methods
+      - derive macros (Debug, Clone, etc.)
+
+  - number: 3
+    name: Error Handling
+    concepts:
+      - Result type
+      - Option type
+      - "? operator"
+      - custom error types
+      - thiserror and anyhow
+      - panic vs return error
+
+  - number: 4
+    name: Async
+    concepts:
+      - async/await syntax
+      - Future trait
+      - tokio runtime basics
+      - streams
+      - channels (mpsc, oneshot, broadcast)
+      - select! and join!
+
+  - number: 5
+    name: Unsafe
+    concepts:
+      - when unsafe is needed
+      - raw pointers
+      - FFI (extern C)
+      - transmute (and why to avoid it)
+      - unsafe trait implementations
+      - safety invariants
+
+  - number: 6
+    name: Architecture
+    concepts:
+      - modules (mod, pub, use)
+      - crates (lib vs bin)
+      - workspaces
+      - feature flags (Cargo features)
+      - re-exports
+      - public API design
