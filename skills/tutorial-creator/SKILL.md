@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase3def
+version: 2.0.0-phase5
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -14,7 +14,7 @@ Three surfaces, gateway-mediated:
 - **`vocab`** — manage vocabulary independent of lesson generation
 - **`status`** — inspect your learning state (read-only dashboard)
 
-> **v2.0 in development.** Phase 2 of 8 ships the router + gateway question + surface stubs. Phases 3+ ship the actual generation, vocab management, status, recovery, and audience-facing paths. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+> **v2.0 in development.** Phases 1-5 shipped (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard). Phases 6 (recovery), 7 (audience-facing path with 6 venue templates), and 8 (polish + README + v2.0.0 release) remain. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
 >
 > The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) routes to entry [b] (topic + file) and produces v1.1-shaped output until later phases land.
 
@@ -107,7 +107,7 @@ The audience-facing path (Path 2) is not yet implemented. All five Path 2 entrie
 
 For unimplemented Path 2 entries, return:
 
-> Entry `[<letter>]` (audience-facing) is not yet implemented in `v2.0-phase3def`. Coming in Phase 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+> Entry `[<letter>]` (audience-facing) is not yet implemented in `v2.0-phase5`. Coming in Phase 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
 
 ## Entry [a] — Daily progression
 
@@ -491,15 +491,30 @@ See `VOCAB.md` for the full procedure spec, state machine, and grading rules.
 
 ## Status surface
 
-Routes to `STATUS.md`. Phase 5 implements aggregate dashboard; Phase 2 ships stub.
+Routes to `STATUS.md`. **Phase 5 — fully implemented.** Read-only dashboard. Invocation forms:
 
-See `STATUS.md` for the loaded surface.
+```
+/skill tutorial-creator status                  # direct invocation
+/skill tutorial-creator                         # gateway question, then [4]
+/skill tutorial-creator --mode status           # skip gateway, route directly
+```
+
+The dashboard aggregates `tutorial-config.yaml`, `vocabulary.yaml`, the last 10 session logs, generated `Day*.md` files, and the active progression. It shows:
+
+- **Daily practice:** tutorials shipped, last lesson, streak, suggested-next-lesson short form
+- **Vocabulary:** status counts (mastered / reviewing / confused / new), due-for-review count, recent additions
+- **Gap radar:** top 3-5 confused terms sorted by staleness
+- **Suggested next lesson:** one recommendation with candidate file, reason, and one-line action
+
+Cold-start projects (no vocabulary, no tutorials) get a friendly empty-state message instead of an empty scaffold. The surface writes nothing and mutates nothing; it is safe to invoke as often as wanted.
+
+See `STATUS.md` for the procedure spec, aggregate logic, and suggested-next-lesson tiebreak.
 
 ## Undo
 
 Routes to recovery logic. Phase 6 implements; Phase 2 returns stub:
 
-> `undo` is not yet implemented in v2.0-phase2. Coming in Phase 6.
+> `undo` is not yet implemented in v2.0-phase5. Coming in Phase 6.
 
 ## Writing Style
 
@@ -596,8 +611,8 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped |
 | 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped |
 | 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped |
-| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped (this) |
-| 5 | Status dashboard | ⏳ pending |
+| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
+| 5 | Status dashboard | ✅ shipped (this) |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ⏳ pending |
 | 7 | Audience-facing path with 6 venue templates | ⏳ pending |
 | 8 | Polish, README rewrite, v2.0.0 release | ⏳ pending |
