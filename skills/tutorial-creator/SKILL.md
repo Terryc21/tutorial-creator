@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase5
+version: 2.0.0-phase6
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -14,7 +14,7 @@ Three surfaces, gateway-mediated:
 - **`vocab`** — manage vocabulary independent of lesson generation
 - **`status`** — inspect your learning state (read-only dashboard)
 
-> **v2.0 in development.** Phases 1-5 shipped (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard). Phases 6 (recovery), 7 (audience-facing path with 6 venue templates), and 8 (polish + README + v2.0.0 release) remain. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
+> **v2.0 in development.** Phases 1-6 shipped (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery). Phases 7 (audience-facing path with 6 venue templates) and 8 (polish + README + v2.0.0 release) remain. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
 >
 > The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) routes to entry [b] (topic + file) and produces v1.1-shaped output until later phases land.
 
@@ -26,7 +26,9 @@ Three surfaces, gateway-mediated:
 /skill tutorial-creator tutorial <args>         # tutorial surface
 /skill tutorial-creator vocab <subcommand>      # vocab surface
 /skill tutorial-creator status                  # status surface
-/skill tutorial-creator undo                    # revert last generation (Phase 6)
+/skill tutorial-creator undo                    # revert last generation
+/skill tutorial-creator undo --session <id>     # revert a specific session (rare)
+/skill tutorial-creator renumber <old> <new>    # rename Day-N + rewrite cross-references
 /skill tutorial-creator --mode learn|audience|both|vocab|status [args]
                                                  # skip gateway, route directly
 ```
@@ -36,8 +38,15 @@ Three surfaces, gateway-mediated:
 Every invocation runs through this dispatch:
 
 1. **Read `--mode` flag if present.** If set, echo it back to the user as a one-line confirmation, then jump directly to that surface or path. Skip the gateway question. Mode values: `learn`, `audience`, `both`, `vocab`, `status`.
-2. **Else, parse positional arguments.** If the user invoked with two positional args matching `<topic> <source>` AND the source is an existing file in the project, treat as **entry [b] legacy path** — produce a v1.1-shaped tutorial. This preserves the v1.1 invocation contract for users who haven't seen the v2 changes.
-3. **Else, ask the gateway question.** Present the four-option menu (below). Route based on answer.
+2. **Else, recognize first-positional subcommand keywords.** If the first positional arg is one of:
+   - `tutorial` → tutorial surface (Path 1 unless `--mode audience` follows)
+   - `vocab` → vocab surface; the second positional is the subcommand (`add`, `list`, `show`, `edit`, `merge`, `review`, `gap`, `regen-md`, `undo`)
+   - `status` → status surface (`STATUS.md`)
+   - `undo` → recovery `undo` route (see `## Recovery` § `undo` command). May be followed by `--session <id>`
+   - `renumber` → recovery `renumber` route (see `## Recovery` § `renumber`). Requires two more positional args: `<old> <new>` (e.g., `renumber 8 7.5`)
+   Route directly. Skip the gateway question.
+3. **Else, parse two-positional legacy form.** If the user invoked with two positional args matching `<topic> <source>` AND the source is an existing file in the project, treat as **entry [b] legacy path** — produce a v1.1-shaped tutorial. This preserves the v1.1 invocation contract for users who haven't seen the v2 changes.
+4. **Else, ask the gateway question.** Present the four-option menu (below). Route based on answer.
 
 ### Gateway question
 
@@ -107,7 +116,7 @@ The audience-facing path (Path 2) is not yet implemented. All five Path 2 entrie
 
 For unimplemented Path 2 entries, return:
 
-> Entry `[<letter>]` (audience-facing) is not yet implemented in `v2.0-phase5`. Coming in Phase 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+> Entry `[<letter>]` (audience-facing) is not yet implemented in `v2.0-phase6`. Coming in Phase 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
 
 ## Entry [a] — Daily progression
 
@@ -238,13 +247,18 @@ When invoked as entry [b] (topic + file), produce a tutorial with these sections
     ```
     Aim for 6-12 rows. Every concept here MUST also appear in the Vocabulary table at the top.
 
+### Before Writing (pre-write hook)
+
+Run `## Recovery` § "Always-on: pre-write hook" first. Skip if `recovery_enabled: false` in config; otherwise the hook stages the session id, snapshots PROGRESS.md / VOCABULARY.md / vocabulary.yaml / tutorial-config.yaml, and stages the session yaml. The generation procedure below assumes that hook ran.
+
 ### After Writing
 
 1. **Save** to `{tutorials_dir}/DayN-[Topic]-Annotated.md`
 2. **Update PROGRESS.md** — add Score Log row (day, date, file, test counts) and Concepts Mastery Checklist entries (`- [ ] [Concept name] (Day N)`).
 3. **Update VOCABULARY.md** — add new section `## Day N: [Topic]`; only genuinely new terms; update Cumulative Count.
 4. **Increment** `next_day` in config.
-5. **Gap analysis** — review the new tutorial; if it depends on uncovered concepts, propose half-step bridge tutorials (e.g., Day 7.5) with topic, what they bridge, and why. Ask whether to create now or defer.
+5. **Run the post-write hook** (`## Recovery` § "Always-on: post-write hook") — populates and writes the session yaml, prunes old sessions per retention. Skipped if `recovery_enabled: false`.
+6. **Gap analysis** — review the new tutorial; if it depends on uncovered concepts, propose half-step bridge tutorials (e.g., Day 7.5) with topic, what they bridge, and why. Ask whether to create now or defer.
 
 ## Entry [c] — Topic only (skill finds the file)
 
@@ -457,11 +471,12 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
    - **Post-Test:** harder questions that require applying the concept beyond what the source explicitly said
    - **Answer Key:** explanations for both tests
    - **New Concepts Introduced:** standard table; concepts from the source feed `vocab add` automatically (skill confirms before writing each one)
-9. **After writing:**
-   - Save to `{tutorials_dir}/DayN-External-<SourceShort>-Annotated.md`
-   - Update PROGRESS.md (Score Log row + concepts added)
-   - For each new concept, write a vocab entry (context: `external source`, source_file: empty, related_terms: extracted from the source if mentioned)
-   - Mark session log with `entry: external-source` and the source URL/path
+9. **Before writing:** run `## Recovery` § "Always-on: pre-write hook" (snapshots + staged session yaml), unless `recovery_enabled: false`.
+10. **After writing:**
+    - Save to `{tutorials_dir}/DayN-External-<SourceShort>-Annotated.md`
+    - Update PROGRESS.md (Score Log row + concepts added)
+    - For each new concept, write a vocab entry (context: `external source`, source_file: empty, related_terms: extracted from the source if mentioned). These adds are tutorial-time; they go into the session's `vocab_added` list, not into the standalone sentinel system.
+    - Run `## Recovery` § "Always-on: post-write hook" — populates the session yaml with `entry: external-source`, the source URL/path in a free-form note, the populated `vocab_added` list, and `output`.
 
 ### Honesty rule (cross-cutting)
 
@@ -510,11 +525,130 @@ Cold-start projects (no vocabulary, no tutorials) get a friendly empty-state mes
 
 See `STATUS.md` for the procedure spec, aggregate logic, and suggested-next-lesson tiebreak.
 
-## Undo
+## Recovery
 
-Routes to recovery logic. Phase 6 implements; Phase 2 returns stub:
+**Phase 6 — fully implemented.** Every tutorial generation is reversible. Vocab additions made standalone are reversible within 24h. Day-N renumbering rewrites every reference atomically. The recovery system has three commands and one always-on hook.
 
-> `undo` is not yet implemented in v2.0-phase5. Coming in Phase 6.
+### Always-on: pre-write hook + session log
+
+Before any tutorial generation writes a file, the skill runs the **pre-write hook**:
+
+1. **Check `recovery_enabled`** in `tutorial-config.yaml` (default `true`). If false, skip the rest of this hook entirely. The user opted out of the filesystem footprint and has no undo available; proceed directly to generation.
+2. **Compute session id.** ISO-8601 timestamp with `:` replaced by `-` (filesystem-safe), e.g. `2026-05-09T14-32-00`.
+3. **Create the session directory.** `.claude/tutorial-sessions/<session_id>/` (relative to project root).
+4. **Snapshot the four files that will be modified.** For each of these, copy the *current* contents into the session directory before any modification:
+   - `{tutorials_dir}/PROGRESS.md` → `.claude/tutorial-sessions/<session_id>/PROGRESS.md`
+   - `{tutorials_dir}/VOCABULARY.md` → `.claude/tutorial-sessions/<session_id>/VOCABULARY.md`
+   - `{tutorials_dir}/vocabulary.yaml` → `.claude/tutorial-sessions/<session_id>/vocabulary.yaml`
+   - `.claude/tutorial-config.yaml` → `.claude/tutorial-sessions/<session_id>/tutorial-config.yaml`
+
+   If a source file does not exist yet (e.g., first-run cold-start has no PROGRESS.md), record its absence in the snapshot manifest below as `path: ..., absent: true` and skip the copy. On undo, an absent snapshot means "the file did not exist; deleting it on revert is the correct action."
+5. **Stage the session yaml.** Build the session record per `SCHEMAS.md` Schema 3 (mode, entry, gap_term, file, day_number, output, vocab_added empty list for now, snapshots manifest, four S49-reserved fields all `null`). Do NOT write the yaml to disk yet — `vocab_added` and `output` are populated by post-write hook.
+
+### Always-on: post-write hook
+
+After tutorial generation writes successfully:
+
+1. **Populate session record.** Set `output` to the generated tutorial's relative path. Set `vocab_added` to the list of terms added during this generation (deduped). Set `progress_updated` to whether PROGRESS.md was modified (always true for entries [a-e]; may be false for some Path 2 audience-facing modes).
+2. **Write the session yaml** to `.claude/tutorial-sessions/<session_id>.yaml`.
+3. **Prune old sessions** (retention rule below).
+
+If generation **fails** mid-write (e.g., the tool errors after some files have been modified but before all are):
+
+1. Do NOT write the session yaml. The session directory contains pre-write snapshots; without the yaml, the directory is orphaned but harmless and will be pruned by retention.
+2. Tell the user: `Generation failed mid-write. Pre-write snapshots are at .claude/tutorial-sessions/<session_id>/. Run "/skill tutorial-creator undo --session <session_id>" to manually revert.`
+
+### Retention
+
+Last 10 sessions retained on disk. At the start of every post-write hook (after the new yaml is written), enumerate session yamls sorted by `session_id` descending, keep the first 10, and silently delete:
+
+- The session yaml `.claude/tutorial-sessions/<old_id>.yaml`
+- The corresponding snapshot directory `.claude/tutorial-sessions/<old_id>/` (if it exists)
+
+Pruning is silent. Retention applies to session yamls; standalone vocab-add sentinels (per `VOCAB.md`) prune separately on their own 24h schedule.
+
+### `undo` command
+
+Reverts the most recent tutorial generation. Invoked as:
+
+```
+/skill tutorial-creator undo                    # most recent session
+/skill tutorial-creator undo --session <id>     # specific session (rare; for orphaned mid-write recovery)
+```
+
+#### Procedure
+
+1. **Find the session.** Without `--session`, pick the session yaml with the lexicographically-largest `session_id`. With `--session`, find that specific yaml. If no session exists or the requested one is missing, say: `No session to undo.` and stop.
+
+2. **Show what will revert.** Read the session yaml. Display:
+   ```
+   Undo session <session_id>?
+     Mode:           <writing-to-learn | audience-facing>
+     Entry:          <entry name>
+     Generated:      <output path>
+     Vocab added:    <count> terms (<list, capped at 5 with ellipsis>)
+     Files affected: <count> files
+   Type "yes" to revert, anything else to cancel.
+   ```
+
+3. **Defensive: snapshot the current state.** Before any restore, copy each currently-on-disk file in the session's `snapshots` manifest into a *new* sub-directory `.claude/tutorial-sessions/<session_id>/.pre-undo/`. This is the safety net: if the restore goes wrong halfway, the user has the pre-undo state too.
+
+4. **Restore each snapshot.** For each entry in the manifest:
+   - If `absent: true`, delete the on-disk file (it shouldn't exist post-revert).
+   - Otherwise, copy `saved_to` over `path`.
+   - On any I/O error: stop. Do NOT continue restoring other files. Tell the user: `Restore failed at <path>. Pre-undo snapshots are at .claude/tutorial-sessions/<session_id>/.pre-undo/. Inspect both directories before retrying.` Leave both `<session_id>/` and `<session_id>/.pre-undo/` in place untouched.
+
+5. **Delete the generated tutorial file.** Whatever path is in the session's `output` field. If it's missing (user already deleted it manually), warn but continue: `Tutorial output already missing; skipping.`
+
+6. **Clean up the session.** On full success, delete:
+   - `.claude/tutorial-sessions/<session_id>.yaml`
+   - `.claude/tutorial-sessions/<session_id>/` (the snapshot directory)
+   - `.claude/tutorial-sessions/<session_id>/.pre-undo/` (the safety-net directory)
+
+7. **Confirm to user.** `Reverted session <session_id>. Removed <output>; restored <count> files.`
+
+#### Refusal cases
+
+The skill refuses to undo (rather than guessing) when:
+- The session yaml is missing or malformed (cannot parse). `Session yaml is unreadable; refusing to guess. Inspect .claude/tutorial-sessions/<id>.yaml manually.`
+- Any `saved_to` path in the manifest does not exist on disk. `Snapshot file <path> is missing; refusing partial restore.`
+- A file in the manifest has been modified since the session ran (compare the on-disk content against what the session yaml expects to find — for v2.0 the simple check is "does the file currently exist where the manifest says it should": if `absent: true` says "did not exist" but the file now exists with different content, warn before restoring).
+
+The session log is the single source of truth for what to revert. If it's missing or malformed, refuse rather than guess.
+
+### `renumber <old> <new>` command
+
+Renames a Day-N tutorial file and rewrites every cross-reference. Supports whole-number days (`Day 8`) and half-step days (`Day 7.5`).
+
+```
+/skill tutorial-creator renumber 8 7.5
+/skill tutorial-creator renumber 7.5 8
+```
+
+#### Procedure
+
+1. **Find the source file.** Search `{tutorials_dir}` for any `Day<old>-*.md`. If zero matches, say `No file matches Day<old>-*.md` and stop. If multiple matches (shouldn't happen, but defend), show all and refuse.
+2. **Compute the destination.** Replace `Day<old>` with `Day<new>` in the filename, preserving the rest of the path. If the destination already exists, refuse: `Day<new>-*.md already exists. Use 'undo' to revert that file first, or pick a different number.`
+3. **Find all references.** Scan these files for the literal strings `Day<old>` and `Day <old>` (with and without space):
+   - The source tutorial file itself (occasional self-reference)
+   - `{tutorials_dir}/PROGRESS.md`
+   - `{tutorials_dir}/VOCABULARY.md`
+   - All other `{tutorials_dir}/Day*.md` files
+4. **Show the diff.** Render a diff per file: `<file>: N references will change Day<old> → Day<new>`. List each line that will change with line numbers. Total summary at top: `Will rename 1 file and update N references across M files.`
+5. **Confirm.** `Type "yes" to apply, anything else to cancel.`
+6. **Apply atomically.** Either all changes apply or none:
+   - First, write modified contents to all reference-holding files
+   - Then, rename the source file (the rename is the last step)
+   - On any I/O error mid-way, attempt to restore modified files to their pre-rename contents from in-memory copies you held; if that also fails, tell the user exactly which files are in inconsistent state and which paths to inspect
+7. **Confirm to user.** `Renamed Day<old> → Day<new>; updated N references across M files.`
+
+`renumber` does NOT write a session log entry — it's a structural rename, not a generation. To revert, run `renumber <new> <old>`.
+
+### `vocab undo` integration
+
+Standalone `vocab add` (outside tutorial generation) writes a 24h sentinel marker per `VOCAB.md`. `vocab undo` reverts these within 24h. See `VOCAB.md` § `vocab undo`.
+
+Vocab additions that happen *during* tutorial generation are recorded in the session yaml's `vocab_added` field. When `undo` reverts a session, those terms are removed by the snapshot restore (vocabulary.yaml is restored to its pre-generation state). No double-bookkeeping: tutorial-time adds do NOT also write sentinels.
 
 ## Writing Style
 
@@ -612,7 +746,7 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped |
 | 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped |
 | 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
-| 5 | Status dashboard | ✅ shipped (this) |
-| 6 | Recovery (undo, renumber, 24h soft-stage) | ⏳ pending |
+| 5 | Status dashboard | ✅ shipped |
+| 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped (this) |
 | 7 | Audience-facing path with 6 venue templates | ⏳ pending |
 | 8 | Polish, README rewrite, v2.0.0 release | ⏳ pending |

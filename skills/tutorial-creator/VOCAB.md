@@ -90,7 +90,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
        related_terms: [<list>]
        notes: ""
      ```
-   - Write a 24h soft-stage marker file: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` containing the term name. Used by `vocab undo` (within 24h).
+   - Write a 24h soft-stage marker file: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` containing the term name. Used by `vocab undo` (within 24h). The sentinel is the disambiguator that distinguishes standalone adds from tutorial-time adds; the latter are already captured by the session-log snapshot system in `SKILL.md` § Recovery and do NOT write a sentinel.
    - Regenerate VOCABULARY.md.
    - Print confirmation: `Added "<term>" (status: new). Undo within 24h via: /skill tutorial-creator vocab undo`
 5. **On `edit`:** drop into editable interactive editor for the four AI-drafted fields, then return to step 4.
@@ -417,17 +417,21 @@ If VOCABULARY.md doesn't exist (during `--import`): refuse with `No VOCABULARY.m
 
 ## `vocab undo`
 
-24-hour soft-stage reversal of the last `vocab add`. Phase 6 wires this into the broader undo system; Phase 4 ships the local-only version.
+24-hour soft-stage reversal of the last *standalone* `vocab add` (a `vocab add <term>` invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`/skill tutorial-creator undo`); see `SKILL.md` § Recovery for that path.
 
 ### Procedure
 
 1. List soft-stage markers: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` files.
 2. Filter to those within 24 hours of now.
-3. **No markers in window:** `No vocab add to undo within the last 24 hours.`
+3. **No markers in window:** `No vocab add to undo within the last 24 hours. (For tutorial-time adds, use /skill tutorial-creator undo instead.)`
 4. **One marker:** show details (term name, when added) and prompt confirm. On yes, remove the term from vocabulary.yaml + delete the marker; regenerate VOCABULARY.md.
 5. **Multiple markers:** show a numbered list, user picks which to undo (or `cancel`).
 
 Markers older than 24h are silently pruned at the start of any vocab subcommand.
+
+### Why two undo paths
+
+Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROGRESS.md + VOCABULARY.md + tutorial-config.yaml are taken before the generation runs, and `/skill tutorial-creator undo` restores them. Standalone vocab adds don't get a snapshot (they're a single-line yaml change with no ripple effect), so the 24h sentinel is the simpler approach. Both surfaces are user-facing; the skill chooses which one applies based on whether a session yaml exists for the change.
 
 ---
 
@@ -550,7 +554,7 @@ For other languages, the import heuristic falls back to `concept` for everything
 
 This file is the spec; the runtime LLM follows the procedures above when the user invokes a `vocab <subcommand>`. There is no separate vocab "executable" — the skill's behavior is the LLM faithfully executing this spec against the user's vocabulary.yaml.
 
-Phase 4's job is the spec. Phase 6 wires `vocab undo` into the broader session-log undo system; until then, vocab add's 24h soft-stage is the only undo mechanism.
+Phase 4's job is the spec for the vocab surface itself. Phase 6 added the broader session-log recovery system in `SKILL.md` § Recovery; tutorial-time vocab adds are reverted via that path. Standalone vocab adds (this file) keep the 24h sentinel approach.
 
 ### Honesty rule (cross-cutting)
 
