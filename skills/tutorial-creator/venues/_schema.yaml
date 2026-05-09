@@ -1,0 +1,100 @@
+# tutorial-creator venues schema
+#
+# Source of truth for venue metadata and length-budget resolution.
+# Voice notes and exemplars live in venues/<name>.md (one per venue).
+# This file holds only what the routing layer needs to look up at runtime.
+#
+# Schema lifted from venues/reddit.md front-matter on 2026-05-09 per
+# Phase 7 decision P7-B (schema discovered from a real template, not
+# imagined). New fields go here AND in the matching venue file's
+# front-matter.
+
+schema_version: 1
+
+venues:
+  reddit:
+    voice: punchy
+    sectioning: minimal
+    code_blocks: inline-heavy
+    front_matter:
+      title_only: true
+    length_budget:
+      S: { words: 200,  ceiling: 350 }
+      M: { words: 600,  ceiling: 900 }
+      L: { words: 1500, ceiling: 2200 }
+      X: { words: 3000, ceiling: 4500 }
+    honest_machine_section_name: Edit
+
+  book-chapter:
+    voice: narrative
+    sectioning: nested-headers
+    code_blocks: fenced-with-context
+    front_matter:
+      chapter_number: optional
+      title: required
+      epigraph: optional
+    length_budget:
+      S: { words: 1500, ceiling: 2000 }
+      M: { words: 4000, ceiling: 5500 }
+      L: { words: 8000, ceiling: 11000 }
+      X: { words: 15000, ceiling: 20000 }
+    honest_machine_section_name: "Limits and open questions"
+
+  apple-developer-article:
+    voice: declarative-reference
+    sectioning: docc-flat
+    code_blocks: fenced-frequent
+    front_matter:
+      title: required
+      summary: required
+      symbol_links: optional
+    length_budget:
+      S: { words: 400,  ceiling: 600 }
+      M: { words: 1000, ceiling: 1500 }
+      L: { words: 2500, ceiling: 3500 }
+      X: { words: 5000, ceiling: 7000 }
+    honest_machine_section_name: "See Also and open questions"
+
+  medium:
+    voice: magazine-essay
+    sectioning: light-headers
+    code_blocks: fenced-sparingly
+    front_matter:
+      title: required
+      subtitle: optional
+      lede: required
+    length_budget:
+      S: { words: 600,  ceiling: 900 }
+      M: { words: 1500, ceiling: 2200 }
+      L: { words: 3000, ceiling: 4500 }
+      X: { words: 6000, ceiling: 8500 }
+    honest_machine_section_name: "What this leaves out"
+
+  blog:
+    voice: conversational-personal
+    sectioning: optional-headers
+    code_blocks: fenced-as-needed
+    front_matter:
+      title: required
+      date: required
+      tags: optional
+    length_budget:
+      S: { words: 400,  ceiling: 700 }
+      M: { words: 1000, ceiling: 1500 }
+      L: { words: 2200, ceiling: 3200 }
+      X: { words: 4500, ceiling: 6500 }
+    honest_machine_section_name: "Caveats"
+
+  repo-doc:
+    voice: terse-instructional
+    sectioning: structured-headers
+    code_blocks: fenced-minimal-prose
+    front_matter:
+      title: required
+      tldr: required
+    length_budget:
+      S: { words: 200,  ceiling: 350 }
+      M: { words: 500,  ceiling: 800 }
+      L: { words: 1200, ceiling: 1800 }
+      X: { words: 2500, ceiling: 3500 }
+    honest_machine_section_name: "Out of scope"

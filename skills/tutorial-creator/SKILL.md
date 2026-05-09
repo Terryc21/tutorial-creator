@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase6
+version: 2.0.0-phase7
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -14,9 +14,9 @@ Three surfaces, gateway-mediated:
 - **`vocab`** — manage vocabulary independent of lesson generation
 - **`status`** — inspect your learning state (read-only dashboard)
 
-> **v2.0 in development.** Phases 1-6 shipped (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery). Phases 7 (audience-facing path with 6 venue templates) and 8 (polish + README + v2.0.0 release) remain. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
+> **v2.0 in development.** Phases 1-7 shipped (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery, audience-facing path with 6 venue templates). Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) remains. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
 >
-> The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) routes to entry [b] (topic + file) and produces v1.1-shaped output until later phases land.
+> The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) routes to entry [b] (topic + file) and produces v1.1-shaped output until v2.0 ships.
 
 ## Usage
 
@@ -62,17 +62,26 @@ What do you want to do?
 ```
 
 - **Answer [1]** → tutorial surface, Path 1 (writing-to-learn). Ask the entry-point question (six options; see `## Tutorial surface — entry points`).
-- **Answer [2]** → tutorial surface, Path 2 (audience-facing). Ask the entry-point question (five options; Phase 7 stub).
+- **Answer [2]** → tutorial surface, Path 2 (audience-facing). Load `AUDIENCE.md` and run the Path 2 routing flow (entry-point question, audience question, honest-machine opt-in, length budget, venue selection, then handoff to the chosen `venues/<name>.md`).
 - **Answer [3]** → vocab surface (load `VOCAB.md`).
 - **Answer [4]** → status surface (load `STATUS.md`).
 
 ### Mode-mismatch detection
 
-If the user picked Path 2 (audience-facing) but their topic phrasing reads "I want to understand X" or "I'm confused about Y," soft-nudge once:
+If the user picked Path 2 (audience-facing) AND their topic phrasing matches one of these patterns, soft-nudge once:
+
+- starts with `I want to understand`
+- starts with `I'm confused about`
+- starts with `why does my`
+- starts with `what is`
+
+Nudge text:
 
 > This phrasing reads like writing-to-learn. Confirm audience-facing, or switch to writing-to-learn?
 
-One nudge per session. Not blocking. The user always has final say. (Implemented in Phase 7.)
+**Single-fire per session.** A session-scoped flag (`mode_mismatch_nudge_fired: true`) flips after the first surface. Subsequent matching topics in the same session do NOT re-nudge. The user has demonstrated awareness.
+
+Not blocking. The user always has final say. The nudge is purely advisory; either answer proceeds without delay.
 
 ## Tutorial surface — entry points
 
@@ -101,6 +110,15 @@ Where does the tutorial start?
 [e] Documentation-grounded   — Apple Developer docs, RFCs, etc.
 ```
 
+After the entry letter is picked, the Path 2 flow runs four more AskUserQuestion prompts in this order, then hands off to a venue template:
+
+1. **Audience question.** Options: `beginner` / `intermediate` / `senior` / `mixed`. Drives in-voice content shifts (definitions vs. tradeoffs).
+2. **Honest-machine opt-in.** Y / N. When Y, the venue template appends a section on what the article does NOT cover (section name varies by venue; resolved from `venues/_schema.yaml#venues.<name>.honest_machine_section_name`).
+3. **Length budget.** Options: `S` / `M` / `L` / `X`. Each option label includes the venue's word target and ceiling, looked up from `venues/_schema.yaml#venues.<name>.length_budget`.
+4. **Venue selection.** Options: `reddit` / `book-chapter` / `apple-developer-article` / `medium` / `blog` / `repo-doc`.
+
+The full procedure for each Path 2 entry, the venue handoff payload schema, the audience × budget interaction rules, and the recovery-asymmetry rationale all live in `AUDIENCE.md`. SKILL.md is the routing surface; AUDIENCE.md is the procedure surface.
+
 ### Implementation status
 
 **All six writing-to-learn entries are implemented** (Phases 3abc + 3def):
@@ -112,11 +130,15 @@ Where does the tutorial start?
 - **[e] gap-driven** — see `## Entry [e] — Gap-driven`
 - **[f] external source** — see `## Entry [f] — External source`
 
-The audience-facing path (Path 2) is not yet implemented. All five Path 2 entries return a "Phase 7" placeholder. The five entries [a]-[e] under audience-facing share letters with the writing-to-learn entries but are different procedures; do not conflate them.
+**All five audience-facing entries are implemented** (Phase 7):
 
-For unimplemented Path 2 entries, return:
+- **[a] annotated source** — see `AUDIENCE.md` § Entry [a]
+- **[b] incident-grounded** — see `AUDIENCE.md` § Entry [b]
+- **[c] synthesized example** — see `AUDIENCE.md` § Entry [c]
+- **[d] external source** — see `AUDIENCE.md` § Entry [d]
+- **[e] documentation-grounded** — see `AUDIENCE.md` § Entry [e]
 
-> Entry `[<letter>]` (audience-facing) is not yet implemented in `v2.0-phase6`. Coming in Phase 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+The five Path 2 entries `[a]`-`[e]` share letters with the Path 1 entries but are different procedures; do not conflate them. Path 1 produces artifacts for the user (writing-to-learn); Path 2 produces artifacts for an audience (Reddit posts, book chapters, articles, blog posts, repo docs). After the entry is chosen, Path 2 hands off to one of six venue templates in `venues/`, each calibrated to a target medium's voice and length budget.
 
 ## Entry [a] — Daily progression
 
@@ -748,5 +770,6 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
 | 5 | Status dashboard | ✅ shipped |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped (this) |
-| 7 | Audience-facing path with 6 venue templates | ⏳ pending |
+| 7 | Audience-facing path with 6 venue templates | ✅ shipped (this) |
+| 8 | Polish, CHANGELOG, demo bundles, v2.0.0 release | ⏳ pending |
 | 8 | Polish, README rewrite, v2.0.0 release | ⏳ pending |
