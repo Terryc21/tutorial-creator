@@ -1,204 +1,237 @@
 ---
 name: tutorial-creator
-description: Generate annotated code reading tutorials from your own codebase -- builds incremental learning with vocabulary tracking, pre/post tests, and gap analysis
-version: 1.1.0
+description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
+version: 2.0.0-phase2
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
 
-# Create Tutorial
+# tutorial-creator
 
-Generate annotated code reading tutorials using real code from your project. Each tutorial teaches one concept, tests comprehension, and tracks vocabulary across sessions.
+Three surfaces, gateway-mediated:
+
+- **`tutorial`** — generate a lesson (six writing-to-learn entries, five audience-facing entries)
+- **`vocab`** — manage vocabulary independent of lesson generation
+- **`status`** — inspect your learning state (read-only dashboard)
+
+> **v2.0 in development.** Phase 2 of 8 ships the router + gateway question + surface stubs. Phases 3+ ship the actual generation, vocab management, status, recovery, and audience-facing paths. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
+>
+> The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) routes to entry [b] (topic + file) and produces v1.1-shaped output until later phases land.
 
 ## Usage
 
 ```
-/skill tutorial-creator [topic] [source file or component]
+/skill tutorial-creator                         # opens gateway question
+/skill tutorial-creator <topic> <source>        # legacy v1.1 path → entry [b]
+/skill tutorial-creator tutorial <args>         # tutorial surface
+/skill tutorial-creator vocab <subcommand>      # vocab surface
+/skill tutorial-creator status                  # status surface
+/skill tutorial-creator undo                    # revert last generation (Phase 6)
+/skill tutorial-creator --mode learn|audience|both|vocab|status [args]
+                                                 # skip gateway, route directly
 ```
 
-**Examples:**
-- `/skill tutorial-creator closures src/utils/helpers.ts`
-- `/skill tutorial-creator optional chaining Sources/Models/User.swift`
-- `/skill tutorial-creator hooks src/components/Dashboard.tsx`
-- `/skill tutorial-creator ownership src/main.rs`
+## Routing logic
 
-If no source file is given, find one in the project that best demonstrates the topic.
+Every invocation runs through this dispatch:
+
+1. **Read `--mode` flag if present.** If set, echo it back to the user as a one-line confirmation, then jump directly to that surface or path. Skip the gateway question. Mode values: `learn`, `audience`, `both`, `vocab`, `status`.
+2. **Else, parse positional arguments.** If the user invoked with two positional args matching `<topic> <source>` AND the source is an existing file in the project, treat as **entry [b] legacy path** — produce a v1.1-shaped tutorial. This preserves the v1.1 invocation contract for users who haven't seen the v2 changes.
+3. **Else, ask the gateway question.** Present the four-option menu (below). Route based on answer.
+
+### Gateway question
+
+Use AskUserQuestion (or plain-text prompt if AskUserQuestion is unavailable):
+
+```
+What do you want to do?
+
+[1] Write a tutorial for myself      (writing-to-learn)
+[2] Write a tutorial for others      (audience-facing)
+[3] Manage vocabulary                 (jump to vocab surface)
+[4] Inspect my learning state         (jump to status surface)
+```
+
+- **Answer [1]** → tutorial surface, Path 1 (writing-to-learn). Ask the entry-point question (six options; see `## Tutorial surface — entry points`).
+- **Answer [2]** → tutorial surface, Path 2 (audience-facing). Ask the entry-point question (five options; Phase 7 stub).
+- **Answer [3]** → vocab surface (load `VOCAB.md`).
+- **Answer [4]** → status surface (load `STATUS.md`).
+
+### Mode-mismatch detection
+
+If the user picked Path 2 (audience-facing) but their topic phrasing reads "I want to understand X" or "I'm confused about Y," soft-nudge once:
+
+> This phrasing reads like writing-to-learn. Confirm audience-facing, or switch to writing-to-learn?
+
+One nudge per session. Not blocking. The user always has final say. (Implemented in Phase 7.)
+
+## Tutorial surface — entry points
+
+After gateway answer = [1] (writing-to-learn), ask:
+
+```
+Where does the lesson start?
+
+[a] Daily progression       — pick what's next based on my progress
+[b] Topic + file            — I have both ("closures in helpers.ts")
+[c] Topic only              — I have a topic, find the best file
+[d] Question                — I'm stuck on something specific
+[e] Gap-driven              — show me my "confused" vocabulary, pick from there
+[f] External source         — I read this; help me consolidate
+```
+
+After gateway answer = [2] (audience-facing), ask:
+
+```
+Where does the tutorial start?
+
+[a] Annotated source         — file in my codebase that demonstrates the pattern
+[b] Incident-grounded        — a real failure or decision I want to write about
+[c] Synthesized example      — contrived minimal example for the concept
+[d] External source          — public repo, Apple sample, blog post
+[e] Documentation-grounded   — Apple Developer docs, RFCs, etc.
+```
+
+### Phase 2 status
+
+Only **entry [b] legacy path** (writing-to-learn, topic + file) is implemented. It produces v1.1-shaped output by following the "Tutorial Format" specification below. All other entries return:
+
+> Entry [<letter>] is not yet implemented in v2.0-phase2. Coming in Phase 3 or 7. See `~/.claude/plans/tutorial-creator-v2-implementation.md`.
 
 ## First-Run Setup
 
-On first invocation, check for `.claude/tutorial-config.yaml` in the project root. If it doesn't exist, run the setup wizard:
+On first invocation in a new project, check for `.claude/tutorial-config.yaml`. If missing, run setup:
 
 ```
 Welcome to tutorial-creator! Let's set up your learning environment.
 ```
 
-Ask these questions using AskUserQuestion:
+Ask via AskUserQuestion:
 
-1. **Where should tutorials be saved?**
-   Default: `./tutorials/`
+1. **Where should tutorials be saved?** Default: `./tutorials/`
+2. **What language/framework are you learning?** Auto-detect from project files (`package.json` = JS/TS, `Package.swift` = Swift, `Cargo.toml` = Rust, etc.); user confirms or overrides.
+3. **What's your experience level?** beginner / intermediate / advanced.
+4. **What's your project directory?** Default: current working directory.
 
-2. **What language/framework are you learning?**
-   Auto-detect from project files (package.json = JS/TS, Package.swift = Swift, Cargo.toml = Rust, etc.)
-   Let user confirm or override.
-
-3. **What's your experience level?**
-   - Beginner (explain everything -- syntax, types, control flow)
-   - Intermediate (skip basic syntax, focus on patterns and idioms)
-   - Advanced (focus on architecture, gotchas, performance)
-
-4. **What's your project directory?** (for finding real code examples)
-   Default: current working directory
-
-Save config to `.claude/tutorial-config.yaml`:
+Save config to `.claude/tutorial-config.yaml` per `SCHEMAS.md` Schema 1:
 
 ```yaml
+schema_version: 2
 tutorials_dir: ./tutorials/
 language: swift
 framework: swiftui
-experience_level: intermediate
 project_dir: .
 next_day: 1
+experience_level: intermediate
+vocab_format: yaml-with-md-view
+recovery_enabled: true
+progression_override: null
 ```
 
 Create initial files:
-- `{tutorials_dir}/VOCABULARY.md` -- cumulative term reference
-- `{tutorials_dir}/PROGRESS.md` -- score tracker + concepts checklist
+- `{tutorials_dir}/PROGRESS.md` (template at end of this file)
+- `{tutorials_dir}/VOCABULARY.md` (regenerated view)
+- `{tutorials_dir}/vocabulary.yaml` (empty list `[]`)
 
-## Before Writing
+If `.claude/` doesn't exist, create it.
+
+## Entry [b] — Tutorial Format (legacy v1.1 path)
+
+When invoked as entry [b] (topic + file), produce a tutorial with these sections in this order. This is the v1.1 format preserved verbatim.
+
+### Before Writing
 
 1. **Read the config:** `.claude/tutorial-config.yaml`
+2. **Read PROGRESS.md** — use next available day; check covered concepts.
+3. **Read vocabulary.yaml** (or VOCABULARY.md if yaml absent) — reference existing terms.
+4. **Read the source file** to annotate.
 
-2. **Read the progress tracker:** `{tutorials_dir}/PROGRESS.md`
-   - Use the next available day number
-   - Check which concepts have been covered -- don't re-explain unless building on them
-   - Check the progression phase
+### Required Sections
 
-3. **Read the vocabulary file:** `{tutorials_dir}/VOCABULARY.md`
-   - Reference terms already defined
-   - Only introduce genuinely new terms
+1. **Header**
+   ```markdown
+   # Day N: [Topic Title] -- [Subtitle]
 
-4. **Read the source file** from the project to annotate
+   *Source: `[file path]` ([scope description])*
+   *Day N -- [Date] -- [Phase name] (Phase N)*
+   ```
 
-## Tutorial Format (Required Sections)
+2. **What You'll Learn** — 1-2 sentences in plain language.
 
-Every tutorial MUST include these sections in this order:
+3. **Vocabulary** — only new terms (not in earlier tutorials). One-line definitions. End with: `> Full vocabulary list: [VOCABULARY.md](VOCABULARY.md)`
 
-### Header
-```markdown
-# Day N: [Topic Title] -- [Subtitle]
+4. **Pre-Test** — 5-8 questions answerable from the vocabulary table alone; tests intuition, not memorization.
 
-*Source: `[file path]` ([scope description])*
-*Day N -- [Date] -- [Phase name] (Phase N)*
+5. **The Core Pattern** — explain the concept with simplified examples first, then build up. Calibrate depth to `experience_level`:
+   - **beginner:** explain syntax, name types, define every keyword
+   - **intermediate:** skip basic syntax, focus on "why this pattern" and alternatives
+   - **advanced:** focus on tradeoffs, edge cases, performance implications
+
+6. **Real Code from [Project]** — actual source, annotated with `// <--` or `// ^^^` arrows. Simplify if needed; note what was removed.
+
+7. **Common Mistakes** — 3-5 errors with what happens and how to fix.
+
+8. **Post-Test** — 5-8 harder questions; require applying the concept.
+
+9. **Answer Key** — full explanations for both tests.
+
+10. **New Concepts Introduced**
+    ```markdown
+    | Concept | Where in Code | Key Takeaway |
+    |---------|---------------|--------------|
+    | [name]  | [Line N]      | [one-sentence summary] |
+    ```
+    Aim for 6-12 rows. Every concept here MUST also appear in the Vocabulary table at the top.
+
+### After Writing
+
+1. **Save** to `{tutorials_dir}/DayN-[Topic]-Annotated.md`
+2. **Update PROGRESS.md** — add Score Log row (day, date, file, test counts) and Concepts Mastery Checklist entries (`- [ ] [Concept name] (Day N)`).
+3. **Update VOCABULARY.md** — add new section `## Day N: [Topic]`; only genuinely new terms; update Cumulative Count.
+4. **Increment** `next_day` in config.
+5. **Gap analysis** — review the new tutorial; if it depends on uncovered concepts, propose half-step bridge tutorials (e.g., Day 7.5) with topic, what they bridge, and why. Ask whether to create now or defer.
+
+## Vocab surface
+
+Routes to `VOCAB.md`. Phase 4 implements full surface; Phase 2 ships stubs:
+
+```
+vocab add <term>            # not yet implemented (Phase 4)
+vocab list [--status=<s>]   # not yet implemented
+vocab show <term>           # not yet implemented
+vocab edit <term>           # not yet implemented
+vocab merge <a> <b>         # not yet implemented
+vocab review                # not yet implemented
+vocab gap                   # not yet implemented
+vocab regen-md              # not yet implemented
 ```
 
-### What You'll Learn
-One or two sentences describing the concept in plain language.
+See `VOCAB.md` for the loaded surface.
 
-### Vocabulary
-| Term | Quick Definition |
-New terms introduced in this tutorial only -- terms not covered by any earlier tutorial. Keep definitions to one line. End the vocabulary section with a link:
-`> Full vocabulary list: [VOCABULARY.md](VOCABULARY.md)`
+## Status surface
 
-### Pre-Test
-5-8 questions testing whether the reader already knows the concept BEFORE reading. Questions should be answerable from the vocabulary table alone -- they test intuition, not memorization.
+Routes to `STATUS.md`. Phase 5 implements aggregate dashboard; Phase 2 ships stub.
 
-### The Core Pattern
-Explain the concept using simplified code examples BEFORE showing real project code. Start with the simplest version, then build up. Calibrate depth to the configured experience level.
+See `STATUS.md` for the loaded surface.
 
-### Real Code from [Your Project]
-The actual source file, annotated with inline comments explaining each concept. Use `// <--` or `// ^^^` arrows to draw attention to key lines. Simplify the code if the full file is too long -- note what was removed.
+## Undo
 
-### Common Mistakes
-| Mistake | What happens | Fix |
-3-5 common errors related to this concept.
+Routes to recovery logic. Phase 6 implements; Phase 2 returns stub:
 
-### Post-Test
-5-8 questions testing comprehension AFTER reading. Should be harder than pre-test -- require applying the concept, not just recalling definitions.
-
-### Answer Key
-Answers for both pre-test and post-test. Full explanations, not just "true/false".
-
-### New Concepts Introduced
-A summary table at the end listing the new concepts this tutorial taught, anchored to the file with line references where helpful. Format:
-
-```markdown
-| Concept | Where in Code | Key Takeaway |
-|---------|---------------|--------------|
-| [concept name] | [Line N or "throughout"] | [one-sentence summary] |
-```
-
-This table is the reader's quick-reference card after they finish the tutorial. It also feeds the Concepts Mastery Checklist update in PROGRESS.md (see "After Writing" below). Every concept in this table MUST also appear in the Vocabulary table at the top of the tutorial; new entries here without matching vocabulary entries are inconsistent.
-
-The table should be derivable from the tutorial's content -- if a concept isn't taught well enough in the body to summarize in one sentence, either teach it better or remove it from the table. Aim for 6-12 rows depending on the tutorial's depth.
-
-## After Writing
-
-1. **Save the tutorial** to `{tutorials_dir}/DayN-[Topic]-Annotated.md`
-
-2. **Update PROGRESS.md:**
-   - Add a row to the Score Log table with the day number, date, file name, and test counts
-   - Add new concepts to the Concepts Mastery Checklist under the appropriate phase. The concepts to add are the ones listed in the tutorial's "New Concepts Introduced" table -- format each as `- [ ] [Concept name] (Day N)`. The brief takeaway from the table can be omitted in PROGRESS.md; readers will follow the day reference back to the tutorial if they need more detail.
-
-3. **Update VOCABULARY.md:**
-   - Add a new section for this tutorial's terms (format: `## Day N: [Topic]` with vocabulary table)
-   - Update the Cumulative Count table at the bottom
-   - Only add terms that are genuinely new -- not repeats of earlier tutorials
-
-4. **Update config:** Increment `next_day` in `.claude/tutorial-config.yaml`
-
-5. **Gap analysis:** Review the tutorial you just wrote. If it uses concepts not covered by any earlier tutorial, propose gap-filling tutorials (numbered as N.5 between existing days) to bridge the prerequisite knowledge. List each proposed gap tutorial with its topic, which days it bridges, and why the gap matters. Ask whether to create them now or defer.
-
-## Phase Progression Defaults
-
-The skill uses language-appropriate learning progressions:
-
-**Swift/SwiftUI:**
-1. Utilities (optionals, guard, closures, extensions)
-2. Models (enums, structs, Codable, protocols)
-3. ViewModels (@Observable, async/await, error handling)
-4. Views (@State, @Binding, navigation, modifiers)
-5. Managers (dependency injection, singletons, networking)
-6. Serialization (Codable, JSON, backup/restore)
-
-**TypeScript/React:**
-1. Utilities (types, interfaces, generics, utility functions)
-2. Hooks (useState, useEffect, useContext, custom hooks)
-3. Components (props, children, composition, render patterns)
-4. State Management (context, reducers, external stores)
-5. API Layer (fetch, error handling, caching, optimistic updates)
-6. Testing (unit tests, component tests, mocking)
-
-**Python/Django:**
-1. Utilities (types, decorators, generators, context managers)
-2. Models (ORM, migrations, relationships, managers)
-3. Views (class-based, function-based, mixins, permissions)
-4. Serializers (DRF, validation, nested serialization)
-5. Middleware (request/response processing, authentication)
-6. Testing (pytest, fixtures, factories, mocking)
-
-**Rust:**
-1. Ownership (borrowing, lifetimes, moves, clones)
-2. Traits (definition, implementation, trait objects, bounds)
-3. Error Handling (Result, Option, ?, custom errors)
-4. Async (tokio, futures, streams, channels)
-5. Unsafe (raw pointers, FFI, transmute, when to use)
-6. Architecture (modules, crates, workspace organization)
-
-Custom progressions can be defined in the config file.
+> `undo` is not yet implemented in v2.0-phase2. Coming in Phase 6.
 
 ## Writing Style
 
-- Use "you" -- speak directly to the reader
-- Explain like a patient mentor, not a textbook
-- Connect new concepts to ones already covered in previous days
-- Use real code from the reader's project, not hypothetical examples
-- Keep annotations conversational: "This line is doing X because Y"
-- Calibrate explanation depth to the configured experience level:
-  - **Beginner:** Explain syntax, name types, define every keyword
-  - **Intermediate:** Skip basic syntax, focus on "why this pattern" and alternatives
-  - **Advanced:** Focus on tradeoffs, edge cases, performance implications
+For all generated content:
 
-## PROGRESS.md Template
+- Use "you" — speak directly to the reader.
+- Explain like a patient mentor, not a textbook.
+- Connect new concepts to ones already covered in previous days.
+- Use real code from the reader's project, not hypothetical examples.
+- Keep annotations conversational: "This line is doing X because Y."
+- Calibrate depth to `experience_level` per the Core Pattern section above.
+
+## PROGRESS.md template
 
 Created on first run:
 
@@ -237,14 +270,16 @@ Check off when you feel confident (not just "saw it once"):
 - [ ] (populated as tutorials are created)
 ```
 
-## VOCABULARY.md Template
+## VOCABULARY.md template (generated view)
 
-Created on first run:
+Created on first run; regenerable from vocabulary.yaml:
 
 ```markdown
 # Tutorial Vocabulary
 
 Terms introduced in each tutorial, in order of appearance.
+
+> Source of truth: `vocabulary.yaml` (this file is a generated view; do not edit by hand).
 
 ---
 
@@ -261,3 +296,26 @@ Terms introduced in each tutorial, in order of appearance.
 
 *Updated: [date]*
 ```
+
+## Phase Progressions
+
+Built-in progressions live in `progressions/<language>.yaml` (loaded from the skill bundle, not the user's project). v2.0 ships with Swift, TypeScript, Python, and Rust. Custom progressions go via `progression_override` in `tutorial-config.yaml`.
+
+See `SCHEMAS.md` Schema 4 for the progression yaml format.
+
+## Schemas
+
+All persistent data shapes (tutorial-config, vocabulary, session-log, progressions) are documented in `SCHEMAS.md`. When in doubt, that file is the source of truth.
+
+## What's coming next
+
+| Phase | Adds | Status |
+|---|---|---|
+| 1 | Externalized progressions, schemas, vocab example | ✅ shipped |
+| 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped (this) |
+| 3 | All six writing-to-learn entry points | ⏳ pending |
+| 4 | Full vocab surface (add, list, review, gap radar) | ⏳ pending |
+| 5 | Status dashboard | ⏳ pending |
+| 6 | Recovery (undo, renumber, 24h soft-stage) | ⏳ pending |
+| 7 | Audience-facing path with 6 venue templates | ⏳ pending |
+| 8 | Polish, README rewrite, v2.0.0 release | ⏳ pending |
