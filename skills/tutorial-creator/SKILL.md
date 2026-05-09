@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase3abc
+version: 2.0.0-phase4
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -311,20 +311,21 @@ If 50+ files match the topic, do not enumerate all of them. Cap at top 3 + offer
 
 ## Vocab surface
 
-Routes to `VOCAB.md`. Phase 4 implements full surface; Phase 2 ships stubs:
+Routes to `VOCAB.md`. **Phase 4 — fully implemented.** Subcommands:
 
 ```
-vocab add <term>            # not yet implemented (Phase 4)
-vocab list [--status=<s>]   # not yet implemented
-vocab show <term>           # not yet implemented
-vocab edit <term>           # not yet implemented
-vocab merge <a> <b>         # not yet implemented
-vocab review                # not yet implemented
-vocab gap                   # not yet implemented
-vocab regen-md              # not yet implemented
+vocab add <term>                  # draft definition; user confirms; saved
+vocab list [--status=<s>]         # browse (filter by status: new|reviewing|mastered|confused)
+vocab show <term>                 # full record incl. test history
+vocab edit <term> [--reset-mastery]   # update fields (status NOT user-editable except via --reset-mastery)
+vocab merge <a> <b>               # collapse duplicates; preserve test history
+vocab review [--strict]           # spaced-repetition test session (lenient by default per D3)
+vocab gap                         # show "confused" terms ranked by staleness; feeds entry [3e]
+vocab regen-md [--import]         # regenerate VOCABULARY.md from yaml; --import migrates v1.1
+vocab undo                        # revert last vocab add (within 24h soft-stage)
 ```
 
-See `VOCAB.md` for the loaded surface.
+See `VOCAB.md` for the full procedure spec, state machine, and grading rules.
 
 ## Status surface
 
@@ -431,9 +432,9 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 |---|---|---|
 | 1 | Externalized progressions, schemas, vocab example | ✅ shipped |
 | 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped |
-| 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped (this) |
-| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external (depends on Phase 4) | ⏳ pending |
-| 4 | Full vocab surface (add, list, review, gap radar) | ⏳ pending |
+| 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped |
+| 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped (this) |
+| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ⏳ pending |
 | 5 | Status dashboard | ⏳ pending |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ⏳ pending |
 | 7 | Audience-facing path with 6 venue templates | ⏳ pending |
