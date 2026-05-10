@@ -34,13 +34,9 @@ Future audits may flag these as "missing"; they are deliberate choices for Path 
    - **Audience:** beginner / intermediate / senior / mixed
    - **Honest-machine opt-in:** Y / N (asks "Append a section on what this article does NOT cover and what's still uncertain?")
    - **Length budget:** S / M / L / X (show the venue's word count for each tier, resolved from `venues/_schema.yaml`)
-   - **Venue:** reddit / book-chapter / apple-developer-article / medium *(not yet available)* / blog *(not yet available)* / repo-doc *(not yet available)*
+   - **Venue:** reddit / book-chapter / apple-developer-article / medium / blog / repo-doc
 
-   **Partial-Phase-7 guard (load-bearing).** If the user selects `medium`, `blog`, or `repo-doc`, refuse with this exact message and stop, do NOT proceed to step 5:
-
-   > Venue `<name>` is not yet shipped in `2.0.0-phase7-partial`. Available venues right now: `reddit`, `book-chapter`, `apple-developer-article`. Pick one of those, or wait for the next release.
-
-   The runtime must NOT attempt to load `venues/<name>.md` for an unshipped venue under any circumstance; the file does not exist and the open will fail with no graceful path.
+   All six venues are shipped as of `2.0.0-phase7`. Each has a corresponding `venues/<name>.md` template the runtime loads at step 5.
 5. **Hand off to venue template.** Open `venues/<chosen>.md` and render the article using the venue's voice signature, supplying:
    - `topic` (string)
    - `source` (file path + line range)

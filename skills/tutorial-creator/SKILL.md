@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase7-partial
+version: 2.0.0-phase7
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -131,13 +131,7 @@ After the entry letter is picked, the Path 2 flow runs four more AskUserQuestion
 1. **Audience question.** Options: `beginner` / `intermediate` / `senior` / `mixed`. Drives in-voice content shifts (definitions vs. tradeoffs).
 2. **Honest-machine opt-in.** Y / N. When Y, the venue template appends a section on what the article does NOT cover (section name varies by venue; resolved from `venues/_schema.yaml#venues.<name>.honest_machine_section_name`).
 3. **Length budget.** Options: `S` / `M` / `L` / `X`. Each option label includes the venue's word target and ceiling, looked up from `venues/_schema.yaml#venues.<name>.length_budget`.
-4. **Venue selection.** Options: `reddit` / `book-chapter` / `apple-developer-article` / `medium` / `blog` / `repo-doc`.
-
-   **Partial-Phase-7 guard:** the venue-selection question must label the three not-yet-shipped venues (`medium`, `blog`, `repo-doc`) as `(not yet available)` in their option text. If the user selects any of those three regardless, the skill MUST refuse with this exact message and stop, NOT attempt the venue handoff:
-
-   > Venue `<name>` is not yet shipped in `2.0.0-phase7-partial`. Available venues right now: `reddit`, `book-chapter`, `apple-developer-article`. Pick one of those, or wait for the next release.
-
-   The runtime must NOT attempt to load `venues/<name>.md` for an unshipped venue under any circumstance; the file does not exist and the open will fail.
+4. **Venue selection.** Options: `reddit` / `book-chapter` / `apple-developer-article` / `medium` / `blog` / `repo-doc`. All six venues are shipped as of `2.0.0-phase7`; the runtime loads `venues/<chosen>.md` and renders the article using that venue's voice signature.
 
 The full procedure for each Path 2 entry, the venue handoff payload schema, the audience × budget interaction rules, and the recovery-asymmetry rationale all live in `AUDIENCE.md`. SKILL.md is the routing surface; AUDIENCE.md is the procedure surface.
 
@@ -167,11 +161,11 @@ The full procedure for each Path 2 entry, the venue handoff payload schema, the 
 | `reddit` | `venues/reddit.md` | ✅ shipped |
 | `book-chapter` | `venues/book-chapter.md` | ✅ shipped |
 | `apple-developer-article` | `venues/apple-developer-article.md` | ✅ shipped |
-| `medium` | `venues/medium.md` | ⚠️ not yet shipped |
-| `blog` | `venues/blog.md` | ⚠️ not yet shipped |
-| `repo-doc` | `venues/repo-doc.md` | ⚠️ not yet shipped |
+| `medium` | `venues/medium.md` | ✅ shipped |
+| `blog` | `venues/blog.md` | ✅ shipped |
+| `repo-doc` | `venues/repo-doc.md` | ✅ shipped |
 
-The five Path 2 entries `[a]`-`[e]` share letters with the Path 1 entries but are different procedures; do not conflate them. Path 1 produces artifacts for the user (writing-to-learn); Path 2 produces artifacts for an audience (Reddit posts, book chapters, articles, blog posts, repo docs). After the entry is chosen, Path 2 hands off to one of the 3 currently-shipped venue templates in `venues/`. Selecting an unshipped venue triggers the partial-Phase-7 guard described in the venue-selection step above.
+The five Path 2 entries `[a]`-`[e]` share letters with the Path 1 entries but are different procedures; do not conflate them. Path 1 produces artifacts for the user (writing-to-learn); Path 2 produces artifacts for an audience (Reddit posts, book chapters, articles, blog posts, repo docs). After the entry is chosen, Path 2 hands off to one of the 6 venue templates in `venues/`.
 
 ## Entry [a] — Daily progression
 
@@ -887,7 +881,5 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 5 | Status dashboard | ✅ shipped |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped (this) |
 | 6.5 | Project resolution: `--project-dir`, env var, ancestor walk, registry, `open`/`forget` subcommands | ✅ shipped (2026-05-10) |
-| 7 | Audience-facing path with 6 venue templates | ⚠️ partial (this): routing + AUDIENCE.md + 3 of 6 venues shipped (`reddit`, `book-chapter`, `apple-developer-article`); `medium`, `blog`, `repo-doc` pending |
-| 7 (final) | Remaining 3 venue templates (`medium`, `blog`, `repo-doc`) | ⏳ pending |
+| 7 | Audience-facing path with 6 venue templates | ✅ shipped (this): routing + AUDIENCE.md + all 6 venues (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) |
 | 8 | Polish, CHANGELOG, demo bundles, v2.0.0 release | ⏳ pending |
-| 8 | Polish, README rewrite, v2.0.0 release | ⏳ pending |

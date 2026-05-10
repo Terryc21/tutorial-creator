@@ -6,7 +6,7 @@
 
 Works with any Swift, TypeScript, Python, or Rust project. Originally built during development of [Stuffolio](https://stuffolio.app) — a real iOS/macOS app whose codebase serves as the bundled demo.
 
-> **v2.0 in development.** Phases 1-6 are fully shipped on the `feature/v2-robust` branch (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery). Phase 7 (audience-facing path with 6 venue templates) is **partially shipped**: the routing layer, AUDIENCE.md procedures, and 3 of 6 venue templates (`reddit`, `book-chapter`, `apple-developer-article`) are live; `medium`, `blog`, and `repo-doc` venues are pending. Selecting an unshipped venue at the venue-selection prompt returns a clear refusal message. Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) follows. Until v2.0 merges to `main`, the shipping version is **v1.1.0** and the install instructions below describe v1.1 behavior.
+> **v2.0 in development.** Phases 1-7 are fully shipped on the `feature/v2-robust` branch (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery, and the audience-facing path with all 6 venue templates: `reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`). Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) is the last gate. Until v2.0 merges to `main`, the shipping version is **v1.1.0** and the install instructions below describe v1.1 behavior.
 
 ---
 
@@ -17,7 +17,7 @@ Two installable lines. Pick based on whether you want a stable tutorial generato
 | Branch | Version | What you get | Stability |
 |:--|:--|:--|:--|
 | **`main`** | v1.1.0 | Single-mode tutorial generation (`/skill tutorial-creator <topic> <source>`); vocabulary tracked as a side effect of writing tutorials; PROGRESS.md + VOCABULARY.md cumulative tracking; gap analysis on each tutorial | ✅ **Stable.** Mature, used daily, behavior is fixed. Recommended for new users who want it to "just work." |
-| **`feature/v2-robust`** | 2.0.0-phase7-partial | Three surfaces (tutorial / vocab / status); gateway question; six writing-to-learn entry points; full vocab subcommand suite (review, gap, merge, edit); state machine; status dashboard; recovery / undo; project resolution from any cwd; audience-facing path (3 of 6 venues live) | ⚠️ **Active development.** Shape is set but details still moving — file layouts, error messages, command flags can change between commits. Recommended for users who want to track v2.0 development or have feedback to give. |
+| **`feature/v2-robust`** | 2.0.0-phase7 | Three surfaces (tutorial / vocab / status); gateway question; six writing-to-learn entry points; full vocab subcommand suite (review, gap, merge, edit); state machine; status dashboard; recovery / undo; project resolution from any cwd; audience-facing path with all 6 venue templates | ⚠️ **Active development.** Shape is set but details still moving — file layouts, error messages, command flags can change between commits. Recommended for users who want to track v2.0 development or have feedback to give. |
 
 To switch between them, `git checkout main` or `git checkout feature/v2-robust` in your local clone, then re-run the install copy command. There's no in-skill upgrade procedure; you replace the files. The v1.1 → v2.0 vocabulary migration is described in the **Migrating from v1.1 to v2.0** section below; it does not happen automatically when you swap branches.
 
@@ -33,10 +33,10 @@ To switch between them, `git checkout main` or `git checkout feature/v2-robust` 
 | 5 | Status dashboard | ✅ shipped |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped |
 | 6.5 | Project resolution: `--project-dir` flag, ancestor walk, registry, `open` / `forget` subcommands | ✅ shipped |
-| 7 | Audience-facing path with 6 venue templates | ⚠️ partial: routing + AUDIENCE.md + 3 of 6 venues shipped (`reddit`, `book-chapter`, `apple-developer-article`); `medium`, `blog`, `repo-doc` pending |
+| 7 | Audience-facing path with 6 venue templates | ✅ shipped: routing + AUDIENCE.md + all 6 venues (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) |
 | 8 | Polish, CHANGELOG, demo bundles, v2.0.0 release | ⏳ pending |
 
-Phase 7 will be redeclared as fully shipped (and the in-skill version bumped to `2.0.0-phase7`) when the remaining 3 venues land. Phase 8 is the last gate before v2.0 merges to `main`.
+Phase 8 is the last gate before v2.0 merges to `main`.
 
 ---
 
@@ -72,7 +72,7 @@ v2.0 splits the skill into three top-level surfaces, with a gateway question tha
 
 | Surface | Purpose | Subcommands |
 |---|---|---|
-| **`tutorial`** | Generate a lesson | 6 entry points (writing-to-learn) + 5 (audience-facing; Phase 7 partial: 3 of 6 venues live) |
+| **`tutorial`** | Generate a lesson | 6 entry points (writing-to-learn) + 5 (audience-facing) into 6 venue templates |
 | **`vocab`** | Manage your vocabulary | `add`, `list`, `show`, `edit`, `merge`, `review`, `gap`, `regen-md`, `undo` |
 | **`status`** | Inspect your learning state | Read-only dashboard (Phase 5) |
 
@@ -138,24 +138,22 @@ A read-only at-a-glance view of your learning state:
 
 Every tutorial generation logs a session record and snapshots the four files it modifies. `undo` reverts the last generation cleanly. Vocab additions are revertable for 24 hours via `vocab undo`. Day numbers can be retroactively renumbered via `renumber <old> <new>`, which rewrites references across PROGRESS.md, VOCABULARY.md, and other tutorials.
 
-### Audience-facing path *(Phase 7, partially shipped)*
+### Audience-facing path *(Phase 7, shipped)*
 
 v2.0 adds a second gateway path for users who want to publish what they've learned. Instead of writing-to-learn, you're writing-to-teach. Five entry points (annotated source / incident-grounded / synthesized example / external source / documentation-grounded) feed into six venue templates with venue-aware voice calibration.
 
 After picking an entry, the skill asks four routing questions in order: audience (beginner / intermediate / senior / mixed), honest-machine opt-in (Y / N), length budget (S / M / L / X), and venue. Each answer shapes the rendered artifact: the audience setting shifts content toward setup-and-definition or tradeoffs-and-alternatives, the honest-machine opt-in adds a venue-specific section listing what the article does NOT cover, and the length budget caps the artifact's word count using per-venue tier targets.
 
-**Venue templates available right now:**
+**Venue templates:**
 
-| Venue | Status | Voice |
-|---|---|---|
-| `reddit` | ✅ shipped | Punchy single-thread arc, conversational first-person, one fenced block per post, "Edit:" honest-machine convention |
-| `book-chapter` | ✅ shipped | Narrative essayistic, nested headers, long-form paragraphs (4-8 sentences), code in service of prose |
-| `apple-developer-article` | ✅ shipped | Declarative reference voice, frequent code listings, DocC-flat sectioning, no first-person |
-| `medium` | ⚠️ not yet shipped | Magazine-essay register; pending |
-| `blog` | ⚠️ not yet shipped | Conversational personal-blog voice; pending |
-| `repo-doc` | ⚠️ not yet shipped | Terse instructional README/CONTRIBUTING voice; pending |
-
-Selecting an unshipped venue triggers a refusal message naming the 3 currently-available alternatives. Phase 7 will be redeclared as fully shipped (and the in-skill version bumped to `2.0.0-phase7`) when the remaining 3 venues land.
+| Venue | Voice |
+|---|---|
+| `reddit` | Punchy single-thread arc, conversational first-person, one fenced block per post, "Edit:" honest-machine convention |
+| `book-chapter` | Narrative essayistic, nested headers, long-form paragraphs (4-8 sentences), code in service of prose |
+| `apple-developer-article` | Declarative reference voice, frequent code listings, DocC-flat sectioning, no first-person |
+| `medium` | Magazine-essay register, lede-first front matter, light headers, fenced code sparingly |
+| `blog` | Conversational personal-blog voice, optional headers, date-stamped front matter, code as the story needs it |
+| `repo-doc` | Terse instructional README / runbook / ADR voice, structured headers, TL;DR-first front matter, fenced-minimal-prose code |
 
 ---
 
