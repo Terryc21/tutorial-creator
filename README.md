@@ -4,11 +4,7 @@
 
 **Generate personalized coding lessons from your own codebase.** A Claude Code skill that turns the files you actually work on every day into annotated tutorials, tracks the vocabulary you've learned, and shows you where you're confused.
 
-Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management app — and now for any Swift, TypeScript, Python, or Rust project.
-
-<a href="https://buymeacoffee.com/stuffolio"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="120"></a>
-
-If this skill saves you time, a [coffee](https://buymeacoffee.com/stuffolio) is appreciated. [Sponsoring](https://github.com/sponsors/Terryc21) supports further development.
+Works with any Swift, TypeScript, Python, or Rust project. Originally built during development of [Stuffolio](https://stuffolio.app) — a real iOS/macOS app whose codebase serves as the bundled demo.
 
 > **v2.0 in development.** Phases 1-6 are fully shipped on the `feature/v2-robust` branch (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery). Phase 7 (audience-facing path with 6 venue templates) is **partially shipped**: the routing layer, AUDIENCE.md procedures, and 3 of 6 venue templates (`reddit`, `book-chapter`, `apple-developer-article`) are live; `medium`, `blog`, and `repo-doc` venues are pending. Selecting an unshipped venue at the venue-selection prompt returns a clear refusal message. Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) follows. Until v2.0 merges to `main`, the shipping version is **v1.1.0** and the install instructions below describe v1.1 behavior.
 
@@ -386,7 +382,9 @@ Pull requests welcome on either branch, but for non-trivial v2.0 changes please 
 
 ## Author
 
-Created by **Terry Nyberg**, [Coffee & Code LLC](https://stuffolio.app/).
+Created by **Terry Nyberg**, [Coffee & Code LLC](https://stuffolio.app/). If this skill has saved you time, a coffee is appreciated.
+
+<a href="https://buymeacoffee.com/stuffolio"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="120"></a>
 
 ## License
 
