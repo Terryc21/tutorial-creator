@@ -8,7 +8,7 @@ Built for [Stuffolio](https://stuffolio.app), an iOS/macOS inventory management 
 
 If this skill saves you time, a [coffee](https://buymeacoffee.com/stuffolio) is appreciated. [Sponsoring](https://github.com/sponsors/Terryc21) supports further development.
 
-> **v2.0 in development.** Path 1 (writing-to-learn) is feature-complete on the `feature/v2-robust` branch. Phases 5-8 (status dashboard, recovery, audience-facing path, polish) are remaining. Until v2.0 merges to `main`, the shipping version is **v1.1.0** and the install instructions below describe v1.1 behavior.
+> **v2.0 in development.** Phases 1-6 are fully shipped on the `feature/v2-robust` branch (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery). Phase 7 (audience-facing path with 6 venue templates) is **partially shipped**: the routing layer, AUDIENCE.md procedures, and 3 of 6 venue templates (`reddit`, `book-chapter`, `apple-developer-article`) are live; `medium`, `blog`, and `repo-doc` venues are pending. Selecting an unshipped venue at the venue-selection prompt returns a clear refusal message. Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) follows. Until v2.0 merges to `main`, the shipping version is **v1.1.0** and the install instructions below describe v1.1 behavior.
 
 ---
 
@@ -44,7 +44,7 @@ v2.0 splits the skill into three top-level surfaces, with a gateway question tha
 
 | Surface | Purpose | Subcommands |
 |---|---|---|
-| **`tutorial`** | Generate a lesson | 6 entry points (writing-to-learn) + 5 (audience-facing, Phase 7) |
+| **`tutorial`** | Generate a lesson | 6 entry points (writing-to-learn) + 5 (audience-facing; Phase 7 partial: 3 of 6 venues live) |
 | **`vocab`** | Manage your vocabulary | `add`, `list`, `show`, `edit`, `merge`, `review`, `gap`, `regen-md`, `undo` |
 | **`status`** | Inspect your learning state | Read-only dashboard (Phase 5) |
 
@@ -110,9 +110,24 @@ A read-only at-a-glance view of your learning state:
 
 Every tutorial generation logs a session record and snapshots the four files it modifies. `undo` reverts the last generation cleanly. Vocab additions are revertable for 24 hours via `vocab undo`. Day numbers can be retroactively renumbered via `renumber <old> <new>`, which rewrites references across PROGRESS.md, VOCABULARY.md, and other tutorials.
 
-### Audience-facing path *(Phase 7)*
+### Audience-facing path *(Phase 7, partially shipped)*
 
-v2.0 adds a second gateway path for users who want to publish what they've learned. Instead of writing-to-learn, you're writing-to-teach. Five entry points (annotated source / incident-grounded / synthesized example / external source / documentation-grounded), six venue templates (blog, Reddit, Medium, Apple Developer-style article, book chapter, repo doc), with venue-aware voice calibration.
+v2.0 adds a second gateway path for users who want to publish what they've learned. Instead of writing-to-learn, you're writing-to-teach. Five entry points (annotated source / incident-grounded / synthesized example / external source / documentation-grounded) feed into six venue templates with venue-aware voice calibration.
+
+After picking an entry, the skill asks four routing questions in order: audience (beginner / intermediate / senior / mixed), honest-machine opt-in (Y / N), length budget (S / M / L / X), and venue. Each answer shapes the rendered artifact: the audience setting shifts content toward setup-and-definition or tradeoffs-and-alternatives, the honest-machine opt-in adds a venue-specific section listing what the article does NOT cover, and the length budget caps the artifact's word count using per-venue tier targets.
+
+**Venue templates available right now:**
+
+| Venue | Status | Voice |
+|---|---|---|
+| `reddit` | ✅ shipped | Punchy single-thread arc, conversational first-person, one fenced block per post, "Edit:" honest-machine convention |
+| `book-chapter` | ✅ shipped | Narrative essayistic, nested headers, long-form paragraphs (4-8 sentences), code in service of prose |
+| `apple-developer-article` | ✅ shipped | Declarative reference voice, frequent code listings, DocC-flat sectioning, no first-person |
+| `medium` | ⚠️ not yet shipped | Magazine-essay register; pending |
+| `blog` | ⚠️ not yet shipped | Conversational personal-blog voice; pending |
+| `repo-doc` | ⚠️ not yet shipped | Terse instructional README/CONTRIBUTING voice; pending |
+
+Selecting an unshipped venue triggers a refusal message naming the 3 currently-available alternatives. Phase 7 will be redeclared as fully shipped (and the in-skill version bumped to `2.0.0-phase7`) when the remaining 3 venues land.
 
 ---
 
