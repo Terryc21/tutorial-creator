@@ -1,42 +1,10 @@
 # tutorial-creator
 
-> ⚠️ **`tutorial-creator` is under active development.** Behavior, file layouts, and command names may change between commits. Check back often for updates. The shipping baseline is v1.1.0; v2.0 is being built on `feature/v2-robust` and is described in detail below.
-
 **Generate personalized coding lessons from your own codebase.** A Claude Code skill that turns the files you actually work on every day into annotated tutorials, tracks the vocabulary you've learned, and shows you where you're confused.
 
-Works with any Swift, TypeScript, Python, or Rust project. Originally built during development of [Stuffolio](https://stuffolio.app) — a real iOS/macOS app whose codebase serves as the bundled demo.
+Works with any Swift, TypeScript, Python, or Rust project. Originally built during development of [Stuffolio](https://stuffolio.app), a real iOS/macOS app whose codebase serves as the bundled demo.
 
-> **v2.0 in development.** Phases 1-7 are fully shipped on the `feature/v2-robust` branch (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery, and the audience-facing path with all 6 venue templates: `reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`). Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) is the last gate. Until v2.0 merges to `main`, the shipping version is **v1.1.0** and the install instructions below describe v1.1 behavior.
-
----
-
-## Which version should I install?
-
-Two installable lines. Pick based on whether you want a stable tutorial generator today or want to try v2.0 in progress.
-
-| Branch | Version | What you get | Stability |
-|:--|:--|:--|:--|
-| **`main`** | v1.1.0 | Single-mode tutorial generation (`/skill tutorial-creator <topic> <source>`); vocabulary tracked as a side effect of writing tutorials; PROGRESS.md + VOCABULARY.md cumulative tracking; gap analysis on each tutorial | ✅ **Stable.** Mature, used daily, behavior is fixed. Recommended for new users who want it to "just work." |
-| **`feature/v2-robust`** | 2.0.0-phase7 | Three surfaces (tutorial / vocab / status); gateway question; six writing-to-learn entry points; full vocab subcommand suite (review, gap, merge, edit); state machine; status dashboard; recovery / undo; project resolution from any cwd; audience-facing path with all 6 venue templates | ⚠️ **Active development.** Shape is set but details still moving — file layouts, error messages, command flags can change between commits. Recommended for users who want to track v2.0 development or have feedback to give. |
-
-To switch between them, `git checkout main` or `git checkout feature/v2-robust` in your local clone, then re-run the install copy command. There's no in-skill upgrade procedure; you replace the files. The v1.1 → v2.0 vocabulary migration is described in the **Migrating from v1.1 to v2.0** section below; it does not happen automatically when you swap branches.
-
-### v2.0 phase status (snapshot at most recent commit)
-
-| Phase | What it adds | Status |
-|---|---|---|
-| 1 | Externalized progressions, schemas, vocab examples | ✅ shipped |
-| 2 | Surfaces split, gateway question, `--mode` flag | ✅ shipped |
-| 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped |
-| 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
-| 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped |
-| 5 | Status dashboard | ✅ shipped |
-| 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped |
-| 6.5 | Project resolution: `--project-dir` flag, ancestor walk, registry, `open` / `forget` subcommands | ✅ shipped |
-| 7 | Audience-facing path with 6 venue templates | ✅ shipped: routing + AUDIENCE.md + all 6 venues (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) |
-| 8 | Polish, CHANGELOG, demo bundles, v2.0.0 release | ⏳ pending |
-
-Phase 8 is the last gate before v2.0 merges to `main`.
+**Current version: v2.0.0** (released 2026-05-10). See [CHANGELOG.md](CHANGELOG.md) for what changed and the v1.1 → v2.0 migration path.
 
 ---
 
@@ -58,15 +26,13 @@ This skill:
 - Tracks vocabulary and concept progression across sessions
 - Detects missing prerequisites and proposes bridge tutorials automatically
 - Helps you learn naturally while continuing to ship real software
-- *(v2.0)* Manages vocabulary as a first-class object, not a side effect of writing tutorials
-- *(v2.0)* Shows you which terms you're confused about and proposes targeted lessons
-- *(v2.0)* Supports six entry points to learning (daily progression, topic + file, topic only, question, gap-driven, external source)
+- Manages vocabulary as a first-class object, not a side effect of writing tutorials
+- Shows you which terms you're confused about and proposes targeted lessons
+- Supports six entry points to learning (daily progression, topic + file, topic only, question, gap-driven, external source)
 
 ---
 
-## v2.0 — Three surfaces, gateway-mediated
-
-> Available on the `feature/v2-robust` branch; not yet merged to `main`.
+## Three surfaces, gateway-mediated
 
 v2.0 splits the skill into three top-level surfaces, with a gateway question that asks you what you actually want to do before assuming you want to write a tutorial.
 
@@ -74,7 +40,7 @@ v2.0 splits the skill into three top-level surfaces, with a gateway question tha
 |---|---|---|
 | **`tutorial`** | Generate a lesson | 6 entry points (writing-to-learn) + 5 (audience-facing) into 6 venue templates |
 | **`vocab`** | Manage your vocabulary | `add`, `list`, `show`, `edit`, `merge`, `review`, `gap`, `regen-md`, `undo` |
-| **`status`** | Inspect your learning state | Read-only dashboard (Phase 5) |
+| **`status`** | Inspect your learning state | Read-only dashboard |
 
 Bare invocation opens the gateway:
 
@@ -124,7 +90,7 @@ Now you can:
 
 Status is **earned through tests, not user-set**. Mastered requires 3 consecutive correct results; confused requires 2 of last 3 partial/wrong. The one allowed manual transition is `mastered → reviewing` (you noticed you've forgotten something). Getting back to mastered requires re-earning it.
 
-### Status dashboard *(Phase 5)*
+### Status dashboard
 
 A read-only at-a-glance view of your learning state:
 
@@ -134,11 +100,11 @@ A read-only at-a-glance view of your learning state:
 - Gap radar (top 3-5 confused terms with staleness)
 - Suggested next lesson (combines vocab gap + progression)
 
-### Recovery / undo *(Phase 6)*
+### Recovery / undo
 
 Every tutorial generation logs a session record and snapshots the four files it modifies. `undo` reverts the last generation cleanly. Vocab additions are revertable for 24 hours via `vocab undo`. Day numbers can be retroactively renumbered via `renumber <old> <new>`, which rewrites references across PROGRESS.md, VOCABULARY.md, and other tutorials.
 
-### Audience-facing path *(Phase 7, shipped)*
+### Audience-facing path
 
 v2.0 adds a second gateway path for users who want to publish what they've learned. Instead of writing-to-learn, you're writing-to-teach. Five entry points (annotated source / incident-grounded / synthesized example / external source / documentation-grounded) feed into six venue templates with venue-aware voice calibration.
 
@@ -198,8 +164,8 @@ I wrote both bridge tutorials in the same session. Without the gap analysis I'd 
 | Generic vocabulary | Vocabulary from your project |
 | No continuity | Persistent progress tracking |
 | Assumes prerequisites | Detects missing concepts |
-| Read-only | Tested via spaced-repetition review *(v2.0)* |
-| One mode | Six entry points + audience-facing path *(v2.0)* |
+| Read-only | Tested via spaced-repetition review |
+| One mode | Six entry points + audience-facing path |
 | Separate from production work | Integrated into active development |
 
 ### Example workflow
@@ -227,7 +193,7 @@ Your code  ──►  tutorial-creator  ──►  Annotated lesson
 /skill tutorial-creator --mode learn           # skip gateway -> writing-to-learn
 /skill tutorial-creator --mode audience        # skip gateway -> audience-facing
 
-# v2.0 — multi-project (Phase 6.5, shipped 2026-05-10)
+# Multi-project (invoke from any cwd; the skill walks up to find the project)
 /skill tutorial-creator open <path>            # register a tutorial-creator project
 /skill tutorial-creator open                   # list registered projects, set default
 /skill tutorial-creator forget <path>          # remove a project from the registry
@@ -295,24 +261,11 @@ The v2.0 redesign extends this philosophy: vocabulary as a first-class learning 
 
 ## Install
 
-Two branches are installable. See **Which version should I install?** above for the difference. Default is `main` (stable v1.1).
-
-### Stable (recommended for new users)
-
 ```bash
 git clone https://github.com/Terryc21/tutorial-creator.git
-# clones the default branch, currently `main` (v1.1.0)
 ```
 
-### v2.0 in development
-
-```bash
-git clone -b feature/v2-robust https://github.com/Terryc21/tutorial-creator.git
-# or, if you've already cloned:
-cd tutorial-creator && git checkout feature/v2-robust
-```
-
-After cloning either branch:
+Then copy the skill into your Claude Code skills directory.
 
 **Global install** (all projects):
 
@@ -328,10 +281,9 @@ mkdir -p /path/to/project/.claude/skills && cp -r tutorial-creator/skills/* /pat
 
 ### Migrating from v1.1 to v2.0
 
-When you switch from `main` (v1.1) to `feature/v2-robust` (v2.0), or once v2.0 merges to `main`, users with existing v1.1 vocabulary need a one-time migration:
+If you used v1.1 and have an existing `VOCABULARY.md`, run a one-time import after installing v2.0:
 
 ```bash
-# After installing v2.0:
 /skill tutorial-creator vocab regen-md --import
 ```
 
@@ -357,7 +309,7 @@ These tools focus on workflow behavior and user experience, not just static code
 
 This repo (then named `code-smarter`) originally bundled two skills: `tutorial-creator` and `prompter`. The `prompter` skill was extracted into its own repo at [github.com/Terryc21/prompter](https://github.com/Terryc21/prompter) (with full commit history preserved) so each focused tool can be discovered independently. The repo was renamed from `code-smarter` to `tutorial-creator` so the repo name matches the skill name. The old URL still redirects.
 
-**v2.0** (in development on `feature/v2-robust`): vocabulary as a first-class object with state machine and review mode; six entry points instead of one; audience-facing path for users who want to publish what they've learned; status dashboard; recovery / undo. The redesign reframes Stuffolio's daily practice (the original use case) as a demo and treats other users — anyone learning Swift, TypeScript, Python, or Rust — as the target audience.
+**v2.0** (released 2026-05-10): vocabulary as a first-class object with state machine and review mode; six entry points instead of one; audience-facing path for users who want to publish what they've learned; status dashboard; recovery / undo. The redesign reframes Stuffolio's daily practice (the original use case) as a demo and treats other users, anyone learning Swift, TypeScript, Python, or Rust, as the target audience. See [CHANGELOG.md](CHANGELOG.md) for the full release notes.
 
 ---
 
@@ -367,14 +319,10 @@ Two channels, depending on what you've got:
 
 | Channel | Use it for |
 |:--|:--|
-| [**GitHub Discussions**](https://github.com/Terryc21/tutorial-creator/discussions) | Open-ended feedback, design questions, "is this how it's supposed to work?", suggestions for new entry points / venues / progressions, sharing how you're using the skill, asking which install branch fits your case. The right home for "I'm not sure if this is a bug." |
+| [**GitHub Discussions**](https://github.com/Terryc21/tutorial-creator/discussions) | Open-ended feedback, design questions, "is this how it's supposed to work?", suggestions for new entry points / venues / progressions, sharing how you're using the skill. The right home for "I'm not sure if this is a bug." |
 | [**GitHub Issues**](https://github.com/Terryc21/tutorial-creator/issues) | Concrete defect reports (it crashed, it produced wrong output, the install instructions don't work on my OS, a documented command does the wrong thing). Reproduce-able problems that need a fix. |
 
-Discussions is the right channel for active-development feedback while v2.0 is still moving. File an Issue when you have something specific and reproducible.
-
-If you're filing about v2.0 specifically, mention which phase the feedback applies to (the **v2.0 phase status** table near the top of this README has the list) and which branch you have installed (`main` or `feature/v2-robust`). That removes the first round of disambiguation.
-
-Pull requests welcome on either branch, but for non-trivial v2.0 changes please open a Discussion first — the design is still evolving and a misaligned PR is wasted effort for both of us.
+Pull requests welcome. For non-trivial changes please open a Discussion first so the design intent stays aligned.
 
 ---
 

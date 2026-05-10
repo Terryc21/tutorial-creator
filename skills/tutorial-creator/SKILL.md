@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase7
+version: 2.0.0
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -14,9 +14,7 @@ Three surfaces, gateway-mediated:
 - **`vocab`** — manage vocabulary independent of lesson generation
 - **`status`** — inspect your learning state (read-only dashboard)
 
-> **v2.0 in development.** Phases 1-6 fully shipped. Phase 7 is **partially shipped**: the audience-facing routing layer, AUDIENCE.md procedures, and 3 of 6 venue templates (`reddit`, `book-chapter`, `apple-developer-article`) are live. The remaining 3 venue templates (`medium`, `blog`, `repo-doc`) are not yet shipped; selecting them at the venue-selection prompt returns a "venue not yet available" message rather than rendering. Phase 7 will be redeclared as fully shipped (and the version bumped to `2.0.0-phase7`) when the remaining 3 venue files land. Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) follows. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
->
-> The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) routes to entry [b] (topic + file) and produces v1.1-shaped output until v2.0 ships.
+The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) still works; it routes to writing-to-learn entry [b] (topic + file).
 
 ## Usage
 
@@ -131,7 +129,7 @@ After the entry letter is picked, the Path 2 flow runs four more AskUserQuestion
 1. **Audience question.** Options: `beginner` / `intermediate` / `senior` / `mixed`. Drives in-voice content shifts (definitions vs. tradeoffs).
 2. **Honest-machine opt-in.** Y / N. When Y, the venue template appends a section on what the article does NOT cover (section name varies by venue; resolved from `venues/_schema.yaml#venues.<name>.honest_machine_section_name`).
 3. **Length budget.** Options: `S` / `M` / `L` / `X`. Each option label includes the venue's word target and ceiling, looked up from `venues/_schema.yaml#venues.<name>.length_budget`.
-4. **Venue selection.** Options: `reddit` / `book-chapter` / `apple-developer-article` / `medium` / `blog` / `repo-doc`. All six venues are shipped as of `2.0.0-phase7`; the runtime loads `venues/<chosen>.md` and renders the article using that venue's voice signature.
+4. **Venue selection.** Options: `reddit` / `book-chapter` / `apple-developer-article` / `medium` / `blog` / `repo-doc`. All six venues are shipped as of `v2.0.0`; the runtime loads `venues/<chosen>.md` and renders the article using that venue's voice signature.
 
 The full procedure for each Path 2 entry, the venue handoff payload schema, the audience × budget interaction rules, and the recovery-asymmetry rationale all live in `AUDIENCE.md`. SKILL.md is the routing surface; AUDIENCE.md is the procedure surface.
 
@@ -146,7 +144,7 @@ The full procedure for each Path 2 entry, the venue handoff payload schema, the 
 - **[e] gap-driven** — see `## Entry [e] — Gap-driven`
 - **[f] external source** — see `## Entry [f] — External source`
 
-**All five audience-facing entries are implemented** (Phase 7), but only 3 of 6 venue templates are shipped (Phase 7 is partial):
+**All five audience-facing entries are implemented** (Phase 7); all six venue templates are shipped:
 
 - **[a] annotated source** — see `AUDIENCE.md` § Entry [a]
 - **[b] incident-grounded** — see `AUDIENCE.md` § Entry [b]
@@ -869,7 +867,9 @@ See `SCHEMAS.md` Schema 4 for the progression yaml format.
 
 All persistent data shapes (tutorial-config, vocabulary, session-log, progressions) are documented in `SCHEMAS.md`. When in doubt, that file is the source of truth.
 
-## What's coming next
+## Release history
+
+The phases below describe how v2.0 was built incrementally. See `CHANGELOG.md` at the repo root for the user-facing release notes.
 
 | Phase | Adds | Status |
 |---|---|---|
@@ -879,7 +879,8 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped |
 | 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
 | 5 | Status dashboard | ✅ shipped |
-| 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped (this) |
+| 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped |
 | 6.5 | Project resolution: `--project-dir`, env var, ancestor walk, registry, `open`/`forget` subcommands | ✅ shipped (2026-05-10) |
-| 7 | Audience-facing path with 6 venue templates | ✅ shipped (this): routing + AUDIENCE.md + all 6 venues (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) |
-| 8 | Polish, CHANGELOG, demo bundles, v2.0.0 release | ⏳ pending |
+| 7 | Audience-facing path with 6 venue templates | ✅ shipped: routing + AUDIENCE.md + all 6 venues (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) |
+| 8a | Polish, CHANGELOG, v2.0.0 release | ✅ shipped |
+| 8b | Entry demo bundles under `examples/v2-entry-demos/` | ⏳ follow-up |
