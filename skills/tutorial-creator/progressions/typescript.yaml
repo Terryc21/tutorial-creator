@@ -1,0 +1,70 @@
+# TypeScript / React learning progression
+# Used by tutorial-creator entry [a] (daily progression) to recommend the next
+# concept based on the user's current phase.
+
+language: typescript
+framework: react
+
+phases:
+  - number: 1
+    name: Utilities
+    concepts:
+      - basic types (string, number, boolean, array, object)
+      - interfaces
+      - type aliases
+      - union and intersection types
+      - generics
+      - utility functions
+      - type guards
+
+  - number: 2
+    name: Hooks
+    concepts:
+      - useState
+      - useEffect (and cleanup)
+      - useContext
+      - useRef
+      - useMemo and useCallback
+      - custom hooks
+      - hook rules
+
+  - number: 3
+    name: Components
+    concepts:
+      - props and prop types
+      - children and composition
+      - render patterns (lists, conditional rendering)
+      - controlled vs uncontrolled
+      - higher-order components
+      - render props
+      - portals
+
+  - number: 4
+    name: State Management
+    concepts:
+      - lifting state up
+      - context for shared state
+      - useReducer
+      - external stores (Zustand, Jotai, Redux Toolkit)
+      - server state (TanStack Query, SWR)
+      - state colocation principles
+
+  - number: 5
+    name: API Layer
+    concepts:
+      - fetch and Response handling
+      - async/await with errors
+      - request cancellation (AbortController)
+      - caching strategies
+      - optimistic updates
+      - retry and exponential backoff
+
+  - number: 6
+    name: Testing
+    concepts:
+      - unit tests with Vitest/Jest
+      - component tests with Testing Library
+      - mocking modules and functions
+      - mocking fetch / network
+      - integration tests
+      - snapshot testing tradeoffs

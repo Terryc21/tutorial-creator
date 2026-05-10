@@ -1,0 +1,93 @@
+# Sample vocabulary.yaml showing all field shapes and all four status values.
+# Used as a reference for users learning the v2 vocab schema.
+# Live data lives at <tutorials_dir>/vocabulary.yaml in your project.
+
+- term: "@MainActor"
+  type: swift-attribute
+  definition: |
+    Property wrapper that constrains a type or method to run on the main thread.
+    Applied to view models, UI handlers, and any code that touches AppKit/UIKit.
+  first_encountered:
+    source_file: "Sources/Models/AppSchema.swift:42"
+    context: "Day 5 tutorial"
+    date: "2026-04-01"
+  status: mastered
+  test_history:
+    - { date: "2026-04-05", result: correct, source: "Day 5 post-test" }
+    - { date: "2026-04-12", result: correct, source: "Day 8 pre-test" }
+    - { date: "2026-04-28", result: correct, source: "vocab review" }
+  applied_test_history: []  # reserved for UNFORGET S49 (deferred); empty in v2.0
+  related_terms: ["actor", "Sendable", "isolation", "nonisolated"]
+  notes: "Earned mastered via 3 consecutive correct results."
+
+- term: "guard let"
+  type: swift-keyword
+  definition: |
+    Conditional binding that exits the current scope if the optional is nil.
+    Forces an early-exit pattern; the unwrapped value is available below the guard.
+  first_encountered:
+    source_file: "Sources/Helpers/MoneyHelper.swift:18"
+    context: "Day 1 tutorial"
+    date: "2026-03-23"
+  status: reviewing
+  test_history:
+    - { date: "2026-03-25", result: correct, source: "Day 1 post-test" }
+    - { date: "2026-04-15", result: partial, source: "vocab review" }
+  applied_test_history: []
+  related_terms: ["if let", "optional binding", "early exit"]
+  notes: ""
+
+- term: "actor isolation"
+  type: concept
+  definition: |
+    Swift's compile-time guarantee that an actor's mutable state is only
+    accessed from inside that actor. External callers must use await to
+    cross the isolation boundary.
+  first_encountered:
+    source_file: "Sources/Managers/CloudSyncManager.swift:127"
+    context: "Day 12 tutorial"
+    date: "2026-04-21"
+  status: confused
+  test_history:
+    - { date: "2026-04-22", result: partial, source: "Day 12 post-test" }
+    - { date: "2026-04-29", result: wrong, source: "vocab review" }
+    - { date: "2026-05-04", result: partial, source: "vocab review" }
+  applied_test_history: []
+  related_terms: ["actor", "@MainActor", "nonisolated", "Sendable"]
+  notes: |
+    Keep confusing this with @MainActor. They're related but not the same:
+    @MainActor is one specific actor (the main one); actor isolation is the
+    general property that any actor enforces.
+
+- term: "consume"
+  type: swift-keyword
+  definition: |
+    Ownership keyword (Swift 5.9+) that explicitly transfers ownership of a
+    value to a function, ending the caller's access to it. Used for non-copyable
+    types and to optimize move semantics for large values.
+  first_encountered:
+    source_file: ""
+    context: "vocab add"
+    date: "2026-05-09"
+  status: new
+  test_history: []
+  applied_test_history: []
+  related_terms: ["ownership", "borrow", "copy", "non-copyable"]
+  notes: "Added via vocab add — encountered in a code review, no source file yet."
+
+- term: "ViewThatFits"
+  type: swift-attribute
+  definition: |
+    SwiftUI container (iOS 16+) that picks the first child that fits the
+    available space. Useful for adaptive layouts that gracefully degrade
+    on smaller screens or larger Dynamic Type sizes.
+  first_encountered:
+    source_file: "Sources/Views/AdaptiveHeader.swift:23"
+    context: "Day 14 tutorial"
+    date: "2026-05-07"
+  status: reviewing
+  test_history:
+    - { date: "2026-05-07", result: correct, source: "Day 14 post-test" }
+  applied_test_history: []
+  related_terms: ["AnyLayout", "GeometryReader", "adaptive layout"]
+  notes: ""

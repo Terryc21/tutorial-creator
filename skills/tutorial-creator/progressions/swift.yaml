@@ -1,0 +1,70 @@
+# Swift / SwiftUI learning progression
+# Used by tutorial-creator entry [a] (daily progression) to recommend the next
+# concept based on the user's current phase. Externalized from SKILL.md in v2.0
+# so users can override one progression without forking the whole skill.
+
+language: swift
+framework: swiftui
+
+phases:
+  - number: 1
+    name: Utilities
+    concepts:
+      - optionals
+      - guard let
+      - closures
+      - extensions
+      - computed properties
+      - access control
+
+  - number: 2
+    name: Models
+    concepts:
+      - enums (with raw values, with associated values)
+      - structs vs classes
+      - Codable
+      - protocols
+      - protocol extensions
+      - generics
+
+  - number: 3
+    name: ViewModels
+    concepts:
+      - "@Observable macro"
+      - async/await
+      - Task and Task lifecycle
+      - error handling (do/try/catch)
+      - "@MainActor"
+      - dependency injection patterns
+
+  - number: 4
+    name: Views
+    concepts:
+      - "@State"
+      - "@Binding"
+      - "@Environment"
+      - navigation (NavigationStack, NavigationSplitView)
+      - view modifiers
+      - view composition
+      - sheets and full-screen covers
+      - alerts and confirmation dialogs
+
+  - number: 5
+    name: Managers
+    concepts:
+      - singletons (.shared) and tradeoffs
+      - protocol abstractions for testability
+      - URLSession and network calls
+      - Keychain access
+      - file system (FileManager, URL)
+      - persistence (UserDefaults, SwiftData)
+
+  - number: 6
+    name: Serialization
+    concepts:
+      - Codable JSON encoding/decoding
+      - custom CodingKeys
+      - nested Codable
+      - backup/restore patterns
+      - data migration (versioning, schema evolution)
+      - export/import (JSON, archive formats)
