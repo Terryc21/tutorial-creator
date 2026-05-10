@@ -31,12 +31,26 @@ Three surfaces, gateway-mediated:
 /skill tutorial-creator renumber <old> <new>    # rename Day-N + rewrite cross-references
 /skill tutorial-creator --mode learn|audience|both|vocab|status [args]
                                                  # skip gateway, route directly
+/skill tutorial-creator open <path>             # register a tutorial-creator project
+                                                 #  in ~/.claude/tutorial-creator/registry.yaml
+                                                 #  so future invocations from any cwd find it
+/skill tutorial-creator open                    # list registered projects + pick one
+                                                 #  (sets it as the registry default)
+/skill tutorial-creator forget <path>           # remove a project from the registry
+                                                 #  (no filesystem changes; project files stay)
+/skill tutorial-creator --project-dir <path> [args]
+                                                 # one-shot override; resolves config
+                                                 #  from <path>/.claude/tutorial-config.yaml
+                                                 #  instead of the default discovery rule
 ```
+
+**Where the project lives.** `.claude/tutorial-config.yaml` and `.claude/tutorial-sessions/` live in the **resolved project root**, not necessarily cwd. The skill walks a discovery chain on every invocation; see `## Project resolution`. This means you can keep a tutorial-creator project at `/Volumes/.../Tutorials/` and invoke `/skill tutorial-creator status` from any working directory and it Just Works — same mental model as `git status` walking up from cwd to find `.git/`.
 
 ## Routing logic
 
 Every invocation runs through this dispatch:
 
+0. **Resolve the project root** (NEW in this revision). Run `## Project resolution` first to determine which `.claude/tutorial-config.yaml` this invocation should read or write to. The resolved path becomes `$PROJECT_ROOT` for the rest of the invocation; all subsequent file operations described in this document use `$PROJECT_ROOT/.claude/`, `$PROJECT_ROOT/{tutorials_dir}/`, etc. Steps 1–4 below assume this has run.
 1. **Read `--mode` flag if present.** If set, echo it back to the user as a one-line confirmation, then jump directly to that surface or path. Skip the gateway question. Mode values: `learn`, `audience`, `both`, `vocab`, `status`.
 2. **Else, recognize first-positional subcommand keywords.** If the first positional arg is one of:
    - `tutorial` → tutorial surface (Path 1 unless `--mode audience` follows)
@@ -44,6 +58,8 @@ Every invocation runs through this dispatch:
    - `status` → status surface (`STATUS.md`)
    - `undo` → recovery `undo` route (see `## Recovery` § `undo` command). May be followed by `--session <id>`
    - `renumber` → recovery `renumber` route (see `## Recovery` § `renumber`). Requires two more positional args: `<old> <new>` (e.g., `renumber 8 7.5`)
+   - `open` → registry route (see `## Project resolution` § `open` command). May be followed by an optional `<path>` positional
+   - `forget` → registry route (see `## Project resolution` § `forget` command). Requires one positional arg: `<path>`
    Route directly. Skip the gateway question.
 3. **Else, parse two-positional legacy form.** If the user invoked with two positional args matching `<topic> <source>` AND the source is an existing file in the project, treat as **entry [b] legacy path** — produce a v1.1-shaped tutorial. This preserves the v1.1 invocation contract for users who haven't seen the v2 changes.
 4. **Else, ask the gateway question.** Present the four-option menu (below). Route based on answer.
@@ -201,9 +217,85 @@ If no source file in the project demonstrates the recommended concept (scan retu
 
 Do not silently fall back to a synthesized example or pick a marginal file. The user's confidence in the recommendation is load-bearing.
 
+## Project resolution
+
+Runs as step 0 of every invocation, before routing. Determines `$PROJECT_ROOT` — the directory whose `.claude/tutorial-config.yaml` this invocation reads from and writes to. Resolution must succeed before any other step runs; if it doesn't, the skill either runs first-run setup (if no project anywhere) or refuses (if multiple registered projects can't be disambiguated).
+
+### Discovery chain (highest precedence first)
+
+1. **`--project-dir <path>` flag.** If set on the invocation, treat `<path>` as `$PROJECT_ROOT` and stop. The path must be absolute or resolvable relative to cwd. If `<path>/.claude/tutorial-config.yaml` does not exist, the skill **does not** auto-create it from this flag — say `--project-dir <path> has no tutorial-creator config. Run "/skill tutorial-creator open <path>" first, or invoke from <path> to trigger first-run setup.` and stop. The `--project-dir` flag is for picking among already-set-up projects, not for bootstrapping new ones in unusual locations.
+2. **Environment variable `TUTORIAL_CREATOR_PROJECT_DIR`.** If set and points to a directory with `.claude/tutorial-config.yaml`, use it as `$PROJECT_ROOT`. If the env var is set but the path is invalid, warn (`TUTORIAL_CREATOR_PROJECT_DIR=<path> doesn't have a tutorial-creator config; ignoring`) and fall through to the next step.
+3. **Cwd's `.claude/tutorial-config.yaml`.** If `./.claude/tutorial-config.yaml` exists in the current working directory, use cwd as `$PROJECT_ROOT`. This preserves backward compatibility with v1.1 / v2.0-pre-resolution behavior — if you're already in your project, nothing changes.
+4. **Ancestor walk from cwd.** Walk up from cwd one directory at a time until either: (a) a `.claude/tutorial-config.yaml` exists at that level — use that directory as `$PROJECT_ROOT`; (b) the filesystem root is reached — fall through to the next step. Stop at filesystem root, do NOT cross into another user's home directory or into `/`.
+5. **Registry lookup.** Read `~/.claude/tutorial-creator/registry.yaml` (per SCHEMAS.md Schema 5). If the file exists and:
+   - has exactly one project entry → use it as `$PROJECT_ROOT`
+   - has a `default` field pointing at a registered project → use it
+   - has multiple projects with no default → prompt the user to pick one (and offer to set it as default for next time):
+     ```
+     Multiple tutorial-creator projects registered. Pick one for this invocation:
+       [1] /Volumes/.../Tutorials      (last invoked: 2026-05-10)
+       [2] /Users/me/Code/learn-rust   (last invoked: 2026-04-15)
+       [3] /Users/me/code-smarter      (last invoked: 2026-03-22)
+     Choose [1-3]; add `--default` to also set this as the registry default.
+     ```
+   - registry file is missing or empty → fall through to the next step
+6. **First-run setup in cwd.** No project found anywhere in the chain. Run `## First-Run Setup` against cwd; ask the user to confirm cwd is where they want the project to live, or to type a different path. After setup, offer to register the new project:
+   ```
+   Add this project to the registry so future invocations from any cwd find it? [yes/no]
+   ```
+   If yes, append to `~/.claude/tutorial-creator/registry.yaml` and set `default: <new path>` if no default exists yet.
+
+### When to refuse vs prompt
+
+- Step 1 (`--project-dir`) without a config at the path → refuse. The flag is explicit; honoring it would silently bootstrap somewhere the user didn't ask for.
+- Step 2 (env var) without a config at the path → warn, fall through. The env var may be stale or wrong; falling through to discovery is forgiving.
+- Step 5 (registry) with multiple projects no default → prompt. This is the common multi-project case and the user just needs to pick.
+- Step 6 (no project anywhere) → run setup. This is the cold-start case the skill was already designed for; the resolution chain just adds the new escape hatches above it.
+
+### Side effect: registry update on success
+
+After successful resolution (steps 1–5), if the project is in the registry, update its `last_invoked` timestamp to now. This makes the multi-project pick prompt order entries by recency. Step 6 may also write a new registry entry (with user consent).
+
+### `open` command
+
+Registers a tutorial-creator project so the resolution chain finds it from any cwd. Two forms:
+
+```
+/skill tutorial-creator open                    # interactive: list registered, pick + set as default
+/skill tutorial-creator open <path>             # add <path> to the registry
+```
+
+**Form 1 — list and pick.** Read `~/.claude/tutorial-creator/registry.yaml`. If empty, say `No projects registered. Use "/skill tutorial-creator open <path>" to add one.` and stop. Otherwise, list registered projects with their `last_invoked` timestamps, ask the user to pick one, and write that project as the registry's `default`. Confirm: `Default set to <path>. Future invocations from any cwd will use this project unless you pass --project-dir.`
+
+**Form 2 — add a path.** Verify `<path>` exists and contains `.claude/tutorial-config.yaml`. If the config is missing, refuse: `<path> has no tutorial-creator config. Either run setup at <path> first by invoking the skill from there, or pass a path to an already-set-up project.` On success, append to the registry. If this is the first registered project, also write it as the `default`. Confirm: `Registered <path>. Now reachable from any cwd via the resolution chain.`
+
+The `open` command does NOT create a config; it only registers an existing one. This is deliberate — bootstrapping a new project should happen via first-run setup, which has its own confirmation flow ("Where should tutorials be saved?", language detection, etc.). Splitting the two prevents accidental misconfig.
+
+### `forget` command
+
+```
+/skill tutorial-creator forget <path>
+```
+
+Removes `<path>` from the registry. Filesystem changes: none. The project's files (`.claude/tutorial-config.yaml`, `tutorials_dir`, etc.) are untouched. If `<path>` was the default, the registry's `default` field is cleared. If `<path>` is not in the registry, say `<path> is not registered.` and stop.
+
+Use `forget` when a project moves (`forget` the old path, `open` the new one) or when a project is archived and shouldn't surface in the multi-project picker anymore.
+
+### Why this design
+
+The previous behavior (`tutorial-config.yaml` pinned to cwd) created the same hostility `git` would have if `.git/` only worked from the exact directory you ran `git init` in. Tutorial projects often outlive any single coding session — the user's tutorials live at `/Volumes/.../Tutorials/` for years; the codebase they're learning from changes weekly. The discovery chain decouples "where the learning artifacts live" from "where I happen to be running the skill from right now," same as `git` decouples the working tree from the .git directory location.
+
+The registry exists for the case where neither cwd nor an ancestor reveals a project. Without it, a user who keeps their tutorials at `~/Code/learn-rust/` and wants to invoke `/skill tutorial-creator status` from `~/`, `/tmp/`, or any other arbitrary cwd would have to type `--project-dir ~/Code/learn-rust` every time. The registry makes "I have one tutorial project" the zero-friction case.
+
+### Cwd-relative paths in resolved configs
+
+Once `$PROJECT_ROOT` is resolved, `tutorials_dir`, `project_dir`, and `progression_override` in the config are interpreted relative to `$PROJECT_ROOT`, NOT cwd. So a config that says `tutorials_dir: ./tutorials/` always means `$PROJECT_ROOT/tutorials/` regardless of where the skill was invoked from. This is the same convention `git` uses for paths in `.gitignore` and `.gitconfig`.
+
+If the existing config has `project_dir: .` (the v1.1 default meaning "the cwd at setup time"), v2 treats `.` as `$PROJECT_ROOT`. This is technically a behavior change for users who set up tutorial-creator in a project root and then invoked from a subdirectory expecting `project_dir` to follow cwd — but that mode was never coherent (the config is per-project, not per-invocation), and no shipped feature relies on the old reading.
+
 ## First-Run Setup
 
-On first invocation in a new project, check for `.claude/tutorial-config.yaml`. If missing, run setup:
+Triggered from `## Project resolution` step 6 (no project found anywhere in the discovery chain). Confirms cwd is where the project should live, then prompts for setup details:
 
 ```
 Welcome to tutorial-creator! Let's set up your learning environment.
@@ -211,12 +303,13 @@ Welcome to tutorial-creator! Let's set up your learning environment.
 
 Ask via AskUserQuestion:
 
-1. **Where should tutorials be saved?** Default: `./tutorials/`
-2. **What language/framework are you learning?** Auto-detect from project files (`package.json` = JS/TS, `Package.swift` = Swift, `Cargo.toml` = Rust, etc.); user confirms or overrides.
-3. **What's your experience level?** beginner / intermediate / advanced.
-4. **What's your project directory?** Default: current working directory.
+1. **Confirm the project root.** Default: cwd. Show the resolved cwd path verbatim, ask "Use this directory as your tutorial-creator project? [yes / pick different path / cancel]". If the user picks a different path, that becomes `$PROJECT_ROOT` for the rest of setup. Refuse paths that don't exist; refuse paths inside another already-registered project (would create nested configs).
+2. **Where should tutorials be saved?** Default: `$PROJECT_ROOT/tutorials/` (config written as `./tutorials/`, interpreted relative to `$PROJECT_ROOT`). User can pick an absolute path elsewhere if they want tutorial files outside the project root for some reason.
+3. **What language/framework are you learning?** Auto-detect from project files (`package.json` = JS/TS, `Package.swift` = Swift, `Cargo.toml` = Rust, etc.) at `$PROJECT_ROOT`; user confirms or overrides.
+4. **What's your experience level?** beginner / intermediate / advanced.
+5. **What's your project directory?** (the codebase you're learning from) Default: `$PROJECT_ROOT` itself. User picks a different path if their tutorials track a *different* codebase than the one hosting the config (e.g., tutorials live at `~/Tutorials/`, codebase being studied lives at `~/Code/myapp/`).
 
-Save config to `.claude/tutorial-config.yaml` per `SCHEMAS.md` Schema 1:
+Save config to `$PROJECT_ROOT/.claude/tutorial-config.yaml` per `SCHEMAS.md` Schema 1:
 
 ```yaml
 schema_version: 2
@@ -231,12 +324,18 @@ recovery_enabled: true
 progression_override: null
 ```
 
-Create initial files:
+Create initial files (relative to `$PROJECT_ROOT`):
 - `{tutorials_dir}/PROGRESS.md` (template at end of this file)
 - `{tutorials_dir}/VOCABULARY.md` (regenerated view)
 - `{tutorials_dir}/vocabulary.yaml` (empty list `[]`)
 
-If `.claude/` doesn't exist, create it.
+If `$PROJECT_ROOT/.claude/` doesn't exist, create it.
+
+After setup completes, offer to register the new project in `~/.claude/tutorial-creator/registry.yaml`:
+
+> Add this project to the registry so future invocations from any cwd find it? [yes/no]
+
+If yes, append an entry per SCHEMAS.md Schema 5. If this is the first registered project, also write it as the registry's `default`. See `## Project resolution` § "Discovery chain" for how the registry feeds future invocations.
 
 ## Entry [b] — Tutorial Format (topic + file)
 
@@ -574,8 +673,8 @@ Before any tutorial generation writes a file, the skill runs the **pre-write hoo
 
 1. **Check `recovery_enabled`** in `tutorial-config.yaml` (default `true`). If false, skip the rest of this hook entirely. The user opted out of the filesystem footprint and has no undo available; proceed directly to generation.
 2. **Compute session id.** ISO-8601 timestamp with `:` replaced by `-` (filesystem-safe), e.g. `2026-05-09T14-32-00`.
-3. **Create the session directory.** `.claude/tutorial-sessions/<session_id>/` (relative to project root).
-4. **Snapshot the four files that will be modified.** For each of these, copy the *current* contents into the session directory before any modification:
+3. **Create the session directory.** `$PROJECT_ROOT/.claude/tutorial-sessions/<session_id>/`. `$PROJECT_ROOT` is the directory the resolution chain (`## Project resolution`) selected for this invocation — NOT necessarily cwd. For a project registered at `/Volumes/.../Tutorials/` invoked from anywhere else, the session directory lives at `/Volumes/.../Tutorials/.claude/tutorial-sessions/<id>/`.
+4. **Snapshot the four files that will be modified.** All paths below are relative to `$PROJECT_ROOT`. For each, copy the *current* contents into the session directory before any modification:
    - `{tutorials_dir}/PROGRESS.md` → `.claude/tutorial-sessions/<session_id>/PROGRESS.md`
    - `{tutorials_dir}/VOCABULARY.md` → `.claude/tutorial-sessions/<session_id>/VOCABULARY.md`
    - `{tutorials_dir}/vocabulary.yaml` → `.claude/tutorial-sessions/<session_id>/vocabulary.yaml`
@@ -787,6 +886,7 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
 | 5 | Status dashboard | ✅ shipped |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped (this) |
+| 6.5 | Project resolution: `--project-dir`, env var, ancestor walk, registry, `open`/`forget` subcommands | ✅ shipped (2026-05-10) |
 | 7 | Audience-facing path with 6 venue templates | ⚠️ partial (this): routing + AUDIENCE.md + 3 of 6 venues shipped (`reddit`, `book-chapter`, `apple-developer-article`); `medium`, `blog`, `repo-doc` pending |
 | 7 (final) | Remaining 3 venue templates (`medium`, `blog`, `repo-doc`) | ⏳ pending |
 | 8 | Polish, CHANGELOG, demo bundles, v2.0.0 release | ⏳ pending |

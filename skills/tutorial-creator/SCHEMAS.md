@@ -5,7 +5,7 @@ or writes. SKILL.md, VOCAB.md, and STATUS.md all reference these schemas;
 when a schema changes, update this file first, then the surfaces that touch it.
 
 **Status:** v2.0 baseline. Versioned at the bottom of each schema.
-**Last updated:** 2026-05-09 (Phase 1)
+**Last updated:** 2026-05-10 (Phase 6.5: Schema 5 added for cross-project registry; `$PROJECT_ROOT` clarified throughout).
 
 ---
 
@@ -19,20 +19,27 @@ when a schema changes, update this file first, then the surfaces that touch it.
 | `PROGRESS.md` | Progression tracker, score log, mastery checklist | This file | Generated; user can edit narrative sections |
 | `tutorial-sessions/<ts>.yaml` | Per-generation session record (for undo) | This file | Generated; never edit by hand |
 | `progressions/<lang>.yaml` | Built-in language progressions | This file (skill repo) | Skill author; users override via config |
+| `~/.claude/tutorial-creator/registry.yaml` | Cross-project registry (multi-project discovery) | This file (Schema 5) | Skill writes; user may edit by hand |
 
-**File locations** (relative to user's project root):
+**File locations** (relative to `$PROJECT_ROOT`, the directory selected by `## Project resolution` in SKILL.md):
 
 ```
-.claude/
-├── tutorial-config.yaml
-└── tutorial-sessions/
-    └── <ISO-timestamp>.yaml
-{tutorials_dir}/                        (default: ./tutorials/)
-├── PROGRESS.md
-├── VOCABULARY.md                       (generated view)
-├── vocabulary.yaml                     (source of truth)
-└── DayN-<Topic>-Annotated.md           (generated tutorials)
+$PROJECT_ROOT/
+├── .claude/
+│   ├── tutorial-config.yaml
+│   └── tutorial-sessions/
+│       └── <ISO-timestamp>.yaml
+└── {tutorials_dir}/                    (default: ./tutorials/)
+    ├── PROGRESS.md
+    ├── VOCABULARY.md                   (generated view)
+    ├── vocabulary.yaml                 (source of truth)
+    └── DayN-<Topic>-Annotated.md       (generated tutorials)
+
+~/.claude/tutorial-creator/
+└── registry.yaml                       (cross-project; Schema 5)
 ```
+
+**`$PROJECT_ROOT` resolution.** `$PROJECT_ROOT` is determined by the discovery chain in SKILL.md `## Project resolution`. It is NOT always cwd. The skill walks the chain on every invocation: `--project-dir` flag → `TUTORIAL_CREATOR_PROJECT_DIR` env var → cwd's `.claude/tutorial-config.yaml` → ancestor walk → registry → first-run setup. All paths in this schemas document are relative to `$PROJECT_ROOT` unless otherwise stated.
 
 ---
 
@@ -257,6 +264,58 @@ phases:
 ### Custom progressions
 
 A user with a custom progression sets `progression_override: /absolute/path/to/my-progression.yaml` in `tutorial-config.yaml`. The custom file must conform to this same schema.
+
+---
+
+## Schema 5 — `~/.claude/tutorial-creator/registry.yaml`
+
+Cross-project registry. Lives in the user's home `~/.claude/`, NOT in any single project. Lets the skill find tutorial-creator projects from any cwd. Populated by `tutorial-creator open <path>`, the offer-to-register prompt at the end of first-run setup, and `tutorial-creator forget <path>` (removal). The skill auto-updates `last_invoked` timestamps; users may hand-edit anything else.
+
+```yaml
+schema_version: 1
+
+projects:
+  - path: /Volumes/2 TB Drive/Coding/GitHub/Tutorials
+    name: stuffolio-learning           # optional; user-provided friendly label
+    last_invoked: 2026-05-10T12:34:00Z
+
+  - path: /Users/me/Code/learn-rust
+    name: rust-fundamentals
+    last_invoked: 2026-04-15T08:21:00Z
+
+# Optional: which project to use when the discovery chain reaches the
+# registry step and there are multiple entries. Set by `tutorial-creator open`
+# (interactive form) or by passing `--default` to the path form.
+default: /Volumes/2 TB Drive/Coding/GitHub/Tutorials
+```
+
+### Field rules
+
+- `schema_version`: integer. Always `1` for v2.0. Future bumps follow the policy below.
+- `projects`: list of registered project entries. Order does not matter; the picker UI sorts by `last_invoked` desc.
+- `projects[].path`: absolute filesystem path. Must contain `.claude/tutorial-config.yaml` to be considered valid by the resolution chain. The registry does NOT validate this on every read — it only refuses to *register* invalid paths (`open` checks). A registered project whose config disappears later silently falls through the resolution chain to the next step; periodic `tutorial-creator forget` cleanup is on the user.
+- `projects[].name`: optional string. Free-form label. Shown in the multi-project picker prompt for human readability when many projects share similar paths.
+- `projects[].last_invoked`: ISO-8601 UTC timestamp, updated by the skill on successful resolution. New entries default to the current timestamp at registration time.
+- `default`: optional absolute path. Must match one of `projects[].path` exactly. Used when the resolution chain reaches step 5 (registry lookup) and finds multiple projects. If `default` is unset and there are multiple projects, the skill prompts the user to pick.
+
+### Operations
+
+- **`tutorial-creator open <path>`** — append to `projects` if not already present; if first project, also set as `default`.
+- **`tutorial-creator open` (interactive)** — show registered projects, set chosen one as `default`.
+- **`tutorial-creator forget <path>`** — remove from `projects`; if it was the `default`, clear `default`.
+- **Successful resolution (any step that picks a registered project)** — update that project's `last_invoked`. Side-effect only; no user interaction.
+
+### Concurrency
+
+The registry is a single-writer file. The skill does not currently take a lock when writing. In practice this is fine because tutorial-creator invocations are interactive and humans don't run two simultaneously. If two writes do race, last-write-wins. The risk of corruption is bounded (yaml is self-contained per write); a future v2.x could add atomic-rename-on-write if it becomes a problem.
+
+### Why not just walk to a known location?
+
+An earlier design considered "always look at `~/.claude/tutorial-creator/<project-name>/` for configs." The registry is a cleaner separation: configs stay with their projects (so a project moves with a `git mv` or `mv` of the project directory), and the registry is just a pointer table. Same separation `git` uses between `.git/` directories and a hypothetical `git config --global` registry — except `git` doesn't actually need a registry because it always operates on cwd. tutorial-creator does need one because invocations from arbitrary cwds are the common case (`/skill tutorial-creator status` from anywhere should work).
+
+### v1 → future migration
+
+v2.0 ships at registry `schema_version: 1`. Adding fields like `tags`, `last_active_concept`, or `archived: true` would be additive and stay at version 1. A breaking change (e.g., restructuring `projects` from a list to a map) would bump to version 2 with a documented migration.
 
 ---
 
