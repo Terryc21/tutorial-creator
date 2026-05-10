@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0-phase7
+version: 2.0.0-phase7-partial
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -14,7 +14,7 @@ Three surfaces, gateway-mediated:
 - **`vocab`** — manage vocabulary independent of lesson generation
 - **`status`** — inspect your learning state (read-only dashboard)
 
-> **v2.0 in development.** Phases 1-7 shipped (foundations, surfaces split, all six writing-to-learn entries, vocab surface, status dashboard, recovery, audience-facing path with 6 venue templates). Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) remains. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
+> **v2.0 in development.** Phases 1-6 fully shipped. Phase 7 is **partially shipped**: the audience-facing routing layer, AUDIENCE.md procedures, and 3 of 6 venue templates (`reddit`, `book-chapter`, `apple-developer-article`) are live. The remaining 3 venue templates (`medium`, `blog`, `repo-doc`) are not yet shipped; selecting them at the venue-selection prompt returns a "venue not yet available" message rather than rendering. Phase 7 will be redeclared as fully shipped (and the version bumped to `2.0.0-phase7`) when the remaining 3 venue files land. Phase 8 (polish, CHANGELOG, demo bundles, v2.0.0 release) follows. See `~/.claude/plans/tutorial-creator-v2-implementation.md` and `~/.claude/plans/tutorial-creator-v2-resume.md`.
 >
 > The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) routes to entry [b] (topic + file) and produces v1.1-shaped output until v2.0 ships.
 
@@ -117,6 +117,12 @@ After the entry letter is picked, the Path 2 flow runs four more AskUserQuestion
 3. **Length budget.** Options: `S` / `M` / `L` / `X`. Each option label includes the venue's word target and ceiling, looked up from `venues/_schema.yaml#venues.<name>.length_budget`.
 4. **Venue selection.** Options: `reddit` / `book-chapter` / `apple-developer-article` / `medium` / `blog` / `repo-doc`.
 
+   **Partial-Phase-7 guard:** the venue-selection question must label the three not-yet-shipped venues (`medium`, `blog`, `repo-doc`) as `(not yet available)` in their option text. If the user selects any of those three regardless, the skill MUST refuse with this exact message and stop, NOT attempt the venue handoff:
+
+   > Venue `<name>` is not yet shipped in `2.0.0-phase7-partial`. Available venues right now: `reddit`, `book-chapter`, `apple-developer-article`. Pick one of those, or wait for the next release.
+
+   The runtime must NOT attempt to load `venues/<name>.md` for an unshipped venue under any circumstance; the file does not exist and the open will fail.
+
 The full procedure for each Path 2 entry, the venue handoff payload schema, the audience × budget interaction rules, and the recovery-asymmetry rationale all live in `AUDIENCE.md`. SKILL.md is the routing surface; AUDIENCE.md is the procedure surface.
 
 ### Implementation status
@@ -130,7 +136,7 @@ The full procedure for each Path 2 entry, the venue handoff payload schema, the 
 - **[e] gap-driven** — see `## Entry [e] — Gap-driven`
 - **[f] external source** — see `## Entry [f] — External source`
 
-**All five audience-facing entries are implemented** (Phase 7):
+**All five audience-facing entries are implemented** (Phase 7), but only 3 of 6 venue templates are shipped (Phase 7 is partial):
 
 - **[a] annotated source** — see `AUDIENCE.md` § Entry [a]
 - **[b] incident-grounded** — see `AUDIENCE.md` § Entry [b]
@@ -138,7 +144,18 @@ The full procedure for each Path 2 entry, the venue handoff payload schema, the 
 - **[d] external source** — see `AUDIENCE.md` § Entry [d]
 - **[e] documentation-grounded** — see `AUDIENCE.md` § Entry [e]
 
-The five Path 2 entries `[a]`-`[e]` share letters with the Path 1 entries but are different procedures; do not conflate them. Path 1 produces artifacts for the user (writing-to-learn); Path 2 produces artifacts for an audience (Reddit posts, book chapters, articles, blog posts, repo docs). After the entry is chosen, Path 2 hands off to one of six venue templates in `venues/`, each calibrated to a target medium's voice and length budget.
+**Venue templates available right now:**
+
+| Venue | File | Status |
+|---|---|---|
+| `reddit` | `venues/reddit.md` | ✅ shipped |
+| `book-chapter` | `venues/book-chapter.md` | ✅ shipped |
+| `apple-developer-article` | `venues/apple-developer-article.md` | ✅ shipped |
+| `medium` | `venues/medium.md` | ⚠️ not yet shipped |
+| `blog` | `venues/blog.md` | ⚠️ not yet shipped |
+| `repo-doc` | `venues/repo-doc.md` | ⚠️ not yet shipped |
+
+The five Path 2 entries `[a]`-`[e]` share letters with the Path 1 entries but are different procedures; do not conflate them. Path 1 produces artifacts for the user (writing-to-learn); Path 2 produces artifacts for an audience (Reddit posts, book chapters, articles, blog posts, repo docs). After the entry is chosen, Path 2 hands off to one of the 3 currently-shipped venue templates in `venues/`. Selecting an unshipped venue triggers the partial-Phase-7 guard described in the venue-selection step above.
 
 ## Entry [a] — Daily progression
 
@@ -770,6 +787,7 @@ All persistent data shapes (tutorial-config, vocabulary, session-log, progressio
 | 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
 | 5 | Status dashboard | ✅ shipped |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped (this) |
-| 7 | Audience-facing path with 6 venue templates | ✅ shipped (this) |
+| 7 | Audience-facing path with 6 venue templates | ⚠️ partial (this): routing + AUDIENCE.md + 3 of 6 venues shipped (`reddit`, `book-chapter`, `apple-developer-article`); `medium`, `blog`, `repo-doc` pending |
+| 7 (final) | Remaining 3 venue templates (`medium`, `blog`, `repo-doc`) | ⏳ pending |
 | 8 | Polish, CHANGELOG, demo bundles, v2.0.0 release | ⏳ pending |
 | 8 | Polish, README rewrite, v2.0.0 release | ⏳ pending |
