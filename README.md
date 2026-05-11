@@ -295,11 +295,11 @@ This converts your existing `VOCABULARY.md` Markdown table into the v2.0 `vocabu
 
 Other skills built during development of Stuffolio:
 
-- [**prompter**](https://github.com/Terryc21/prompter): rewrite Claude Code prompts for clarity before execution. Originally bundled with this repo; split into its own home so the audience that wants prompt rewriting can find it without first finding a tutorial-generation tool.
-- [**bug-echo**](https://github.com/Terryc21/bug-echo): after fixing a bug, locate and rate similar patterns elsewhere in the codebase
-- [**workflow-audit**](https://github.com/Terryc21/workflow-audit): multi-layer behavioral audit of SwiftUI user workflows
-- [**radar-suite**](https://github.com/Terryc21/radar-suite): behavioral audit suite for iOS/macOS Swift projects
-- [**unforget**](https://github.com/Terryc21/unforget): single source of truth for deferred work; nothing slips between releases
+- [**prompter**](https://github.com/Terryc21/prompter): rewrites your Claude Code prompts for clarity and missing context before they run. Catches the ambiguity you didn't see. Sharpens your prompting by seeing how Claude Code would rewrite your prompts for better understanding.
+- [**bug-echo**](https://github.com/Terryc21/bug-echo): after you fix a bug, finds other places in your codebase with the same pattern. Stops the "fixed it once, missed three others" cycle.
+- [**workflow-audit**](https://github.com/Terryc21/workflow-audit): traces SwiftUI user journeys end to end, detects dead ends, broken back navigation, missing empty states, and dismiss traps.
+- [**radar-suite**](https://github.com/Terryc21/radar-suite): multi-domain code audit that grades your codebase A through F across UI paths, data models, release readiness, and more. Tells you what to fix before shipping.
+- [**unforget**](https://github.com/Terryc21/unforget): single source of truth for deferred work; nothing slips between releases.
 
 These tools focus on workflow behavior and user experience, not just static code inspection.
 
