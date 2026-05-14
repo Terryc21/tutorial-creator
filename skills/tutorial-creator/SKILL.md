@@ -69,10 +69,10 @@ Use AskUserQuestion (or plain-text prompt if AskUserQuestion is unavailable):
 ```
 What do you want to do?
 
-[1] Write a tutorial for myself      (writing-to-learn)
-[2] Write a tutorial for others      (audience-facing)
-[3] Manage vocabulary                 (jump to vocab surface)
-[4] Inspect my learning state         (jump to status surface)
+[1] Write a tutorial for myself      (for my own learning)
+[2] Write a tutorial for others      (preparing a lesson for others to learn)
+[3] Manage vocabulary                 (edit vocabulary)
+[4] Inspect my learning state         (see my progress and what I'm forgetting)
 ```
 
 - **Answer [1]** → tutorial surface, Path 1 (writing-to-learn). Ask the entry-point question (six options; see `## Tutorial surface — entry points`).
@@ -105,11 +105,11 @@ After gateway answer = [1] (writing-to-learn), ask:
 Where does the lesson start?
 
 [a] Daily progression       — pick what's next based on my progress
-[b] Topic + file            — I have both ("closures in helpers.ts")
+[b] Topic + file            — I have both a topic and a source file
 [c] Topic only              — I have a topic, find the best file
 [d] Question                — I'm stuck on something specific
 [e] Gap-driven              — show me my "confused" vocabulary, pick from there
-[f] External source         — I read this; help me consolidate
+[f] Notes & synthesis       — from a doc, post, video, or past session
 ```
 
 After gateway answer = [2] (audience-facing), ask:
