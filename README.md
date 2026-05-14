@@ -8,6 +8,34 @@ Works with any Swift, TypeScript, Python, or Rust project. Originally built duri
 
 ---
 
+## Install
+
+Clone into your Claude Code skills directory:
+
+```bash
+git clone https://github.com/Terryc21/tutorial-creator ~/.claude/skills/tutorial-creator
+```
+
+Then in any Claude Code session:
+
+```
+/skill tutorial-creator
+```
+
+First-run setup prompts you for the project to learn from, your language (Swift / TypeScript / Python / Rust auto-detected), and your experience level. The skill creates `.claude/tutorial-config.yaml` and a tutorials directory in the project you point it at.
+
+## What gets generated
+
+Three sample outputs are checked into `skills/tutorial-creator/examples/`:
+
+- **[Day 3 — `ScoutResultsLookupView`](skills/tutorial-creator/examples/Day3-ScoutResultsLookupView-Annotated.md)** — early-progression Swift tutorial annotating a single SwiftUI view file. Pre-test, annotated source, post-test, vocabulary table.
+- **[Day 16 — Captured-self staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md)** — later-progression deep dive on a subtle Swift concurrency bug pattern in the user's own codebase.
+- **[`useDebouncedValue` hook](skills/tutorial-creator/examples/useDebouncedValue-Annotated.md)** — non-Swift example: TypeScript / React custom hook, same tutorial shape.
+
+Each is a real tutorial generated from a real codebase, not a fabricated illustration.
+
+---
+
 ## Why this exists
 
 Most AI coding tools optimize for speed: generate code faster, scaffold features faster, ship faster.
@@ -49,10 +77,10 @@ Bare invocation opens the gateway:
 
 What do you want to do?
 
-[1] Write a tutorial for myself      (writing-to-learn)
-[2] Write a tutorial for others      (audience-facing)
-[3] Manage vocabulary                 (jump to vocab surface)
-[4] Inspect my learning state         (jump to status surface)
+[1] Write a tutorial for myself      (for my own learning)
+[2] Write a tutorial for others      (preparing a lesson for others to learn)
+[3] Manage vocabulary                 (edit vocabulary)
+[4] Inspect my learning state         (see my progress and what I'm forgetting)
 ```
 
 The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) still works and routes to entry [b] (topic + file).
@@ -64,11 +92,11 @@ The skill doesn't assume you have a topic + file in mind. Pick the entry that ma
 | Entry | Use when… |
 |---|---|
 | **[a] Daily progression** | You want the next concept in your learning sequence |
-| **[b] Topic + file** | You have both ("closures in `helpers.ts`") |
+| **[b] Topic + file** | You have both a topic and a source file |
 | **[c] Topic only** | You have a topic; let the skill find the best file |
 | **[d] Question-led** | You're stuck on something specific ("why does my SwiftData fetch return zero?") |
 | **[e] Gap-driven** | Show me what I'm confused about; pick from there |
-| **[f] External source** | I read this Apple doc / blog post / RFC; help me consolidate |
+| **[f] Notes & synthesis** | From a doc, post, video, or past session — help me consolidate |
 
 Entry [c] ranks candidate files by **pedagogical fit** (small file with concentrated examples beats large file with scattered ones), shows evidence (line counts, line ranges, brief reasons), and lets you pick. If no good example exists in your codebase, it offers a synthesized minimal example instead of silently picking a marginal file.
 
