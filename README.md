@@ -1,12 +1,25 @@
 # tutorial-creator
 
+![Version](https://img.shields.io/github/v/tag/Terryc21/tutorial-creator?label=version) ![Last commit](https://img.shields.io/github/last-commit/Terryc21/tutorial-creator) ![Stars](https://img.shields.io/github/stars/Terryc21/tutorial-creator?style=flat) ![Issues](https://img.shields.io/github/issues/Terryc21/tutorial-creator) ![License](https://img.shields.io/github/license/Terryc21/tutorial-creator)
+
 **Generate personalized coding lessons from your own codebase.** A Claude Code skill that turns the files you actually work on every day into annotated tutorials, tracks the vocabulary you've learned, and shows you where you're confused.
 
 Works with any Swift, TypeScript, Python, or Rust project. Originally built during development of [Stuffolio](https://stuffolio.app), a real iOS/macOS app whose codebase serves as the bundled demo.
 
-**Current version: v2.0.0** (released 2026-05-10). See [CHANGELOG.md](CHANGELOG.md) for what changed and the v1.1 → v2.0 migration path.
+*~9 min read · scan the TL;DR if you only have 30 seconds*
 
----
+## TL;DR
+
+- **What:** Generate annotated lessons from your own code, track vocabulary you've learned across sessions, and see exactly what you're confused about.
+- **Why:** Traditional tutorials teach syntax with toy examples; real projects have async workflows, state management, and accumulated design decisions. tutorial-creator builds fluency from the code you ship every day.
+- **Install:** `git clone` into `~/.claude/skills/`; then `/skill tutorial-creator` in any session.
+- **Try first:** `/skill tutorial-creator` — opens the gateway question. Pick "Write a tutorial for myself" → "Topic + file" → point it at any file. ~10 min to a real annotated lesson.
+- **Example output:** [Day 16 — captured-self staleness in SwiftUI](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md), a real production-bug walkthrough with pre/post tests and gap analysis.
+- **Maturity:** v2.0.0 (released 2026-05-10); used through Stuffolio's daily practice; deeper curation for Swift, working built-in progressions for TypeScript / Python / Rust.
+
+## Newer to Claude Code?
+
+A **skill** is a markdown file Claude Code knows how to run. When you type `/skill tutorial-creator`, Claude follows the instructions in this skill, asks what you want to do, then either generates a lesson, manages your vocabulary, or shows you your learning state. You don't have to memorize anything — the skill walks you through each choice.
 
 ## Install
 
@@ -24,7 +37,35 @@ Then in any Claude Code session:
 
 First-run setup prompts you for the project to learn from, your language (Swift / TypeScript / Python / Rust auto-detected), and your experience level. The skill creates `.claude/tutorial-config.yaml` and a tutorials directory in the project you point it at.
 
+<details>
+<summary><strong>Project-specific install (one project only)</strong></summary>
+
+```bash
+mkdir -p /path/to/project/.claude/skills && git clone https://github.com/Terryc21/tutorial-creator /path/to/project/.claude/skills/tutorial-creator
+```
+
+</details>
+
+<details>
+<summary><strong>Migrating from v1.1 to v2.0</strong></summary>
+
+If you used v1.1 and have an existing `VOCABULARY.md`, run a one-time import after installing v2.0:
+
+```
+/skill tutorial-creator vocab regen-md --import
+```
+
+This converts your existing `VOCABULARY.md` Markdown table into the v2.0 `vocabulary.yaml` source-of-truth file. Migrated terms get `status: reviewing` (no v1.1 test history exists). You can `vocab edit` to add types, `vocab merge` to collapse duplicates, and `vocab review` to start earning mastered status.
+
+</details>
+
+See [CHANGELOG.md](CHANGELOG.md) for full release notes and the v1.1 → v2.0 changelog.
+
 ## What gets generated
+
+![tutorial-creator gap analysis showing prerequisite mapping and proposed bridge tutorials](images/tutorial-creator-gap-analysis.png)
+
+*Above: real gap analysis after generating Day 16. The skill found two prerequisite gaps in the user's earlier curriculum and proposed half-step bridge tutorials (Day 15.5 and Day 9.5) that slot between existing days without renumbering.*
 
 Three sample outputs are checked into `skills/tutorial-creator/examples/`:
 
@@ -177,9 +218,7 @@ After each tutorial, the skill asks: *"Does this lesson depend on concepts that 
 
 This prevents the common experience of understanding Tutorial 1, surviving Tutorial 2, and getting completely lost in Tutorial 3.
 
-A real example. I asked `tutorial-creator` to write Day 16, a tutorial about a SwiftUI captured-`self` staleness bug. After it finished, the skill checked whether the new lesson leaned on anything I hadn't covered in earlier days. It found two prerequisite gaps, ranked which ones to fill first, and named them as half-step tutorials (Day 15.5 and Day 9.5) so they would slot between existing days without renumbering anything:
-
-![tutorial-creator gap analysis showing prerequisite mapping and proposed bridge tutorials](images/tutorial-creator-gap-analysis.png)
+A real example: I asked `tutorial-creator` to write Day 16, a tutorial about a SwiftUI captured-`self` staleness bug. The screenshot at the top of this README shows what happened next — the skill checked whether the new lesson leaned on anything I hadn't covered in earlier days, found two prerequisite gaps, ranked which ones to fill first, and named them as half-step tutorials (Day 15.5 and Day 9.5) so they would slot between existing days without renumbering anything.
 
 I wrote both bridge tutorials in the same session. Without the gap analysis I'd have shipped Day 16 with two unstated prerequisites and slowly accumulated learning debt. With it, the curriculum stays self-consistent automatically.
 
@@ -227,6 +266,29 @@ Your code  ──►  tutorial-creator  ──►  Annotated lesson
 /skill tutorial-creator forget <path>          # remove a project from the registry
 /skill tutorial-creator --project-dir <path>   # one-shot override for any subcommand
 ```
+
+### Scoping a run
+
+tutorial-creator scopes by **surface + entry point + project**. You pick what you're doing (tutorial / vocab / status), how the lesson should be sourced (daily progression / topic + file / question-led / gap-driven / notes / audience-facing), and which project's progression and vocab to use.
+
+| Goal | Command |
+|---|---|
+| Generate a lesson, walking through choices | `/skill tutorial-creator` (opens gateway) |
+| Lesson on a known topic + file | `/skill tutorial-creator <topic> <file>` (legacy v1.1, routes to entry [b]) |
+| Lesson on a topic, skill picks the file | `/skill tutorial-creator --mode learn` then pick entry [c] |
+| Lesson targeting a confused vocabulary term | `/skill tutorial-creator --mode learn` then pick entry [e] |
+| Public-facing article from a file | `/skill tutorial-creator --mode audience` |
+| Spaced-repetition test of your vocabulary | `/skill tutorial-creator vocab review` |
+| See what you've been getting wrong | `/skill tutorial-creator vocab gap` |
+| Inspect your learning state | `/skill tutorial-creator status` |
+| Work on a project different from cwd | `/skill tutorial-creator --project-dir <path>` |
+
+**Fresh vs prior history.** tutorial-creator is **history-aware by default** — it reads your existing progression (PROGRESS.md), vocabulary (vocabulary.yaml), and prior tutorials before generating a new lesson. That's the whole point: Day 16 knows what Days 1-15 already taught, and the gap-analysis pass after each generation flags prerequisites you never covered. Two ways to override:
+
+- **Per-session fresh:** delete or rename `.claude/tutorial-config.yaml`, PROGRESS.md, and `vocabulary.yaml` for that project, then run `/skill tutorial-creator` — the skill treats the project as never-onboarded.
+- **Per-tutorial fresh:** entries [b] (topic + file), [c] (topic only), and [f] (notes & synthesis) can generate a lesson independent of your progression. They still *update* vocabulary and PROGRESS.md afterwards; they just don't consult them as constraints.
+
+Vocabulary status (mastered / reviewing / confused / new) is earned through `vocab review`, not user-set. The one allowed manual transition is `mastered → reviewing` when you notice you've forgotten something. `vocab undo` is revertable for 24 hours after a vocab change; `undo` reverts the last tutorial generation cleanly.
 
 ### First-run setup
 
@@ -287,49 +349,27 @@ The v2.0 redesign extends this philosophy: vocabulary as a first-class learning 
 
 ---
 
-## Install
+## Maturity
 
-```bash
-git clone https://github.com/Terryc21/tutorial-creator.git
-```
+v2.0.0 (released 2026-05-10). v1.x line shipped through Stuffolio's daily Swift-learning practice for over six months before the v2 rewrite consolidated vocabulary as a first-class object.
 
-Then copy the skill into your Claude Code skills directory.
+**Validated shape.** Swift / SwiftUI — deepest curation, bundled examples, the daily-practice demo. Used through real production-bug case studies (Day 16 captured-self staleness, Day 3 SwiftUI scaffolding).
 
-**Global install** (all projects):
+**Less-tested shapes.** Built-in progressions exist and work for TypeScript / React, Python / Django, and Rust, but the bundled examples are Swift-only. Audience-facing venue templates (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) have voice calibration but limited real-world use beyond Stuffolio's own publishing.
 
-```bash
-mkdir -p ~/.claude/skills && cp -r tutorial-creator/skills/* ~/.claude/skills/
-```
-
-**Project-specific install** (one project only):
-
-```bash
-mkdir -p /path/to/project/.claude/skills && cp -r tutorial-creator/skills/* /path/to/project/.claude/skills/
-```
-
-### Migrating from v1.1 to v2.0
-
-If you used v1.1 and have an existing `VOCABULARY.md`, run a one-time import after installing v2.0:
-
-```bash
-/skill tutorial-creator vocab regen-md --import
-```
-
-This converts your existing `VOCABULARY.md` Markdown table into the v2.0 `vocabulary.yaml` source-of-truth file. Migrated terms get `status: reviewing` (no v1.1 test history exists). You can `vocab edit` to add types, `vocab merge` to collapse duplicates, and `vocab review` to start earning mastered status.
+**What would sharpen it most.** Feedback from non-Swift projects using `vocab review` for a few weeks — does spaced-repetition lenient grading work for TypeScript hooks or Python decorators the way it does for SwiftUI property wrappers? [Open an issue](https://github.com/Terryc21/tutorial-creator/issues) if you try it.
 
 ---
 
-## Related Claude Code skills
+## Sibling skills
 
-Other skills built during development of Stuffolio:
-
-- [**prompter**](https://github.com/Terryc21/prompter): rewrites your Claude Code prompts for clarity and missing context before they run. Catches the ambiguity you didn't see. Sharpens your prompting by seeing how Claude Code would rewrite your prompts for better understanding.
-- [**bug-echo**](https://github.com/Terryc21/bug-echo): after you fix a bug, finds other places in your codebase with the same pattern. Stops the "fixed it once, missed three others" cycle.
-- [**workflow-audit**](https://github.com/Terryc21/workflow-audit): traces SwiftUI user journeys end to end, detects dead ends, broken back navigation, missing empty states, and dismiss traps.
-- [**radar-suite**](https://github.com/Terryc21/radar-suite): multi-domain code audit that grades your codebase A through F across UI paths, data models, release readiness, and more. Tells you what to fix before shipping.
-- [**unforget**](https://github.com/Terryc21/unforget): single source of truth for deferred work; nothing slips between releases.
-
-These tools focus on workflow behavior and user experience, not just static code inspection.
+- [**bug-echo**](https://github.com/Terryc21/bug-echo) — sibling-bug scan after a fix
+- [**bug-prospector**](https://github.com/Terryc21/bug-prospector) — forward-looking bug hunt before a release
+- [**workflow-audit**](https://github.com/Terryc21/workflow-audit) — 5-layer SwiftUI flow audit
+- [**unforget**](https://github.com/Terryc21/unforget) — one-file deferred-work ledger
+- [**radar-suite**](https://github.com/Terryc21/radar-suite) — 6-skill iOS audit family
+- [**prompter**](https://github.com/Terryc21/prompter) — prompt rewriting before execution
+- [**skill-reviewer**](https://github.com/Terryc21/skill-reviewer) — candid reviews of other Claude Code skills
 
 ---
 
@@ -356,9 +396,9 @@ Pull requests welcome. For non-trivial changes please open a Discussion first so
 
 ## Author
 
-Created by **Terry Nyberg**, [Coffee & Code LLC](https://stuffolio.app/). If this skill has saved you time, a coffee is appreciated.
+Terry Nyberg, [Coffee & Code LLC](https://stuffolio.app/). If tutorial-creator has helped you build fluency on a real codebase, [a coffee](https://buymeacoffee.com/stuffolio) is appreciated. Issue reports about what worked or didn't on a non-Swift project are more useful.
 
-<a href="https://buymeacoffee.com/stuffolio"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" width="120"></a>
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/stuffolio)
 
 ## License
 
