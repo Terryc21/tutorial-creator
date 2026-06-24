@@ -15,11 +15,5 @@
     "spaced-repetition",
     "claude-code",
     "ai-tools"
-  ],
-  "skills": [
-    {
-      "name": "tutorial-creator",
-      "description": "Generate annotated code-reading tutorials from your own codebase, with vocabulary tracking and audience-facing venue templates."
-    }
   ]
 }
