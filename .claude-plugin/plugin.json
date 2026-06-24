@@ -1,0 +1,25 @@
+{
+  "name": "tutorial-creator",
+  "version": "2.0.0",
+  "description": "Generate personalized, annotated code-reading tutorials from your own codebase. Three surfaces (tutorial generation, vocabulary management, learning-state inspection), six writing-to-learn entry points, and five audience-facing entry points. Tracks vocabulary with a status state machine.",
+  "author": {
+    "name": "Terry Nyberg"
+  },
+  "repository": "https://github.com/Terryc21/tutorial-creator",
+  "license": "Apache-2.0",
+  "keywords": [
+    "tutorial",
+    "code-reading",
+    "developer-education",
+    "learning",
+    "spaced-repetition",
+    "claude-code",
+    "ai-tools"
+  ],
+  "skills": [
+    {
+      "name": "tutorial-creator",
+      "description": "Generate annotated code-reading tutorials from your own codebase, with vocabulary tracking and audience-facing venue templates."
+    }
+  ]
+}

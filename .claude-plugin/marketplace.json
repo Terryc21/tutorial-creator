@@ -1,0 +1,22 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "tutorial-creator",
+  "description": "Generate annotated code-reading tutorials from your own codebase — three surfaces (tutorial / vocab / status), writing-to-learn entries, and audience-facing venue templates",
+  "owner": {
+    "name": "Terry Nyberg"
+  },
+  "plugins": [
+    {
+      "name": "tutorial-creator",
+      "version": "2.0.0",
+      "source": "./",
+      "description": "Generate personalized, annotated code-reading tutorials from your own codebase. Three surfaces (tutorial generation, vocabulary management, learning-state inspection), six writing-to-learn entry points, and five audience-facing entry points. Tracks vocabulary with a status state machine.",
+      "author": {
+        "name": "Terry Nyberg"
+      },
+      "homepage": "https://github.com/Terryc21/tutorial-creator",
+      "license": "Apache-2.0",
+      "category": "productivity"
+    }
+  ]
+}
