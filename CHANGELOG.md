@@ -2,6 +2,18 @@
 
 All notable changes to `tutorial-creator` are documented here. This project adheres to [Semantic Versioning](https://semver.org/) and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **`vocab gap` selection now generates a tutorial.** Picking a confused term from the gap radar returned `Entry [e] gap-driven coming in Phase 3def` — a stub left over from the v2.0 build order, even though entry [e] shipped in v2.0.0. Selection now routes to the gap-driven entry as documented.
+- **Manual install instructions produced a skill Claude Code couldn't load.** The README's `git clone` put `SKILL.md` two directories below `~/.claude/skills/`. Plugin install is now the documented primary path; the manual path clones the repo and symlinks `skills/tutorial-creator`.
+- `NOTICE` carried the repo's pre-rename project name (`code-smarter`).
+
+### Changed
+
+- **`--mode both` removed.** It was listed as a valid mode but no surface, routing rule, or session-log `mode` value ever existed for it (Schema 3 enumerates only `writing-to-learn | audience-facing`). Unknown `--mode` values now refuse with the valid list instead of falling through to the gateway. Use `--mode learn` or `--mode audience`; to produce both a lesson and an audience artifact from one source, run the two paths in sequence.
+
 ## [2.0.0] — 2026-05-10
 
 A ground-up redesign that turns `tutorial-creator` from a single-mode tutorial generator into a three-surface learning workflow. v1.1 was a useful side-project; v2.0 is what it should have been from the start.

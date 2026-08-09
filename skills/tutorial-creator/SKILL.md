@@ -27,7 +27,7 @@ The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) still wo
 /skill tutorial-creator undo                    # revert last generation
 /skill tutorial-creator undo --session <id>     # revert a specific session (rare)
 /skill tutorial-creator renumber <old> <new>    # rename Day-N + rewrite cross-references
-/skill tutorial-creator --mode learn|audience|both|vocab|status [args]
+/skill tutorial-creator --mode learn|audience|vocab|status [args]
                                                  # skip gateway, route directly
 /skill tutorial-creator open <path>             # register a tutorial-creator project
                                                  #  in ~/.claude/tutorial-creator/registry.yaml
@@ -49,7 +49,7 @@ The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) still wo
 Every invocation runs through this dispatch:
 
 0. **Resolve the project root** (NEW in this revision). Run `## Project resolution` first to determine which `.claude/tutorial-config.yaml` this invocation should read or write to. The resolved path becomes `$PROJECT_ROOT` for the rest of the invocation; all subsequent file operations described in this document use `$PROJECT_ROOT/.claude/`, `$PROJECT_ROOT/{tutorials_dir}/`, etc. Steps 1–4 below assume this has run.
-1. **Read `--mode` flag if present.** If set, echo it back to the user as a one-line confirmation, then jump directly to that surface or path. Skip the gateway question. Mode values: `learn`, `audience`, `both`, `vocab`, `status`.
+1. **Read `--mode` flag if present.** If set, echo it back to the user as a one-line confirmation, then jump directly to that surface or path. Skip the gateway question. Mode values: `learn`, `audience`, `vocab`, `status`. Any other value (including `both`, which earlier drafts listed but never specified): say `Unknown mode "<value>". Valid modes: learn, audience, vocab, status.` and stop — do not guess a surface or silently fall through to the gateway.
 2. **Else, recognize first-positional subcommand keywords.** If the first positional arg is one of:
    - `tutorial` → tutorial surface (Path 1 unless `--mode audience` follows)
    - `vocab` → vocab surface; the second positional is the subcommand (`add`, `list`, `show`, `edit`, `merge`, `review`, `gap`, `regen-md`, `undo`)
