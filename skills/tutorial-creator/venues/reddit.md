@@ -15,6 +15,11 @@ honest_machine_section_name: Edit
 
 # Venue: reddit
 
+> **Editing budgets or the honest-machine section name?** These values also live in
+> `venues/_schema.yaml` (what the runtime reads) and in this file's `## Length budget
+> calibration` table. All three must change together; `_schema.yaml` wins on conflict.
+> See the duplication contract at the top of `venues/_schema.yaml`.
+
 Renders an audience-facing tutorial as a Reddit post. The reader is scrolling a subreddit feed and decides in the first two lines whether to keep reading. Optimize for that decision.
 
 ## Voice signature

@@ -33,7 +33,7 @@ Future audits may flag these as "missing"; they are deliberate choices for Path 
 4. **Ask the four routing questions.** Via AskUserQuestion, in this order:
    - **Audience:** beginner / intermediate / senior / mixed
    - **Honest-machine opt-in:** Y / N (asks "Append a section on what this article does NOT cover and what's still uncertain?")
-   - **Length budget:** S / M / L / X (show the venue's word count for each tier, resolved from `venues/_schema.yaml`)
+   - **Length budget:** S / M / L / X (show the venue's word count for each tier, resolved from `venues/_schema.yaml` — that file is authoritative if it ever disagrees with a venue file's front-matter or calibration table)
    - **Venue:** reddit / book-chapter / apple-developer-article / medium / blog / repo-doc
 
    All six venues are shipped as of `2.0.0-phase7`. Each has a corresponding `venues/<name>.md` template the runtime loads at step 5.

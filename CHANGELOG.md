@@ -13,6 +13,8 @@ All notable changes to `tutorial-creator` are documented here. This project adhe
 
 ### Changed
 
+- **Venue budget duplication is now a stated contract.** Each venue's length budget and honest-machine section name live in three places: `venues/_schema.yaml`, the venue file's front-matter, and the venue file's `## Length budget calibration` table. All three are kept — the front-matter makes a venue file reviewable standalone, and the calibration table pairs each tier with what changes at it. `_schema.yaml` is now documented as authoritative on conflict, each venue file carries a reciprocal edit warning, and `_schema.yaml` records a dependency-free drift check. All 18 copies verified in agreement 08/09/2026.
+
 - **`--mode both` removed.** It was listed as a valid mode but no surface, routing rule, or session-log `mode` value ever existed for it (Schema 3 enumerates only `writing-to-learn | audience-facing`). Unknown `--mode` values now refuse with the valid list instead of falling through to the gateway. Use `--mode learn` or `--mode audience`; to produce both a lesson and an audience artifact from one source, run the two paths in sequence.
 
 ## [2.0.0] — 2026-05-10

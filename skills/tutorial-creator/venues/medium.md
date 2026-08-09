@@ -17,6 +17,11 @@ honest_machine_section_name: "What this leaves out"
 
 # Venue: medium
 
+> **Editing budgets or the honest-machine section name?** These values also live in
+> `venues/_schema.yaml` (what the runtime reads) and in this file's `## Length budget
+> calibration` table. All three must change together; `_schema.yaml` wins on conflict.
+> See the duplication contract at the top of `venues/_schema.yaml`.
+
 Renders an audience-facing tutorial as a piece for Medium, Substack, or any general-audience essay platform where the reader is browsing a curated feed of writers, not searching for an answer. The reader has clicked the title because it promised something interesting, and the first paragraph has a few seconds to convert that click into reading.
 
 ## Voice signature

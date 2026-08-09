@@ -16,6 +16,11 @@ honest_machine_section_name: "Out of scope"
 
 # Venue: repo-doc
 
+> **Editing budgets or the honest-machine section name?** These values also live in
+> `venues/_schema.yaml` (what the runtime reads) and in this file's `## Length budget
+> calibration` table. All three must change together; `_schema.yaml` wins on conflict.
+> See the duplication contract at the top of `venues/_schema.yaml`.
+
 Renders an audience-facing tutorial as a document inside a code repository: a `README.md`, a `docs/<topic>.md`, an `ADR` (architecture decision record), or a `RUNBOOK.md`. The reader is a developer who has cloned the repo (or is browsing it on the web) and needs to find the answer to a specific operational or architectural question quickly. They are not reading for pleasure.
 
 ## Voice signature

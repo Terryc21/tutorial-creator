@@ -17,6 +17,11 @@ honest_machine_section_name: "See Also and open questions"
 
 # Venue: apple-developer-article
 
+> **Editing budgets or the honest-machine section name?** These values also live in
+> `venues/_schema.yaml` (what the runtime reads) and in this file's `## Length budget
+> calibration` table. All three must change together; `_schema.yaml` wins on conflict.
+> See the duplication contract at the top of `venues/_schema.yaml`.
+
 Renders an audience-facing tutorial in the voice and structure of an Apple Developer article: the kind of page that lives at `developer.apple.com/documentation/...` or surfaces in Xcode's documentation viewer. The reader is looking up how a specific framework, type, or pattern works, often in the middle of writing code, and expects the article to answer the question precisely with code listings they can read or copy.
 
 ## Voice signature

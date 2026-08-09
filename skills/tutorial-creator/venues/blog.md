@@ -17,6 +17,11 @@ honest_machine_section_name: "Caveats"
 
 # Venue: blog
 
+> **Editing budgets or the honest-machine section name?** These values also live in
+> `venues/_schema.yaml` (what the runtime reads) and in this file's `## Length budget
+> calibration` table. All three must change together; `_schema.yaml` wins on conflict.
+> See the duplication contract at the top of `venues/_schema.yaml`.
+
 Renders an audience-facing tutorial as a post on the writer's personal blog: a Jekyll/Hugo/Eleventy site, an Astro garden, a hand-rolled site, or a personal Substack written for known readers. The reader is a subscriber, an RSS follower, or someone who arrived from another post on the same site, and they already know the writer's voice. They are not deciding whether to keep reading; they are reading because they read this writer.
 
 ## Voice signature

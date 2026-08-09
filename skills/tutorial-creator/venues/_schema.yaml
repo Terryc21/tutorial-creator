@@ -6,8 +6,39 @@
 #
 # Schema lifted from venues/reddit.md front-matter on 2026-05-09 per
 # Phase 7 decision P7-B (schema discovered from a real template, not
-# imagined). New fields go here AND in the matching venue file's
-# front-matter.
+# imagined).
+#
+# ---------------------------------------------------------------------
+# Duplication contract (read before editing any budget or section name)
+#
+# Each venue's length budget and honest_machine_section_name exist in
+# THREE places, deliberately:
+#
+#   1. This file                     — what the routing layer reads at
+#                                      runtime to build the length-budget
+#                                      question (AUDIENCE.md step 4).
+#   2. venues/<name>.md front-matter — so a venue file is readable and
+#                                      reviewable standalone, without
+#                                      cross-referencing this file.
+#   3. venues/<name>.md § Length budget calibration
+#                                    — the table pairing each tier with
+#                                      what actually changes at that tier.
+#                                      This is prose the other two copies
+#                                      cannot hold.
+#
+# THIS FILE WINS on any disagreement: it is what the runtime reads.
+# A change to any budget number or section name must be made in all
+# three places, in the same commit.
+#
+# Drift check (run from skills/tutorial-creator/, no dependencies):
+#
+#   grep -A6 'length_budget' venues/_schema.yaml
+#   grep -hE '^\| [SMLX] \|' venues/<name>.md
+#
+# Compare the words/ceiling pairs by eye; six venues x four tiers is a
+# two-minute check. Verified in agreement across all three locations on
+# 2026-08-09.
+# ---------------------------------------------------------------------
 
 schema_version: 1
 

@@ -17,6 +17,11 @@ honest_machine_section_name: "Limits and open questions"
 
 # Venue: book-chapter
 
+> **Editing budgets or the honest-machine section name?** These values also live in
+> `venues/_schema.yaml` (what the runtime reads) and in this file's `## Length budget
+> calibration` table. All three must change together; `_schema.yaml` wins on conflict.
+> See the duplication contract at the top of `venues/_schema.yaml`.
+
 Renders an audience-facing tutorial as a chapter in a technical or essayistic book. The reader is sitting down to read for thirty minutes or more, has chosen this book deliberately, and expects argument to develop over the chapter, not just description.
 
 ## Voice signature
