@@ -221,8 +221,8 @@ graded_at: null                         # ISO timestamp of self-grade entry
 - `entry`: which entry point under that path. Use the design-doc letter (`a`-`f`) or the human-readable name (`daily-progression`, `topic+file`, `topic-only`, `question-led`, `gap-driven`, `external-source`).
 - `gap_term`: only populated when `entry == gap-driven`. Otherwise omit (yaml `null`).
 - `file`: source file annotated, when applicable. Empty for synthesized examples.
-- `day_number`: integer (whole or half-step like `7.5`).
-- `output`: relative path of generated tutorial file.
+- `day_number`: integer (whole or half-step like `7.5`). Rewritten by `renumber` when that session's tutorial is the file being renamed.
+- `output`: relative path of generated tutorial file. Rewritten by `renumber` when it points at the file being renamed — see `SKILL.md` § Recovery → `renumber <old> <new>` step 3. This is the one case where a session record is modified after the post-write hook wrote it; `undo` depends on the path staying accurate.
 - `vocab_added`: list of terms added to vocabulary.yaml as part of this generation.
 - `progress_updated`: bool; whether PROGRESS.md was modified (false for some audience-facing modes).
 - `snapshots`: list of pre-generation file snapshots; consumed by `undo`. v2.0 always includes the four files listed; future modes may add more.

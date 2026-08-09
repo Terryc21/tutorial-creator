@@ -9,6 +9,7 @@ All notable changes to `tutorial-creator` are documented here. This project adhe
 - **`vocab gap` selection now generates a tutorial.** Picking a confused term from the gap radar returned `Entry [e] gap-driven coming in Phase 3def` — a stub left over from the v2.0 build order, even though entry [e] shipped in v2.0.0. Selection now routes to the gap-driven entry as documented.
 - **Manual install instructions produced a skill Claude Code couldn't load.** The README's `git clone` put `SKILL.md` two directories below `~/.claude/skills/`. Plugin install is now the documented primary path; the manual path clones the repo and symlinks `skills/tutorial-creator`.
 - `NOTICE` carried the repo's pre-rename project name (`code-smarter`).
+- **`renumber` no longer leaves `undo` broken.** Renaming a day rewrote references in PROGRESS.md, VOCABULARY.md, and other tutorials, but not the `output` path or `day_number` stored in retained session records. A later `undo` of that session looked for the pre-rename filename, hit the "already missing; skipping" branch, and reported success while leaving the tutorial on disk — and the status dashboard's "Last lesson" line read the stale day number. `renumber` now updates matching session records and shows those updates as a separate block in its confirmation diff. `undo` no longer skips a missing output silently: it looks for the same tutorial under another day number and asks before deleting.
 
 ### Changed
 

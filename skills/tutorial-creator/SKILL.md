@@ -728,7 +728,19 @@ Reverts the most recent tutorial generation. Invoked as:
    - Otherwise, copy `saved_to` over `path`.
    - On any I/O error: stop. Do NOT continue restoring other files. Tell the user: `Restore failed at <path>. Pre-undo snapshots are at .claude/tutorial-sessions/<session_id>/.pre-undo/. Inspect both directories before retrying.` Leave both `<session_id>/` and `<session_id>/.pre-undo/` in place untouched.
 
-5. **Delete the generated tutorial file.** Whatever path is in the session's `output` field. If it's missing (user already deleted it manually), warn but continue: `Tutorial output already missing; skipping.`
+5. **Delete the generated tutorial file.** Whatever path is in the session's `output` field. If it's missing, do not skip silently — first check whether the file was renamed rather than deleted: search `{tutorials_dir}` for a `Day*.md` file whose body matches this session (same topic heading, same source path in the header). If one is found, the day was almost certainly renumbered after this session was recorded; say so and let the user decide:
+
+   ```
+   Session output <output> is missing, but <found path> looks like the same
+   tutorial under a different day number (renumber rewrites session records;
+   a session written before that fix, or a manual rename, would not have been
+   updated).
+     [delete]  remove <found path> as part of this undo
+     [skip]    leave it on disk and finish the undo
+     [cancel]  stop; nothing further is changed
+   ```
+
+   If no such file is found, the user deleted it manually: warn and continue with `Tutorial output already missing; skipping.`
 
 6. **Clean up the session.** On full success, delete:
    - `.claude/tutorial-sessions/<session_id>.yaml`
@@ -763,7 +775,21 @@ Renames a Day-N tutorial file and rewrites every cross-reference. Supports whole
    - `{tutorials_dir}/PROGRESS.md`
    - `{tutorials_dir}/VOCABULARY.md`
    - All other `{tutorials_dir}/Day*.md` files
+   - `.claude/tutorial-sessions/*.yaml` — retained session records whose `output` field points at the file being renamed. These hold the generated tutorial's path (e.g. `tutorials/Day8-Optionals-Annotated.md`); left stale, `undo` for that session looks for a filename that no longer exists and silently skips the deletion at step 5 of `## Recovery` § `undo`, leaving the renamed tutorial on disk after an undo that reported success.
+
+   Two fields change in a matching session record, and only these two:
+   - `output` — string substitution `Day<old>` → `Day<new>`, same as any other reference.
+   - `day_number` — set to `<new>` as a number (not a string substitution; the field holds `8` or `7.5`, never `Day8`). `STATUS.md` § Procedure step 1 reads this for the dashboard's "Last lesson" line, so a stale value misreports the day even when `output` is correct.
+
+   Do NOT touch the `snapshots` manifest: those paths point at snapshot copies inside `.claude/tutorial-sessions/<id>/`, which `renumber` does not move. Rewriting them would break `undo`'s restore step.
 4. **Show the diff.** Render a diff per file: `<file>: N references will change Day<old> → Day<new>`. List each line that will change with line numbers. Total summary at top: `Will rename 1 file and update N references across M files.`
+
+   List session-record updates separately from prose references, so the user sees that recovery state is being modified rather than just tutorial text:
+   ```
+   Session records (undo history):
+     2026-05-09T14-32-00.yaml: output → tutorials/Day<new>-<Topic>-Annotated.md, day_number → <new>
+   ```
+   If no retained session references the file, say `Session records: none affected.` — its absence is worth confirming, since it tells the user this renumber leaves no undo path stale.
 5. **Confirm.** `Type "yes" to apply, anything else to cancel.`
 6. **Apply atomically.** Either all changes apply or none:
    - First, write modified contents to all reference-holding files
@@ -771,7 +797,7 @@ Renames a Day-N tutorial file and rewrites every cross-reference. Supports whole
    - On any I/O error mid-way, attempt to restore modified files to their pre-rename contents from in-memory copies you held; if that also fails, tell the user exactly which files are in inconsistent state and which paths to inspect
 7. **Confirm to user.** `Renamed Day<old> → Day<new>; updated N references across M files.`
 
-`renumber` does NOT write a session log entry — it's a structural rename, not a generation. To revert, run `renumber <new> <old>`.
+`renumber` does NOT write a session log entry of its own — it's a structural rename, not a generation. To revert, run `renumber <new> <old>`. It does, per step 3, *update* existing session records that reference the renamed file, so the recovery system stays consistent with what's on disk. That update is not itself undoable except by running the inverse renumber.
 
 ### `vocab undo` integration
 
