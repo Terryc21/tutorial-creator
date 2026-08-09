@@ -13,7 +13,7 @@ The audience-facing path produces artifacts intended for **other readers**: Redd
 Future audits may flag these as "missing"; they are deliberate choices for Path 2:
 
 - **No `### Cold-start handling`.** Path 1 entries depend on accumulated state (PROGRESS.md, vocabulary.yaml). Path 2 entries are stateless: each invocation produces one standalone artifact for an audience. Cold-start has nothing to handle.
-- **No recovery-system hook.** Path 1's tutorial generation calls the pre-write and post-write hooks (`SKILL.md:252` and `SKILL.md:260`), which snapshot files into `.claude/tutorial-sessions/<id>/` for `undo`. Path 2 does NOT call these hooks. Audience-facing artifacts do not update PROGRESS.md or vocabulary.yaml; there is no learning-state to roll back. The artifact is a standalone file the user copies into the target venue (Reddit editor, book draft, blog CMS); the skill's job ends at the file write. If the user wants the artifact tracked in their learning record, they should pair it with a Path 1 entry on the same source.
+- **No recovery-system hook.** Path 1's tutorial generation calls the pre-write and post-write hooks (`SKILL.md` § Recovery → "Always-on: pre-write hook + session log" and "Always-on: post-write hook"), which snapshot files into `.claude/tutorial-sessions/<id>/` for `undo`. Path 2 does NOT call these hooks. Audience-facing artifacts do not update PROGRESS.md or vocabulary.yaml; there is no learning-state to roll back. The artifact is a standalone file the user copies into the target venue (Reddit editor, book draft, blog CMS); the skill's job ends at the file write. If the user wants the artifact tracked in their learning record, they should pair it with a Path 1 entry on the same source.
 - **No vocabulary write.** Path 1 entries add new terms to `vocabulary.yaml`. Path 2 reads `vocabulary.yaml` (to align audience-facing terminology with the user's own vocabulary, if they have one) but never writes to it.
 - **No `next_day` increment.** Path 2 artifacts are not days in the user's progression.
 
@@ -255,7 +255,7 @@ The skill does NOT post-process the venue file's output. What the venue file emi
 
 ## Mode-mismatch detection (single-fire)
 
-This is wired into SKILL.md's routing layer (the prose has been at `SKILL.md:71-73` since Phase 6). For reference, the trigger is:
+This is wired into SKILL.md's routing layer (see `SKILL.md` § Mode-mismatch detection). For reference, the trigger is:
 
 - The user picked Path 2 (gateway answer `[2]` or `--mode audience`)
 - AND their topic phrasing matches one of: starts with `I want to understand`, starts with `I'm confused about`, starts with `why does my`, starts with `what is`

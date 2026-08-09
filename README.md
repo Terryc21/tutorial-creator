@@ -23,10 +23,14 @@ A **skill** is a markdown file Claude Code knows how to run. When you type `/ski
 
 ## Install
 
-Clone into your Claude Code skills directory:
+Install as a Claude Code plugin:
 
 ```bash
-git clone https://github.com/Terryc21/tutorial-creator ~/.claude/skills/tutorial-creator
+/plugin marketplace add Terryc21/tutorial-creator
+```
+
+```bash
+/plugin install tutorial-creator@tutorial-creator
 ```
 
 Then in any Claude Code session:
@@ -38,10 +42,18 @@ Then in any Claude Code session:
 First-run setup prompts you for the project to learn from, your language (Swift / TypeScript / Python / Rust auto-detected), and your experience level. The skill creates `.claude/tutorial-config.yaml` and a tutorials directory in the project you point it at.
 
 <details>
-<summary><strong>Project-specific install (one project only)</strong></summary>
+<summary><strong>Manual install (no plugin system)</strong></summary>
+
+The skill lives at `skills/tutorial-creator/` inside this repo, so clone the repo somewhere and link (or copy) that subdirectory into your skills directory — cloning the repo *directly* into `~/.claude/skills/tutorial-creator` nests the skill one level too deep and Claude Code won't find it.
 
 ```bash
-mkdir -p /path/to/project/.claude/skills && git clone https://github.com/Terryc21/tutorial-creator /path/to/project/.claude/skills/tutorial-creator
+git clone https://github.com/Terryc21/tutorial-creator ~/src/tutorial-creator && ln -s ~/src/tutorial-creator/skills/tutorial-creator ~/.claude/skills/tutorial-creator
+```
+
+For one project only, link into that project's skills directory instead:
+
+```bash
+mkdir -p /path/to/project/.claude/skills && ln -s ~/src/tutorial-creator/skills/tutorial-creator /path/to/project/.claude/skills/tutorial-creator
 ```
 
 </details>

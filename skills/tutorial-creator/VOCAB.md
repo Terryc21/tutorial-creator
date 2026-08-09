@@ -1,6 +1,6 @@
 # Vocab Surface — tutorial-creator v2
 
-**Status:** Phase 4 implementation. Full vocab surface with state machine, review, and gap radar.
+**Status:** Shipped in v2.0.0. Full vocab surface with state machine, review, and gap radar.
 **Loaded by:** `SKILL.md` when the user routes to `vocab <subcommand>` or chooses `[3]` from the gateway.
 **Source of truth for the schema:** `SCHEMAS.md` Schema 2 (`vocabulary.yaml`).
 
@@ -341,7 +341,7 @@ If no confused terms and no stale reviewing terms, prompt: `No terms are due for
 
 ## `vocab gap`
 
-Read-only view of confused terms, ranked by staleness. Feeds tutorial entry [3e] (gap-driven, Phase 3def).
+Read-only view of confused terms, ranked by staleness. Feeds tutorial entry [e] (gap-driven).
 
 ### Procedure
 
@@ -360,7 +360,7 @@ Read-only view of confused terms, ranked by staleness. Feeds tutorial entry [3e]
 
    Generate a tutorial for one of these? [1-4 / no]
    ```
-6. **On selection:** route to tutorial entry [3e] (gap-driven). Phase 3def implements the entry; for now, route stub returns: `Entry [e] gap-driven coming in Phase 3def.`
+6. **On selection:** route to tutorial entry [e] (gap-driven) — see `SKILL.md` § `Entry [e] — Gap-driven`. The chosen term becomes the topic; that entry's procedure takes over from its step 3 (file-finding), since the term has already been selected here.
 7. **On `no` or empty input:** stop without action.
 
 ### Empty state
@@ -550,11 +550,11 @@ For other languages, the import heuristic falls back to `concept` for everything
 
 ---
 
-## Phase 4 implementation notes
+## Implementation notes
 
 This file is the spec; the runtime LLM follows the procedures above when the user invokes a `vocab <subcommand>`. There is no separate vocab "executable" — the skill's behavior is the LLM faithfully executing this spec against the user's vocabulary.yaml.
 
-Phase 4's job is the spec for the vocab surface itself. Phase 6 added the broader session-log recovery system in `SKILL.md` § Recovery; tutorial-time vocab adds are reverted via that path. Standalone vocab adds (this file) keep the 24h sentinel approach.
+This file's job is the spec for the vocab surface itself. The broader session-log recovery system lives in `SKILL.md` § Recovery; tutorial-time vocab adds are reverted via that path. Standalone vocab adds (this file) keep the 24h sentinel approach.
 
 ### Honesty rule (cross-cutting)
 

@@ -618,7 +618,7 @@ If the user pastes content longer than ~50,000 characters, suggest they save it 
 
 ## Vocab surface
 
-Routes to `VOCAB.md`. **Phase 4 — fully implemented.** Subcommands:
+Routes to `VOCAB.md`. **Fully implemented.** Subcommands:
 
 ```
 vocab add <term>                  # draft definition; user confirms; saved
@@ -627,7 +627,7 @@ vocab show <term>                 # full record incl. test history
 vocab edit <term> [--reset-mastery]   # update fields (status NOT user-editable except via --reset-mastery)
 vocab merge <a> <b>               # collapse duplicates; preserve test history
 vocab review [--strict]           # spaced-repetition test session (lenient by default per D3)
-vocab gap                         # show "confused" terms ranked by staleness; feeds entry [3e]
+vocab gap                         # show "confused" terms ranked by staleness; feeds entry [e]
 vocab regen-md [--import]         # regenerate VOCABULARY.md from yaml; --import migrates v1.1
 vocab undo                        # revert last vocab add (within 24h soft-stage)
 ```
@@ -636,7 +636,7 @@ See `VOCAB.md` for the full procedure spec, state machine, and grading rules.
 
 ## Status surface
 
-Routes to `STATUS.md`. **Phase 5 — fully implemented.** Read-only dashboard. Invocation forms:
+Routes to `STATUS.md`. **Fully implemented.** Read-only dashboard. Invocation forms:
 
 ```
 /skill tutorial-creator status                  # direct invocation
@@ -657,7 +657,7 @@ See `STATUS.md` for the procedure spec, aggregate logic, and suggested-next-less
 
 ## Recovery
 
-**Phase 6 — fully implemented.** Every tutorial generation is reversible. Vocab additions made standalone are reversible within 24h. Day-N renumbering rewrites every reference atomically. The recovery system has three commands and one always-on hook.
+**Fully implemented.** Every tutorial generation is reversible. Vocab additions made standalone are reversible within 24h. Day-N renumbering rewrites every reference atomically. The recovery system has three commands and one always-on hook.
 
 ### Always-on: pre-write hook + session log
 
@@ -732,8 +732,7 @@ Reverts the most recent tutorial generation. Invoked as:
 
 6. **Clean up the session.** On full success, delete:
    - `.claude/tutorial-sessions/<session_id>.yaml`
-   - `.claude/tutorial-sessions/<session_id>/` (the snapshot directory)
-   - `.claude/tutorial-sessions/<session_id>/.pre-undo/` (the safety-net directory)
+   - `.claude/tutorial-sessions/<session_id>/` recursively (the snapshot directory; this also removes the `.pre-undo/` safety-net directory nested inside it)
 
 7. **Confirm to user.** `Reverted session <session_id>. Removed <output>; restored <count> files.`
 

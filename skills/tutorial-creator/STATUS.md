@@ -1,6 +1,6 @@
 # Status Surface — tutorial-creator v2
 
-**Status:** Phase 5 implementation. Read-only learning-state dashboard.
+**Status:** Shipped in v2.0.0. Read-only learning-state dashboard.
 **Loaded by:** `SKILL.md` when the user invokes `status`, chooses `[4]` from the gateway, or passes `--mode status`.
 **Source of truth for the schemas:** `SCHEMAS.md` (Schemas 1-4).
 
