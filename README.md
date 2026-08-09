@@ -339,8 +339,6 @@ Three complete generated tutorials are included, showing how the skill scales fr
 
 **Non-Swift (TypeScript / React):** [useDebouncedValue: A Custom React Hook](skills/tutorial-creator/examples/useDebouncedValue-Annotated.md). Demonstrates that the format ports cleanly to other languages. Annotates a real-world custom hook (debouncing a search input) with vocabulary, pre-test, line-by-line walkthrough, common mistakes, and a post-test calibrated to React's `useEffect` cleanup semantics and TypeScript generics. Useful as a sanity check that the skill isn't iOS-specific.
 
-**v2 schema example:** [vocabulary-example.yaml](skills/tutorial-creator/examples/vocabulary-example.yaml) shows the v2.0 vocabulary format with all four status values represented (new / reviewing / mastered / confused).
-
 ---
 
 ## Philosophy
