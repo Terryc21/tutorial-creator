@@ -44,7 +44,7 @@ Future audits may flag these as "missing"; they are deliberate choices for Path 
    - `length_budget` (one of S/M/L/X, with resolved word target + ceiling)
    - `honest_machine_optin` (boolean)
    - The user's `vocabulary.yaml` (for terminology alignment)
-6. **Write the artifact.** Save to a path the user picks (default: `./audience-artifacts/<venue>-<topic-slug>.md`). The skill does not insert the artifact into a venue's CMS or post it; the user does that step manually.
+6. **Write the artifact.** Save to a path the user picks (default: `./audience-artifacts/<venue>-<topic-slug>.md`). The skill does not insert the artifact into a venue's CMS or post it; the user does that step manually. Tell the user, in one line, that the artifact is not session-logged and `/skill tutorial-creator undo` will not revert it (that command reverts the last *tutorial* generation, a different file) — to remove it, delete the file directly. See `## Asymmetries with Path 1` for why Path 2 has no recovery hook.
 
 ### Honesty rule
 

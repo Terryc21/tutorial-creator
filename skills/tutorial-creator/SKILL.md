@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.0
+version: 2.0.1
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---
@@ -569,6 +569,15 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
    [cancel]
    ```
 3. **Fetch / read the content.** For URL: use the runtime's available web fetch tool (e.g., WebFetch). For file path: read directly. For pasted: prompt the user to paste, terminate on a sentinel like `END` on its own line.
+
+   If no fetch tool is available, or the fetch fails or is denied, say so and offer the other two source types — do NOT generate the tutorial from what you infer the URL contains:
+
+   ```
+   Couldn't fetch <url> (<reason>). Two ways forward:
+     [file]   Save the page locally and pass the file path
+     [paste]  Paste the content directly
+     [cancel] Stop
+   ```
 4. **Extract key concepts.** From the source content, identify 3-8 concepts that the source teaches or references. Group them:
    - **Already in your vocabulary** — show terms that already exist in `vocabulary.yaml` (with current status). The tutorial reinforces these.
    - **New to you** — concepts the source introduces that aren't in your vocabulary yet. The tutorial captures these as new vocab entries.
@@ -775,7 +784,7 @@ Renames a Day-N tutorial file and rewrites every cross-reference. Supports whole
    - `{tutorials_dir}/PROGRESS.md`
    - `{tutorials_dir}/VOCABULARY.md`
    - All other `{tutorials_dir}/Day*.md` files
-   - `.claude/tutorial-sessions/*.yaml` — retained session records whose `output` field points at the file being renamed. These hold the generated tutorial's path (e.g. `tutorials/Day8-Optionals-Annotated.md`); left stale, `undo` for that session looks for a filename that no longer exists and silently skips the deletion at step 5 of `## Recovery` § `undo`, leaving the renamed tutorial on disk after an undo that reported success.
+   - `.claude/tutorial-sessions/*.yaml` — retained session records whose `output` field points at the file being renamed. These hold the generated tutorial's path (e.g. `tutorials/Day8-Optionals-Annotated.md`); left stale, `undo` for that session looks for a filename that no longer exists — see step 5 of `## Recovery` § `undo` for how that case is handled, and why leaving these records stale would push work onto that recovery path instead of preventing it.
 
    Two fields change in a matching session record, and only these two:
    - `output` — string substitution `Day<old>` → `Day<new>`, same as any other reference.

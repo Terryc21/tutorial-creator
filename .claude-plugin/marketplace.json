@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "tutorial-creator",
-      "version": "2.0.0",
+      "version": "2.0.1",
       "source": "./",
       "description": "Generate personalized, annotated code-reading tutorials from your own codebase. Three surfaces (tutorial generation, vocabulary management, learning-state inspection), six writing-to-learn entry points, and five audience-facing entry points. Tracks vocabulary with a status state machine.",
       "author": {

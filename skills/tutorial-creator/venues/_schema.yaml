@@ -30,10 +30,18 @@
 # A change to any budget number or section name must be made in all
 # three places, in the same commit.
 #
-# Drift check (run from skills/tutorial-creator/, no dependencies):
+# Drift check (run from skills/tutorial-creator/, no dependencies).
 #
-#   grep -A6 'length_budget' venues/_schema.yaml
-#   grep -hE '^\| [SMLX] \|' venues/<name>.md
+# All six venues in this file, each block labeled with its venue name:
+#
+#   grep -E '^  [a-z-]+:$|^ +[SMLX]: \{' venues/_schema.yaml
+#
+# One venue's other two copies, front-matter then calibration table:
+#
+#   grep -hE '^  [SMLX]: \{|^\| [SMLX] \|' venues/<name>.md
+#
+# (The patterns are anchored to leading whitespace so they match the data
+# rows and not these comment lines.)
 #
 # Compare the words/ceiling pairs by eye; six venues x four tiers is a
 # two-minute check. Verified in agreement across all three locations on

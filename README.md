@@ -15,7 +15,7 @@ Works with any Swift, TypeScript, Python, or Rust project. Originally built duri
 - **Install:** `git clone` into `~/.claude/skills/`; then `/skill tutorial-creator` in any session.
 - **Try first:** `/skill tutorial-creator` — opens the gateway question. Pick "Write a tutorial for myself" → "Topic + file" → point it at any file. ~10 min to a real annotated lesson.
 - **Example output:** [Day 16 — captured-self staleness in SwiftUI](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md), a real production-bug walkthrough with pre/post tests and gap analysis.
-- **Maturity:** v2.0.0 (released 2026-05-10); used through Stuffolio's daily practice; deeper curation for Swift, working built-in progressions for TypeScript / Python / Rust.
+- **Maturity:** v2.0.1 (2.0 feature release 2026-05-10); used through Stuffolio's daily practice; deeper curation for Swift, working built-in progressions for TypeScript / Python / Rust.
 
 ## Newer to Claude Code?
 
@@ -361,7 +361,7 @@ The v2.0 redesign extends this philosophy: vocabulary as a first-class learning 
 
 ## Maturity
 
-v2.0.0 (released 2026-05-10). v1.x line shipped through Stuffolio's daily Swift-learning practice for over six months before the v2 rewrite consolidated vocabulary as a first-class object.
+v2.0.1 (patch, 2026-08-09); the 2.0 feature release shipped 2026-05-10. v1.x line shipped through Stuffolio's daily Swift-learning practice for over six months before the v2 rewrite consolidated vocabulary as a first-class object.
 
 **Validated shape.** Swift / SwiftUI — deepest curation, bundled examples, the daily-practice demo. Used through real production-bug case studies (Day 16 captured-self staleness, Day 3 SwiftUI scaffolding).
 

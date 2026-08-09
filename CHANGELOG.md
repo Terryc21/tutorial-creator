@@ -2,7 +2,9 @@
 
 All notable changes to `tutorial-creator` are documented here. This project adheres to [Semantic Versioning](https://semver.org/) and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.0.1] — 2026-08-09
+
+A documentation and correctness patch. No new features; the surfaces, entry points, and schemas are unchanged from 2.0.0. Every item below was found by an audit pass over the shipped spec.
 
 ### Fixed
 
@@ -10,8 +12,12 @@ All notable changes to `tutorial-creator` are documented here. This project adhe
 - **Manual install instructions produced a skill Claude Code couldn't load.** The README's `git clone` put `SKILL.md` two directories below `~/.claude/skills/`. Plugin install is now the documented primary path; the manual path clones the repo and symlinks `skills/tutorial-creator`.
 - `NOTICE` carried the repo's pre-rename project name (`code-smarter`).
 - **`renumber` no longer leaves `undo` broken.** Renaming a day rewrote references in PROGRESS.md, VOCABULARY.md, and other tutorials, but not the `output` path or `day_number` stored in retained session records. A later `undo` of that session looked for the pre-rename filename, hit the "already missing; skipping" branch, and reported success while leaving the tutorial on disk — and the status dashboard's "Last lesson" line read the stale day number. `renumber` now updates matching session records and shows those updates as a separate block in its confirmation diff. `undo` no longer skips a missing output silently: it looks for the same tutorial under another day number and asks before deleting.
+- **Entry [f] no longer has an undefined path when a URL can't be fetched.** The spec named a web fetch tool but gave no branch for the tool being unavailable, the fetch failing, or permission being denied — leaving the runtime free to improvise, including generating a synthesis from what it guessed the page said. It now offers the file-path and paste source types instead, and is told explicitly not to generate from an unfetched URL.
+- **The venue drift-check command in `venues/_schema.yaml` didn't work.** Its first match was the comment block documenting it, and it printed no venue names, so the numbers it emitted couldn't be attributed. Replaced with two commands that label each venue and show a venue's front-matter and calibration table together.
 
 ### Changed
+
+- **Audience artifacts now say they aren't undoable at the point they're written.** Path 2 deliberately has no recovery hook (audience-facing artifacts carry no learning state to roll back), but that was documented author-side only. A user who learned that `undo` reverts generations could reasonably expect it to cover a Reddit post; it would instead revert their last tutorial. The write step now states this in one line.
 
 - **Venue budget duplication is now a stated contract.** Each venue's length budget and honest-machine section name live in three places: `venues/_schema.yaml`, the venue file's front-matter, and the venue file's `## Length budget calibration` table. All three are kept — the front-matter makes a venue file reviewable standalone, and the calibration table pairs each tier with what changes at it. `_schema.yaml` is now documented as authoritative on conflict, each venue file carries a reciprocal edit warning, and `_schema.yaml` records a dependency-free drift check. All 18 copies verified in agreement 08/09/2026.
 
