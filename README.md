@@ -81,7 +81,7 @@ See [CHANGELOG.md](CHANGELOG.md) for full release notes and the v1.1 → v2.0 ch
 
 Three sample outputs are checked into `skills/tutorial-creator/examples/`:
 
-- **[Day 3 — `ScoutResultsLookupView`](skills/tutorial-creator/examples/Day3-ScoutResultsLookupView-Annotated.md)** — early-progression Swift tutorial annotating a single SwiftUI view file. Pre-test, annotated source, post-test, vocabulary table.
+- **[Day 3 — `ScoutResultsLookupView`](skills/tutorial-creator/examples/Day03-ScoutResultsLookupView-Annotated.md)** — early-progression Swift tutorial annotating a single SwiftUI view file. Pre-test, annotated source, post-test, vocabulary table.
 - **[Day 16 — Captured-self staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md)** — later-progression deep dive on a subtle Swift concurrency bug pattern in the user's own codebase.
 - **[`useDebouncedValue` hook](skills/tutorial-creator/examples/useDebouncedValue-Annotated.md)** — non-Swift example: TypeScript / React custom hook, same tutorial shape.
 
@@ -333,7 +333,7 @@ Swift gets the deepest curation — the bundled examples and the daily-practice 
 
 Three complete generated tutorials are included, showing how the skill scales from a beginner's first SwiftUI view to an advanced bug-driven case study to a non-Swift hook:
 
-**Starter:** [Day 3 — ScoutResultsLookupView.swift](skills/tutorial-creator/examples/Day3-ScoutResultsLookupView-Annotated.md). The first SwiftUI view a Stuffolio reader walked through. They could read the file before, but reading it didn't *teach* them anything. The annotated tutorial points at what each line is doing and why, builds a vocabulary table from terms the reader hadn't formally learned (`@Environment`, `@Query`, key paths, `NavigationStack`), and ends with a pre/post-test pair so the reader knows whether the lesson actually landed.
+**Starter:** [Day 3 — ScoutResultsLookupView.swift](skills/tutorial-creator/examples/Day03-ScoutResultsLookupView-Annotated.md). The first SwiftUI view a Stuffolio reader walked through. They could read the file before, but reading it didn't *teach* them anything. The annotated tutorial points at what each line is doing and why, builds a vocabulary table from terms the reader hadn't formally learned (`@Environment`, `@Query`, key paths, `NavigationStack`), and ends with a pre/post-test pair so the reader knows whether the lesson actually landed.
 
 **Advanced:** [Day 16 — Captured-Self Staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md). Built around a real production bug where a SwiftUI macOS app's window vanished on save. The bug was three lines and looked dumb in retrospect; the lesson is everything you'd want to know to never write it. Demonstrates the full format: vocabulary, pre-test, core pattern, annotated source, common mistakes, post-test, answer key, and connections back to earlier tutorials. This is also the tutorial whose gap analysis is shown in the screenshot above.
 
