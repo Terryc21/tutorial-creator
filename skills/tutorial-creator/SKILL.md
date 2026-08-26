@@ -570,6 +570,19 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
    ```
 3. **Fetch / read the content.** For URL: use the runtime's available web fetch tool (e.g., WebFetch). For file path: read directly. For pasted: prompt the user to paste, terminate on a sentinel like `END` on its own line.
 
+   **After a paste, ask for a citation URL.** Pasted content is the one source type that arrives with no provenance, and without it the finished tutorial cannot be checked against its source by anyone, including the user six months later. Content and citation are separate things: the user may paste because the page is behind auth, resists fetching, or is a conversation they were part of, and a perfectly good public URL can still exist.
+
+   ```
+   Is there a public URL for this content? It goes in the tutorial header so
+   the source stays checkable later.
+     [url]   paste it
+     [none]  no public URL exists
+   ```
+
+   On `[url]`: use it in the header exactly as given. **Do not fetch it.** The pasted text is the content, and re-fetching risks silently substituting a different version. The URL is a citation, not a source.
+
+   On `[none]`: the header records the source as pasted with no permalink, and the tutorial says so plainly. Do not invent, guess, or reconstruct a URL from the content's description of itself. An unverifiable tutorial that admits it is honest; one carrying a fabricated citation is worse than one with no citation at all.
+
    If no fetch tool is available, or the fetch fails or is denied, say so and offer the other two source types — do NOT generate the tutorial from what you infer the URL contains:
 
    ```
