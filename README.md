@@ -79,13 +79,14 @@ See [CHANGELOG.md](CHANGELOG.md) for full release notes and the v1.1 → v2.0 ch
 
 *Above: real gap analysis after generating Day 16. The skill found two prerequisite gaps in the user's earlier curriculum and proposed half-step bridge tutorials (Day 15.5 and Day 9.5) that slot between existing days without renumbering.*
 
-Three sample outputs are checked into `skills/tutorial-creator/examples/`:
+Sample outputs are checked into `skills/tutorial-creator/examples/`:
 
 - **[Day 3 — `ScoutResultsLookupView`](skills/tutorial-creator/examples/Day03-ScoutResultsLookupView-Annotated.md)** — early-progression Swift tutorial annotating a single SwiftUI view file. Pre-test, annotated source, post-test, vocabulary table.
 - **[Day 16 — Captured-self staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md)** — later-progression deep dive on a subtle Swift concurrency bug pattern in the user's own codebase.
 - **[`useDebouncedValue` hook](skills/tutorial-creator/examples/useDebouncedValue-Annotated.md)** — non-Swift example: TypeScript / React custom hook, same tutorial shape.
+- **[Gateway screen — with topic candidates](skills/tutorial-creator/examples/gateway-screen-with-candidates.md)** — not a tutorial: the menu you see on invocation, captured at the end of a working session where the skill could name specific topic candidates instead of handing over an empty prompt.
 
-Each is a real tutorial generated from a real codebase, not a fabricated illustration.
+The first three are real tutorials generated from a real codebase, not fabricated illustrations; the fourth is a captured invocation screen.
 
 ---
 
