@@ -1,4 +1,4 @@
-# Gateway screen — with topic candidates
+# Intro screen after invoking tutorial-creator, at the end of a session
 
 > [!NOTE]
 > This is a **sample of what the skill shows you on invocation**, not a tutorial it produced.
