@@ -81,10 +81,11 @@ See [CHANGELOG.md](CHANGELOG.md) for full release notes and the v1.1 → v2.0 ch
 
 Sample outputs are checked into `skills/tutorial-creator/examples/`:
 
-- **[Intro screen after invoking tutorial-creator](skills/tutorial-creator/examples/01-Intro-screen-after-invoking-tutorial-creator-at-end-of-a-session.md)** — start here: the screen you see on invocation. Captured at the end of a working session, where the skill could name specific topic candidates instead of handing over an empty prompt. The three below are what it goes on to produce.
+- **[Intro screen after invoking tutorial-creator](skills/tutorial-creator/examples/01-Intro-screen-after-invoking-tutorial-creator-at-end-of-a-session.md)** — start here: the screen you see on invocation. Captured at the end of a working session, where the skill could name specific topic candidates instead of handing over an empty prompt. The tutorials below are what it goes on to produce.
 - **[Day 3 — `ScoutResultsLookupView`](skills/tutorial-creator/examples/Day03-ScoutResultsLookupView-Annotated.md)** — early-progression Swift tutorial annotating a single SwiftUI view file. Pre-test, annotated source, post-test, vocabulary table.
 - **[Day 16 — Captured-self staleness](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md)** — later-progression deep dive on a subtle Swift concurrency bug pattern in the user's own codebase.
 - **[`useDebouncedValue` hook](skills/tutorial-creator/examples/useDebouncedValue-Annotated.md)** — non-Swift example: TypeScript / React custom hook, same tutorial shape.
+- **[Day 22 — Verifying the whole path](skills/tutorial-creator/examples/Day22-VerifyingTheWholePath-Annotated.md)** — writing-to-learn from an incident rather than a file: two shipped regressions three days apart, with a **passing test suite as the annotated source**, read as evidence rather than as code.
 
 The first is a captured invocation screen; the rest are real tutorials generated from a real codebase, not fabricated illustrations.
 
