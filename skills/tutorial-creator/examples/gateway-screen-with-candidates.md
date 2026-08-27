@@ -22,7 +22,7 @@ worth studying.
 
 ## The screen
 
-> ## Back to the tutorial
+> ## Introductory screen for Tutorial-Creator
 >
 > You invoked `/tutorial-creator`. What would you like to do?
 >
@@ -45,9 +45,6 @@ worth studying.
 > The third is the most interesting and the least written-about. It's a CloudKit-specific story
 > with a general lesson: a fix can be right in isolation and still be wrong to ship, if the data
 > it newly exposes was never reconciled.
->
-> Any of those could go to **[2]** as a Reddit post or book chapter, or to **[1]** if you'd
-> rather consolidate the CloudKit concepts for yourself first.
 
 ---
 
@@ -65,9 +62,10 @@ a tutorial worth reading were never captured.
 three equal options pushes the choice back to the user unaided, which is the thing the gateway
 is supposed to help with.
 
-**The routing is stated.** Each candidate is tagged to a surface: `[2]` for an audience artifact
-(Reddit post, book chapter), `[1]` for consolidating the concepts privately. The gateway's job
-is dispatch; naming which door each candidate goes through is part of that job.
+**The general lesson is separated from the specific bug.** The closing line names what the
+third candidate is *about* beyond CloudKit — "a fix can be right in isolation and still be wrong
+to ship." A candidate that is only a war story gives the user nothing to decide with; naming the
+transferable claim is what makes it look writable.
 
 ---
 
