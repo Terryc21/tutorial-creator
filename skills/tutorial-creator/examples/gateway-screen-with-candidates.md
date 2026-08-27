@@ -22,31 +22,37 @@ worth studying.
 
 ## The screen
 
-> ## Introductory screen for Tutorial-Creator
->
-> You invoked `/tutorial-creator`. What would you like to do?
->
-> **[1] Write a tutorial for myself** — for my own learning
-> **[2] Write a tutorial for others** — preparing a lesson for others to learn
-> **[3] Manage vocabulary** — edit vocabulary
-> **[4] Inspect my learning state** — see progress and what you're forgetting
->
-> ---
->
-> Worth noting: this session left unusually good raw material behind, all with **measured
-> evidence** already written down.
->
-> | Candidate | Why it's strong |
-> |---|---|
-> | **The unfollowed cursor** | The app saw 100 of 2,420 records, silently, for weeks — because `records(matching:)` returns one page and the cursor was declared but never read |
-> | **The bug behind the bug** | Fixing pagination immediately exposed a 400-ID fetch cap that had been *unreachable* while the first bug existed |
-> | **The correct fix that caused damage** | A verified-correct fix landed on an inconsistent data model and duplicated a 1,129-item library |
->
-> The third is the most interesting and the least written-about. It's a CloudKit-specific story
-> with a general lesson: a fix can be right in isolation and still be wrong to ship, if the data
-> it newly exposes was never reconciled.
+Everything between the rules below is the captured output, verbatim.
+
+<!-- BEGIN captured screen -->
 
 ---
+
+**Introductory screen for Tutorial-Creator**
+
+You invoked `/tutorial-creator`. What would you like to do?
+
+- **[1] Write a tutorial for myself** — for my own learning
+- **[2] Write a tutorial for others** — preparing a lesson for others to learn
+- **[3] Manage vocabulary** — edit vocabulary
+- **[4] Inspect my learning state** — see progress and what you're forgetting
+
+Worth noting: this session left unusually good raw material behind, all with **measured
+evidence** already written down.
+
+| Candidate | Why it's strong |
+|---|---|
+| **The unfollowed cursor** | The app saw 100 of 2,420 records, silently, for weeks — because `records(matching:)` returns one page and the cursor was declared but never read |
+| **The bug behind the bug** | Fixing pagination immediately exposed a 400-ID fetch cap that had been *unreachable* while the first bug existed |
+| **The correct fix that caused damage** | A verified-correct fix landed on an inconsistent data model and duplicated a 1,129-item library |
+
+The third is the most interesting and the least written-about. It's a CloudKit-specific story
+with a general lesson: a fix can be right in isolation and still be wrong to ship, if the data
+it newly exposes was never reconciled.
+
+---
+
+<!-- END captured screen -->
 
 ## Why the candidates are shaped that way
 
