@@ -646,13 +646,15 @@ Routes to `VOCAB.md`. **Fully implemented.** Subcommands:
 vocab add <term>                  # draft definition + use case; user confirms; saved
 vocab ingest <source>             # batch-extract terms/phrases from a session, URL, file,
                                    #   or pasted text; each gets definition + use case
-vocab list [--status=<s>]         # browse (filter by status: new|reviewing|mastered|confused)
+vocab list [--status=<s>] [--source=<match>] [--date=<d>|--date-from=<d>|--date-to=<d>]
+                                   #   browse, filterable by status, source, and/or date (all compose)
 vocab show <term>                 # full record incl. test history
 vocab edit <term> [--reset-mastery]   # update fields (status NOT user-editable except via --reset-mastery)
 vocab merge <a> <b>               # collapse duplicates; preserve test history
 vocab review [--strict]           # spaced-repetition test session (lenient by default per D3)
 vocab gap                         # show "confused" terms ranked by staleness; feeds entry [e]
-vocab flashcards [--status=<s>] [--count=N]  # export vocabulary as Anki-ready flashcards
+vocab flashcards [--status=<s>] [--source=<match>] [--date=<d>|--date-from=<d>|--date-to=<d>] [--count=N]
+                                   #   export vocabulary as Anki-ready flashcards; same filters as vocab list
 vocab regen-md [--import]         # regenerate VOCABULARY.md from yaml; --import migrates v1.1
 vocab undo                        # revert last vocab add or vocab ingest (within 24h soft-stage)
 ```

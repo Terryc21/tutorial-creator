@@ -35,13 +35,13 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
 |---|---|
 | `vocab add <term>` | Draft definition; user confirms; saved |
 | `vocab ingest <source>` | Batch-extract terms + phrases from a source (session transcript, URL, file, memory files, pasted text); each gets a definition and use case, added with confirmation |
-| `vocab list [--status=<s>]` | Browse the full vocabulary |
+| `vocab list [--status=<s>] [--source=<match>] [--date=…]` | Browse the full vocabulary, filterable by status, source, and/or date |
 | `vocab show <term>` | Full record for one term |
 | `vocab edit <term>` | Update fields (definition, use_case, type, related_terms, notes) |
 | `vocab merge <a> <b>` | Collapse duplicates |
 | `vocab review [--strict]` | Spaced-repetition test session |
 | `vocab gap` | Show terms with `status: confused`, ranked by staleness |
-| `vocab flashcards [--status=<s>] [--count=N]` | Export vocabulary.yaml as Anki-ready flashcards |
+| `vocab flashcards [--status=<s>] [--source=<match>] [--date=…] [--count=N]` | Export vocabulary.yaml as Anki-ready flashcards, same filters as `vocab list` |
 | `vocab regen-md` | Regenerate VOCABULARY.md from vocabulary.yaml |
 | `vocab undo` | Revert last `vocab add` or `vocab ingest` (within 24h soft-stage; Phase 6 wires the broader undo) |
 
@@ -185,15 +185,15 @@ Same as Entry [f] — see `SKILL.md` § "Entry [f] — External source" § "Acce
 
 ---
 
-## `vocab flashcards [--status=<status>] [--count=N]`
+## `vocab flashcards [--status=<status>] [--source=<match>] [--date=<YYYY-MM-DD>] [--date-from=<YYYY-MM-DD>] [--date-to=<YYYY-MM-DD>] [--count=N]`
 
 Export vocabulary.yaml entries as flashcards, front = term, back = definition + use case. Read-only against vocabulary.yaml (writes only the export file, never modifies the vocabulary itself).
 
 ### Procedure
 
 1. **Read vocabulary.yaml.** If empty: `Your vocabulary is empty. Add terms with vocab add or vocab ingest first.` Stop.
-2. **Filter** by `--status` if set (same valid values as `vocab list`: `new`, `reviewing`, `mastered`, `confused`). No filter = all terms.
-3. **Select count.** If `--count=N` is set, pick N terms prioritized the same way `vocab review`'s tier system does (confused/stale first — reviewing the gaps is more valuable practice than drilling what's already mastered). Without `--count`, export every term matching the filter.
+2. **Filter** by `--status`, `--source`, and/or the date flags exactly as `vocab list` does — see that command's Procedure steps 2-5 for the matching rules and composition behavior (filters AND together). This makes "flashcards from just this one URL" or "flashcards from what I learned this week" first-class exports, not just first-class lists. If the combined filter matches zero terms: `No terms match that filter — nothing to export.` Stop.
+3. **Select count.** If `--count=N` is set, pick N terms prioritized the same way `vocab review`'s tier system does (confused/stale first — reviewing the gaps is more valuable practice than drilling what's already mastered), applied *within* the filtered set from step 2. Without `--count`, export every term matching the filter.
 4. **Build one card per term:**
    - **Front:** the term, verbatim.
    - **Back:** `definition`, followed by a blank line, followed by `use_case` if non-empty (formatted as "Example: <use_case text>"). If `use_case` is empty for a term, the back is definition-only — do not fabricate a use case at export time; that's `vocab ingest`/`vocab edit`'s job, not export's.
@@ -208,7 +208,7 @@ Export vocabulary.yaml entries as flashcards, front = term, back = definition + 
 7. **APKG export.** Reuse the same genanki-based generation approach documented in the `flashcard-generator` skill (front/back → `genanki.Note`, packaged via `genanki.Package`) — see that skill's SKILL.md § "Anki APKG Export" for the exact script shape; the card content here is sourced from vocabulary.yaml instead of AI-summarized text, so the summarize/chunk steps in that skill do not apply. Write to `{tutorials_dir}/flashcards-<ISO-date>.apkg`. If `genanki`/`mistune` aren't installed, install via pip same as that skill does; if installation fails, fall back to Markdown-only and say so.
 8. **Confirm:**
    ```
-   Exported N cards from your vocabulary (status filter: <filter-or-none>).
+   Exported N cards from your vocabulary (filters: <status/source/date summary, or "none">).
      - {tutorials_dir}/flashcards-<date>.md
      - {tutorials_dir}/flashcards-<date>.apkg   (if requested)
 
@@ -221,14 +221,22 @@ Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vo
 
 ---
 
-## `vocab list [--status=<status>]`
+## `vocab list [--status=<status>] [--source=<match>] [--date=<YYYY-MM-DD>] [--date-from=<YYYY-MM-DD>] [--date-to=<YYYY-MM-DD>]`
 
 ### Procedure
 
 1. **Read vocabulary.yaml.**
-2. **Filter** by status if `--status` flag is set. Valid values: `new`, `reviewing`, `mastered`, `confused`. Invalid value → list all and warn.
-3. **Sort** alphabetically by `term` (case-insensitive).
-4. **Render as a table:**
+2. **Filter by status** if `--status` flag is set. Valid values: `new`, `reviewing`, `mastered`, `confused`. Invalid value → list all and warn.
+3. **Filter by source** if `--source=<match>` is set. Case-insensitive substring match against three fields, in order, first hit wins: `first_encountered.context`, `first_encountered.source_file`, `notes`. This covers every shape a source takes today — a `vocab ingest`/`vocab add` context string (e.g. `"session transcript, 2026-08-31"`, `"vocab ingest"`, `"external source"`), an in-project file path, or a URL folded into `notes` (per the `vocab ingest` procedure's citation handling, and Entry [f]'s `external source` context). `--source=stuffolio.app` matches a file-path source; `--source=iosweeklybrief.com` matches a URL folded into notes; `--source=session` matches any session-transcript ingest regardless of date.
+4. **Filter by date** if any of `--date`, `--date-from`, `--date-to` are set. Matches against `first_encountered.date`.
+   - `--date=<YYYY-MM-DD>` — exact match only. Mutually exclusive with `--date-from`/`--date-to`; if both forms are passed, `--date` wins and the range flags are ignored with a warning: `--date and --date-from/--date-to both set; using --date, ignoring the range.`
+   - `--date-from=<YYYY-MM-DD>` alone — everything on or after.
+   - `--date-to=<YYYY-MM-DD>` alone — everything on or before.
+   - Both `--date-from` and `--date-to` — inclusive range.
+   - Malformed date (not `YYYY-MM-DD`) → warn and ignore that flag, continue with any other filters still set: `--date value "<value>" isn't YYYY-MM-DD; ignoring.`
+5. **Filters compose.** `--status`, `--source`, and the date filters all narrow the same result set together (AND, not OR) — `vocab list --source=stuffolio.app --date-from=2026-08-01` means "from that source AND added since August."
+6. **Sort** alphabetically by `term` (case-insensitive).
+7. **Render as a table:**
    ```
    Vocabulary  (N terms total · showing N matching filter)
 
@@ -243,11 +251,16 @@ Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vo
 
    Run vocab show <term> for full details.
    ```
-5. **Empty state** (zero terms): `Your vocabulary is empty. Start with: vocab add <term>`.
+   When any of `--source`/`--date`/`--date-from`/`--date-to` narrowed the result, name the active filter(s) in the header line so it's clear what's being shown: `Vocabulary  (221 terms total · showing 14 matching source="session" date=2026-08-31)`.
+8. **Empty state** (zero terms, or zero terms matching the combined filter): `Your vocabulary is empty. Start with: vocab add <term>` (no terms at all) or `No terms match that filter.` (terms exist, none match).
 
 ### Truncation
 
 If a term name is longer than 20 characters, truncate with `...` in the table cell. The full term is always available via `vocab show`.
+
+### Why source/date filter on existing fields, not new ones
+
+`first_encountered.source_file`, `first_encountered.context`, and `first_encountered.date` are already required fields on every entry (Schema 2) — every term has always carried this data, it just wasn't queryable as a first-class filter until now. No schema change was needed; this is a read-side addition only.
 
 ---
 
