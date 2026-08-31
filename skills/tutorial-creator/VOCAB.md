@@ -34,14 +34,16 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
 | Subcommand | Purpose |
 |---|---|
 | `vocab add <term>` | Draft definition; user confirms; saved |
+| `vocab ingest <source>` | Batch-extract terms + phrases from a source (session transcript, URL, file, memory files, pasted text); each gets a definition and use case, added with confirmation |
 | `vocab list [--status=<s>]` | Browse the full vocabulary |
 | `vocab show <term>` | Full record for one term |
-| `vocab edit <term>` | Update fields (definition, type, related_terms, notes) |
+| `vocab edit <term>` | Update fields (definition, use_case, type, related_terms, notes) |
 | `vocab merge <a> <b>` | Collapse duplicates |
 | `vocab review [--strict]` | Spaced-repetition test session |
 | `vocab gap` | Show terms with `status: confused`, ranked by staleness |
+| `vocab flashcards [--status=<s>] [--count=N]` | Export vocabulary.yaml as Anki-ready flashcards |
 | `vocab regen-md` | Regenerate VOCABULARY.md from vocabulary.yaml |
-| `vocab undo` | Revert last `vocab add` (within 24h soft-stage; Phase 6 wires the broader undo) |
+| `vocab undo` | Revert last `vocab add` or `vocab ingest` (within 24h soft-stage; Phase 6 wires the broader undo) |
 
 ---
 
@@ -65,12 +67,14 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
      Drafting definition...
      Type:       <chosen-type>
      Definition: <ai-drafted text>
+     Use case:   <ai-drafted 1-2 sentence scenario, optional>
      Source file (optional): _
      Context:    vocab add
      Related terms (suggested): <list of 2-4 related terms from existing vocabulary>
 
-     Accept this draft? [y / edit / cancel]
+     Accept this draft? [y / edit / skip use case / cancel]
      ```
+   - **Use case** — optional. AI drafts a concrete scenario ("when/why would I reach for this") distinct from the definition ("what is this"). User can accept, edit, or skip (leaves the field empty per Schema 2 default).
    - **Source file** — optional. User can paste a file path, optionally with `:line` suffix.
    - **Related terms** — AI suggests by scanning existing vocabulary.yaml for terms with similar tags, types, or vocabulary near the new term. User accepts, edits, or clears.
 4. **On confirm:**
@@ -80,6 +84,8 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
        type: <type>
        definition: |
          <definition text>
+       use_case: |
+         <use case text, or omit the field entirely if skipped>
        first_encountered:
          source_file: "<path-or-empty>"
          context: vocab add
@@ -100,6 +106,118 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
 
 - If user provides a `source_file` path that doesn't exist in the project, warn but allow (user might be referring to an external file).
 - If `vocabulary.yaml` is malformed (yaml parse error), refuse to write. Tell the user: `vocabulary.yaml is malformed: <error>. Run vocab regen-md or fix manually.` Do not corrupt the file with a partial append.
+
+---
+
+## `vocab ingest <source>`
+
+Batch-extract vocabulary terms and phrases from an arbitrary source — a session transcript, a URL, a local file, a memory file, pasted text — and add each one to vocabulary.yaml with a definition and use case, all under a single confirmation step. This is the vocab-only counterpart to `SKILL.md` Entry [f] (External source): entry [f] produces a full Day-N tutorial *and* files new vocab as a side effect; `vocab ingest` produces *only* the vocabulary entries, with no tutorial artifact. Use `vocab ingest` when the goal is building the glossary; use entry [f] when the goal is a synthesis document that also happens to grow the glossary.
+
+### Accepted source types
+
+Same as Entry [f] — see `SKILL.md` § "Entry [f] — External source" § "Accepted source types" for the authoritative list (URL, file path, pasted text). This section does not repeat those rules; where this procedure says "fetch the source" or "handle the citation," it means exactly what Entry [f] means, including:
+
+- The fetch-failure fallback (offer file path or paste instead of guessing at URL contents)
+- The pasted-content citation rule (ask for a public URL; never fetch a URL provided alongside a paste; never fabricate a citation when none exists)
+- The ~50,000 character paste-size limit (suggest a file instead)
+
+**One addition specific to `vocab ingest`:** a session transcript is a first-class source, not just "pasted text" or "a file." If the user says "this session" or names another session, and the runtime has a way to access that transcript (this session's own context, or a session log path), treat it as already-fetched content — no fetch step, no citation prompt (a transcript has no public URL; note the source as `"session transcript, <date>"` in `first_encountered.context` instead of asking for one).
+
+### Procedure
+
+1. **Read config + existing vocabulary.yaml.** Need `language`, `project_dir` for the codebase-mapping step, and the full existing term list for duplicate detection.
+2. **Resolve the source**, per "Accepted source types" above. For a session transcript, use the available content directly (this session) or read the named session's transcript/log file.
+3. **Extract candidate terms and phrases.** Scan the source for:
+   - Technical terms and jargon (identifiers, API names, keywords — same signal Entry [f] step 4 uses)
+   - Multi-word phrases that function as a unit of jargon (e.g., "confidence floor," "token propagation delay," "spread-gate hide") — vocabulary.yaml's `term` field is not restricted to single words; a phrase is a valid term
+   - Concepts that were *explained* in the source (a definition-shaped sentence: "X is...", "X means...", "X refers to...") are higher-confidence candidates than concepts merely *named* in passing
+4. **Filter against existing vocabulary.** Case-insensitive match each candidate against vocabulary.yaml. Split into two groups, same shape as Entry [f] step 5:
+   - **Already in your vocabulary** — shown with current status; not re-added, but the source can be appended to `notes` if the term's use in this source adds something the existing entry lacks (offer this per-term, don't do it silently)
+   - **New to your vocabulary** — candidates for a new entry
+5. **Show the extraction with confirmation.** Format:
+   ```
+   Scanned <source description> — found N candidate terms.
+
+   Already in your vocabulary (won't re-add):
+     - <term> (status: <status>)
+     - ...
+
+   New to your vocabulary:
+     1. <term>          <one-line hint of where/how it appeared>
+     2. <term>          ...
+     ...
+
+   Add which ones? [all / 1,3,5 / none / cancel]
+   ```
+   Cap the "new" list at 20 shown candidates; if more exist, say `+N more not shown — narrow the source or run ingest again after this batch` rather than silently truncating (per the no-silent-caps rule).
+6. **For each selected term, draft definition + use case.** Same drafting shape as `vocab add` step 3 — AI drafts both fields from the term's actual usage *in the source* (not generic knowledge about the term), so the definition reflects how the source actually used it. Show all drafts together for one bulk confirmation rather than one prompt per term (batch ingest should not become N individual confirmations):
+   ```
+   Drafted entries (3):
+
+   1. confidence floor
+      Definition: A threshold check that hides a valuation range when too
+                   few comps exist or their spread is too wide, rather than
+                   showing an unreliable number.
+      Use case:    Prevents showing a fake-looking "$15-$45" range for a
+                   thrift item when only 2 noisy comps were found.
+
+   2. token propagation delay
+      Definition: ...
+      Use case:    ...
+
+   3. ...
+
+   Accept all as drafted? [y / edit <N> / drop <N> / cancel]
+   ```
+7. **On confirm:** for each accepted term, append to vocabulary.yaml per Schema 2 (same shape as `vocab add` step 4), with:
+   - `first_encountered.context`: `"vocab ingest"` (or `"session transcript, <date>"` for a session source, per "Accepted source types" above)
+   - `first_encountered.source_file`: the file path if the source was a file; empty for URL/paste/session sources (the source description lives in `notes` instead, since `source_file` is specifically for in-project file references)
+   - `notes`: one line naming the source, e.g. `"Ingested from session transcript, 2026-08-31."` or `"Ingested from https://example.com/article."`
+   - Write **one** 24h soft-stage marker covering the whole batch (not one per term) — `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` containing the list of added term names. `vocab undo` on this marker reverts the entire batch as a unit, matching the "one ingest = one undoable action" mental model.
+   - Regenerate VOCABULARY.md.
+8. **On `none` or `cancel`:** stop. No file written.
+
+### Honesty rules (cross-cutting, inherited from Entry [f])
+
+- Definitions and use cases are drafted from the source's actual content, not generic knowledge — if the source doesn't explain a term well enough to draft an honest definition, say so per-term rather than filling in from general knowledge: `"<term>" appeared in the source but wasn't explained there. Draft from general knowledge instead, or skip it?`
+- Never fabricate a citation for pasted content with no public URL, per Entry [f]'s pasted-content rule.
+- If extraction finds zero candidates (source has no jargon-shaped content), say so plainly: `No new vocabulary terms found in this source.` Do not force a result.
+
+---
+
+## `vocab flashcards [--status=<status>] [--count=N]`
+
+Export vocabulary.yaml entries as flashcards, front = term, back = definition + use case. Read-only against vocabulary.yaml (writes only the export file, never modifies the vocabulary itself).
+
+### Procedure
+
+1. **Read vocabulary.yaml.** If empty: `Your vocabulary is empty. Add terms with vocab add or vocab ingest first.` Stop.
+2. **Filter** by `--status` if set (same valid values as `vocab list`: `new`, `reviewing`, `mastered`, `confused`). No filter = all terms.
+3. **Select count.** If `--count=N` is set, pick N terms prioritized the same way `vocab review`'s tier system does (confused/stale first — reviewing the gaps is more valuable practice than drilling what's already mastered). Without `--count`, export every term matching the filter.
+4. **Build one card per term:**
+   - **Front:** the term, verbatim.
+   - **Back:** `definition`, followed by a blank line, followed by `use_case` if non-empty (formatted as "Example: <use_case text>"). If `use_case` is empty for a term, the back is definition-only — do not fabricate a use case at export time; that's `vocab ingest`/`vocab edit`'s job, not export's.
+5. **Ask export format:**
+   ```
+   Exporting N cards. Format?
+     [md]    Markdown (front/back pairs, portable, human-readable)
+     [apkg]  Anki package (.apkg, importable directly into Anki)
+     [both]
+   ```
+6. **Markdown export.** Same front/back/separator format as flashcard-generator's Markdown export (`front\n---\nback\n===`), for consistency with the sibling tool users may already know. Write to `{tutorials_dir}/flashcards-<ISO-date>.md`.
+7. **APKG export.** Reuse the same genanki-based generation approach documented in the `flashcard-generator` skill (front/back → `genanki.Note`, packaged via `genanki.Package`) — see that skill's SKILL.md § "Anki APKG Export" for the exact script shape; the card content here is sourced from vocabulary.yaml instead of AI-summarized text, so the summarize/chunk steps in that skill do not apply. Write to `{tutorials_dir}/flashcards-<ISO-date>.apkg`. If `genanki`/`mistune` aren't installed, install via pip same as that skill does; if installation fails, fall back to Markdown-only and say so.
+8. **Confirm:**
+   ```
+   Exported N cards from your vocabulary (status filter: <filter-or-none>).
+     - {tutorials_dir}/flashcards-<date>.md
+     - {tutorials_dir}/flashcards-<date>.apkg   (if requested)
+
+   Import .apkg into Anki: File > Import > select the file.
+   ```
+
+### Why this doesn't write to vocabulary.yaml
+
+Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vocab review` (which appends to `test_history` and can change `status`), running `vocab flashcards` — or later studying the exported deck in Anki — does not feed back into tutorial-creator's own spaced-repetition state. Anki has its own SRS scheduling; tutorial-creator's `test_history` stays the source of truth for *this* skill's state machine. Keeping them separate avoids two systems fighting over one term's mastery state.
 
 ---
 
@@ -149,6 +267,10 @@ If a term name is longer than 20 characters, truncate with `...` in the table ce
    Definition:
      Property wrapper that constrains a type or method to run on the main thread.
 
+   Use case:
+     Applied to a ViewModel class so every property/method touching UI state
+     is guaranteed to run on the main thread, without manually dispatching.
+
    Related terms:    actor, Sendable, isolation, nonisolated
 
    Test history (3 entries):
@@ -162,6 +284,8 @@ If a term name is longer than 20 characters, truncate with `...` in the table ce
      Earned mastered via 3 consecutive correct results.
    ```
 
+Omit the "Use case:" block entirely when `use_case` is empty — most terms added before this field existed have none, and an empty labeled block reads as broken rather than absent.
+
 ### Multi-match handling
 
 If `<term>` is ambiguous (multiple case-insensitive matches), show a numbered list and prompt the user to pick.
@@ -173,6 +297,7 @@ If `<term>` is ambiguous (multiple case-insensitive matches), show a numbered li
 ### Editable fields
 
 - `definition`
+- `use_case`
 - `type`
 - `related_terms`
 - `notes`
@@ -380,7 +505,7 @@ Regenerate `VOCABULARY.md` from `vocabulary.yaml`. Used as a manual safety net a
    - Group 1: terms with context starting `Day N tutorial` (sorted by day number)
    - Group 2: terms with context `vocab add` (sorted by date added)
    - Group 3: terms with context `vocab review` (rare; means added during a review session)
-   - Group 4: terms with context `external source` (sorted by date)
+   - Group 4: terms with context `external source` or `vocab ingest` or starting `session transcript` (sorted by date) — these three all mean "batch-ingested from a non-project source" and share a group; the distinction between them lives in each term's `notes` field, not the grouping
 3. Write VOCABULARY.md atomically (write to `.tmp` file, then rename).
 4. Print: `Regenerated VOCABULARY.md from N terms in vocabulary.yaml.`
 
@@ -417,15 +542,19 @@ If VOCABULARY.md doesn't exist (during `--import`): refuse with `No VOCABULARY.m
 
 ## `vocab undo`
 
-24-hour soft-stage reversal of the last *standalone* `vocab add` (a `vocab add <term>` invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`/skill tutorial-creator undo`); see `SKILL.md` § Recovery for that path.
+24-hour soft-stage reversal of the last *standalone* `vocab add` or `vocab ingest` (an invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`/skill tutorial-creator undo`); see `SKILL.md` § Recovery for that path.
+
+### Marker file shape
+
+A `vocab add` marker contains one term name (single-term add). A `vocab ingest` marker contains a **list** of term names — one marker per ingest batch, not one per term, so undoing an ingest reverts the whole batch as a unit rather than requiring N separate undos. Both shapes live in the same `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` naming scheme; the procedure below handles either.
 
 ### Procedure
 
 1. List soft-stage markers: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` files.
 2. Filter to those within 24 hours of now.
-3. **No markers in window:** `No vocab add to undo within the last 24 hours. (For tutorial-time adds, use /skill tutorial-creator undo instead.)`
-4. **One marker:** show details (term name, when added) and prompt confirm. On yes, remove the term from vocabulary.yaml + delete the marker; regenerate VOCABULARY.md.
-5. **Multiple markers:** show a numbered list, user picks which to undo (or `cancel`).
+3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use /skill tutorial-creator undo instead.)`
+4. **One marker:** show details — term name (single-add) or the full term list + count (ingest batch) — and when added; prompt confirm. On yes, remove the term(s) from vocabulary.yaml + delete the marker; regenerate VOCABULARY.md.
+5. **Multiple markers:** show a numbered list — each row labeled `<term>` for a single add or `<N> terms from vocab ingest (<source>)` for a batch — user picks which to undo (or `cancel`). Only one marker is undone per invocation; run `vocab undo` again for another.
 
 Markers older than 24h are silently pruned at the start of any vocab subcommand.
 

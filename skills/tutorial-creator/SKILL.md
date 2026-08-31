@@ -52,7 +52,7 @@ Every invocation runs through this dispatch:
 1. **Read `--mode` flag if present.** If set, echo it back to the user as a one-line confirmation, then jump directly to that surface or path. Skip the gateway question. Mode values: `learn`, `audience`, `vocab`, `status`. Any other value (including `both`, which earlier drafts listed but never specified): say `Unknown mode "<value>". Valid modes: learn, audience, vocab, status.` and stop — do not guess a surface or silently fall through to the gateway.
 2. **Else, recognize first-positional subcommand keywords.** If the first positional arg is one of:
    - `tutorial` → tutorial surface (Path 1 unless `--mode audience` follows)
-   - `vocab` → vocab surface; the second positional is the subcommand (`add`, `list`, `show`, `edit`, `merge`, `review`, `gap`, `regen-md`, `undo`)
+   - `vocab` → vocab surface; the second positional is the subcommand (`add`, `ingest`, `list`, `show`, `edit`, `merge`, `review`, `gap`, `flashcards`, `regen-md`, `undo`)
    - `status` → status surface (`STATUS.md`)
    - `undo` → recovery `undo` route (see `## Recovery` § `undo` command). May be followed by `--session <id>`
    - `renumber` → recovery `renumber` route (see `## Recovery` § `renumber`). Requires two more positional args: `<old> <new>` (e.g., `renumber 8 7.5`)
@@ -643,15 +643,18 @@ If the user pastes content longer than ~50,000 characters, suggest they save it 
 Routes to `VOCAB.md`. **Fully implemented.** Subcommands:
 
 ```
-vocab add <term>                  # draft definition; user confirms; saved
+vocab add <term>                  # draft definition + use case; user confirms; saved
+vocab ingest <source>             # batch-extract terms/phrases from a session, URL, file,
+                                   #   or pasted text; each gets definition + use case
 vocab list [--status=<s>]         # browse (filter by status: new|reviewing|mastered|confused)
 vocab show <term>                 # full record incl. test history
 vocab edit <term> [--reset-mastery]   # update fields (status NOT user-editable except via --reset-mastery)
 vocab merge <a> <b>               # collapse duplicates; preserve test history
 vocab review [--strict]           # spaced-repetition test session (lenient by default per D3)
 vocab gap                         # show "confused" terms ranked by staleness; feeds entry [e]
+vocab flashcards [--status=<s>] [--count=N]  # export vocabulary as Anki-ready flashcards
 vocab regen-md [--import]         # regenerate VOCABULARY.md from yaml; --import migrates v1.1
-vocab undo                        # revert last vocab add (within 24h soft-stage)
+vocab undo                        # revert last vocab add or vocab ingest (within 24h soft-stage)
 ```
 
 See `VOCAB.md` for the full procedure spec, state machine, and grading rules.
@@ -931,3 +934,4 @@ The phases below describe how v2.0 was built incrementally. See `CHANGELOG.md` a
 | 7 | Audience-facing path with 6 venue templates | ✅ shipped: routing + AUDIENCE.md + all 6 venues (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) |
 | 8a | Polish, CHANGELOG, v2.0.0 release | ✅ shipped |
 | 8b | Entry demo bundles under `examples/v2-entry-demos/` | ⏳ follow-up |
+| 9 | `vocab ingest` (batch vocabulary extraction from any source), `vocab flashcards` (Anki export), `use_case` field on Schema 2 | ✅ shipped (2026-08-31) |

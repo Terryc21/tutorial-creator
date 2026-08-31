@@ -95,6 +95,9 @@ The first-class vocabulary store. Replaces `VOCABULARY.md` as source of truth.
   type: swift-attribute
   definition: |
     Property wrapper that constrains a type or method to run on the main thread.
+  use_case: |
+    Applied to a ViewModel class so every property/method touching UI state is
+    guaranteed to run on the main thread, without manually dispatching.
   first_encountered:
     source_file: "Sources/Models/AppSchema.swift:42"
     context: "Day 5 tutorial"
@@ -112,10 +115,11 @@ The first-class vocabulary store. Replaces `VOCABULARY.md` as source of truth.
 
 - `term` (required): string. Unique within vocabulary.yaml. Quote terms with leading `@`, `:`, or other yaml-special characters.
 - `type` (required): one of `swift-keyword`, `swift-attribute`, `api`, `concept`, `pattern`, `idiom`, plus the language-specific equivalents for ts/python/rust (e.g., `ts-keyword`, `python-decorator`, `rust-trait`). New types can be added; this enum is informational, not enforced.
-- `definition` (required): string. Multi-line yaml block scalar (`|`) preferred for readability.
+- `definition` (required): string. Multi-line yaml block scalar (`|`) preferred for readability. Answers "what is this."
+- `use_case` (optional, default `""`): string. Multi-line yaml block scalar (`|`) preferred. Answers "when/why would I reach for this" — a concrete scenario or worked example, distinct from the definition. **Added for the `vocab ingest` / `vocab flashcards` surfaces** (see VOCAB.md); existing entries from before this field existed simply have it empty, which is a valid, backward-compatible state — nothing reads it as required. `vocab add`'s interactive flow prompts for it as an optional field alongside `definition`.
 - `first_encountered` (required): object with three sub-fields:
   - `source_file` (string, may be empty): file path with optional `:line` suffix
-  - `context` (string): one of `"Day N tutorial"`, `"vocab add"`, `"review session"`, `"external source"`, or free-form
+  - `context` (string): one of `"Day N tutorial"`, `"vocab add"`, `"review session"`, `"external source"`, `"vocab ingest"`, or free-form
   - `date` (string): ISO date `YYYY-MM-DD`
 - `status` (required): one of `new`, `reviewing`, `mastered`, `confused`. See state machine below.
 - `test_history` (required, may be empty list): list of test results from `vocab review` sessions. Each entry: `{ date, result, source }`. `result` is one of `correct`, `partial`, `wrong`.
