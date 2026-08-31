@@ -654,7 +654,8 @@ vocab merge <a> <b>               # collapse duplicates; preserve test history
 vocab review [--strict]           # spaced-repetition test session (lenient by default per D3)
 vocab gap                         # show "confused" terms ranked by staleness; feeds entry [e]
 vocab flashcards [--status=<s>] [--source=<match>] [--date=<d>|--date-from=<d>|--date-to=<d>] [--count=N]
-                                   #   export vocabulary as Anki-ready flashcards; same filters as vocab list
+                                   #   export vocabulary as Markdown, Anki .apkg, or a duplex-print
+                                   #   PDF; same filters as vocab list
 vocab regen-md [--import]         # regenerate VOCABULARY.md from yaml; --import migrates v1.1
 vocab undo                        # revert last vocab add or vocab ingest (within 24h soft-stage)
 ```
@@ -936,4 +937,4 @@ The phases below describe how v2.0 was built incrementally. See `CHANGELOG.md` a
 | 7 | Audience-facing path with 6 venue templates | ✅ shipped: routing + AUDIENCE.md + all 6 venues (`reddit`, `book-chapter`, `apple-developer-article`, `medium`, `blog`, `repo-doc`) |
 | 8a | Polish, CHANGELOG, v2.0.0 release | ✅ shipped |
 | 8b | Entry demo bundles under `examples/v2-entry-demos/` | ⏳ follow-up |
-| 9 | `vocab ingest` (batch vocabulary extraction from any source), `vocab flashcards` (Anki export), `use_case` field on Schema 2 | ✅ shipped (2026-08-31) |
+| 9 | `vocab ingest` (batch vocabulary extraction from any source), `vocab flashcards` (Markdown/Anki/print-PDF export), `--source`/`--date` filtering on `vocab list`/`vocab flashcards`, `use_case` field on Schema 2 | ✅ shipped (2026-08-31) |

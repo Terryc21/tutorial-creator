@@ -41,7 +41,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
 | `vocab merge <a> <b>` | Collapse duplicates |
 | `vocab review [--strict]` | Spaced-repetition test session |
 | `vocab gap` | Show terms with `status: confused`, ranked by staleness |
-| `vocab flashcards [--status=<s>] [--source=<match>] [--date=…] [--count=N]` | Export vocabulary.yaml as Anki-ready flashcards, same filters as `vocab list` |
+| `vocab flashcards [--status=<s>] [--source=<match>] [--date=…] [--count=N]` | Export vocabulary.yaml as Markdown, Anki `.apkg`, or a duplex-print PDF; same filters as `vocab list` |
 | `vocab regen-md` | Regenerate VOCABULARY.md from vocabulary.yaml |
 | `vocab undo` | Revert last `vocab add` or `vocab ingest` (within 24h soft-stage; Phase 6 wires the broader undo) |
 
@@ -200,20 +200,83 @@ Export vocabulary.yaml entries as flashcards, front = term, back = definition + 
 5. **Ask export format:**
    ```
    Exporting N cards. Format?
-     [md]    Markdown (front/back pairs, portable, human-readable)
-     [apkg]  Anki package (.apkg, importable directly into Anki)
-     [both]
+     [md]     Markdown (front/back pairs, portable, human-readable)
+     [apkg]   Anki package (.apkg, importable directly into Anki)
+     [print]  Print-ready PDF for physical cards (duplex, cut guides)
+     [both]   md + apkg (print is opt-in separately -- see below)
    ```
 6. **Markdown export.** Same front/back/separator format as flashcard-generator's Markdown export (`front\n---\nback\n===`), for consistency with the sibling tool users may already know. Write to `{tutorials_dir}/flashcards-<ISO-date>.md`.
 7. **APKG export.** Reuse the same genanki-based generation approach documented in the `flashcard-generator` skill (front/back → `genanki.Note`, packaged via `genanki.Package`) — see that skill's SKILL.md § "Anki APKG Export" for the exact script shape; the card content here is sourced from vocabulary.yaml instead of AI-summarized text, so the summarize/chunk steps in that skill do not apply. Write to `{tutorials_dir}/flashcards-<ISO-date>.apkg`. If `genanki`/`mistune` aren't installed, install via pip same as that skill does; if installation fails, fall back to Markdown-only and say so.
-8. **Confirm:**
+8. **Print export.** See "Print export (`[print]`)" below — a distinct procedure, since it needs a duplex-convention answer from the user and real page-layout math, not just a format conversion.
+9. **Confirm:**
    ```
    Exported N cards from your vocabulary (filters: <status/source/date summary, or "none">).
      - {tutorials_dir}/flashcards-<date>.md
      - {tutorials_dir}/flashcards-<date>.apkg   (if requested)
+     - {tutorials_dir}/flashcards-print-<date>.pdf   (if requested)
 
    Import .apkg into Anki: File > Import > select the file.
+   Print the PDF: open it, print pages 1-N (fronts) first, then reload the
+   SAME sheets into the printer/copier and print pages N+1-2N (backs) on
+   the reverse side. See the PDF's own first page for duplex-orientation
+   instructions specific to your answer below.
    ```
+
+### Print export (`[print]`)
+
+Produces a print-ready PDF laid out so that, after duplex printing and cutting, each physical card shows its term on one side and definition + use case on the flip side — cut once, both sides align.
+
+**Why this is a distinct procedure, not just another output format:** unlike Markdown and APKG (which are pure reformatting of the same front/back pairs), a print layout has to solve a real geometry problem — content printed on the back of a duplex sheet is NOT in the same left-to-right, top-to-bottom order as the front, because physically flipping a sheet mirrors it. Getting this wrong doesn't produce an error; it produces cards that look fine in the PDF preview and are silently wrong once printed and cut — term A's front paired with term B's back. This procedure exists specifically to prevent that failure mode.
+
+#### Ask the duplex convention first
+
+Before generating anything, ask:
+
+```
+How does your printer/copier handle two-sided printing?
+  [long-edge]   Flips like a book page (left edge stays fixed) -- the
+                 common default for most home/office printers and copiers.
+  [short-edge]  Flips like a calendar page (top edge stays fixed) -- less
+                 common; check your printer's duplex setting if unsure.
+  [unsure]      I don't know -- guide me
+```
+
+On `[unsure]`: say `Print one test page single-sided first, hold it up to a light source with the printed side toward you, then flip it left-to-right like a book page. If the back of the sheet (now facing you) would show the SAME orientation as if you'd just flipped a book page, that's long-edge -- the common default. If your printer's settings mention "flip on short edge" or "calendar flip," pick short-edge instead.` and default the layout to `long-edge` (the more common default) unless corrected.
+
+**Get this wrong and the deck misprints — see the derivation below before changing this logic.**
+
+#### Grid geometry and the mirror transform
+
+Layout: US Letter or A4 (ask which, default Letter), portrait, a fixed grid of index-card-sized cells — 2 columns × 4 rows (8 cards/page) fits a standard 3×5 index card size with margin; use this as the default grid unless the card content is unusually long, in which case drop to 2×3 (6 cards/page) rather than shrinking text below readable size.
+
+Pages come in **front/back pairs**: page 1 = fronts for cards 1-8, page 2 = backs for cards 1-8 (to be printed on the reverse of page 1's physical sheet), page 3 = fronts for cards 9-16, page 4 = backs for cards 9-16, and so on.
+
+**The back page's card order is NOT the same as the front page's.** It must be transformed per the chosen duplex convention, derived geometrically (not guessed) as follows — R = grid rows, C = grid columns, 0-indexed positions:
+
+- **Long-edge flip** (mirrors about the sheet's VERTICAL center line): a card at front position `(row r, col c)` must be printed on the back page at `(row r, col C-1-c)`. **Rows unchanged, columns reverse.** This is the standard "flip like a book page" case and will be the default for most users.
+- **Short-edge flip** (mirrors about the sheet's HORIZONTAL center line): a card at front position `(row r, col c)` must be printed on the back page at `(row R-1-r, col c)`. **Columns unchanged, rows reverse.**
+
+*Derivation, for anyone re-verifying this later:* model the sheet as a coordinate plane, front content at position `x` becomes visible at `(sheet_width - x)` after a 180° rotation about the vertical center line (long-edge case; substitute height/vertical-axis for short-edge). Solving for what must be printed at each back-page position to land under the matching front position gives exactly the column-reversal (long-edge) / row-reversal (short-edge) rule above. This was verified with a coordinate simulation, including the degenerate single-row case (short-edge flip on a 1-row grid correctly produces no change, since there's nothing to reverse) — do not re-derive this from intuition alone if revisiting; re-run the same coordinate check.
+
+Applying the transform: build the front grid in normal reading order (card 1 at `(0,0)`, card 2 at `(0,1)`, ... wrapping to the next row), then build the back grid by placing each card at its transformed position per the rule above, so that page N+1 (the back) — printed on the reverse of page N's physical sheet — lines up correctly once flipped.
+
+#### Card content and cut guides
+
+- Each cell: the term (front) or definition + use case (back), centered, font size scaled to fit the cell without truncation — if content doesn't fit at a readable minimum size, drop to the smaller grid (2×3) for that card's page rather than shrinking text further.
+- Draw a thin dashed border around every cell as a cut guide.
+- Add a one-line footer on the PDF's first page (front-page 1 only, not repeated) stating the chosen duplex convention and grid size, so the physical printout carries a record of how it was generated.
+
+#### PDF generation
+
+Generate via a Python script using `reportlab` (install via pip if missing, same pattern as `genanki`/`mistune` in the APKG step) — reportlab gives precise point-level page-layout control, which HTML-to-PDF conversion does not reliably provide across print drivers, and precision is exactly what this feature depends on. Write to `{tutorials_dir}/flashcards-print-<ISO-date>.pdf`.
+
+#### Verification caveat — say this explicitly, every time
+
+After generating the PDF, always include this line in the output, not as an optional aside:
+
+> ⚠️ This layout is generated from a geometric derivation, not verified against an actual printed-and-cut sheet. Print and cut ONE test page before running a full deck through your printer — confirm the flip actually lines up front-to-back for your specific printer's duplex behavior before committing paper/ink to the rest.
+
+Do not omit this caveat even on repeat exports once "verified once" — a different printer, different duplex setting, or different paper size changes the physical behavior being relied on.
 
 ### Why this doesn't write to vocabulary.yaml
 
