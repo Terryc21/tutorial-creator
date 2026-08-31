@@ -123,6 +123,9 @@ notice you've forgotten it. Getting back means earning it again.
 > solid on and one you can *define from memory* are not the same, and only the second can
 > be measured.
 
+Want your own pace instead? Export the same vocabulary as flashcards — an Anki deck, cards
+you can print and cut out, or plain text — and study however you like.
+
 ---
 
 ## What it can do
@@ -131,6 +134,8 @@ notice you've forgotten it. Getting back means earning it again.
 |---|---|
 | **Write a lesson** | Six places to start — see [USAGE.md](USAGE.md) |
 | **Handle your vocabulary** | Add, quiz, merge, and see your gaps |
+| **Pull vocabulary from anywhere** | Point it at a URL, a file, or this conversation and it drafts a definition and a real example for every term worth keeping |
+| **Turn vocabulary into flashcards** | Export as an Anki deck, print-ready cards, or plain text — filterable by where a term came from and when |
 | **Show your progress** | A read-only summary of where you are |
 
 Plus a second path for **writing to teach** rather than to learn: turn what you've
