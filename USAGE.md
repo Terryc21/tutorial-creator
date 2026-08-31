@@ -57,6 +57,8 @@ The old version 1.1 form still works and behaves like choosing "topic + file":
 | Write about a word I keep getting wrong | `--mode learn`, then pick **[e]** |
 | Turn a file into an article for other people | `--mode audience` |
 | Be quizzed on what I've learned | `vocab review` |
+| Pull several words in from a source, not one at a time | `vocab ingest <source>` |
+| Get flashcards — Markdown, Anki, or print — from my vocabulary | `vocab flashcards` |
 | See what I'm confused about | `vocab gap` |
 | See my overall progress | `status` |
 | Work on a different project than the folder I'm in | `--project-dir <path>` |
@@ -97,10 +99,13 @@ The skill keeps a list of terms you've met, and how well you know each one.
 
 | Command | What it does |
 |---|---|
-| `vocab add <term>` | Add a word you ran into anywhere. The skill drafts a definition; you fix it or accept it. |
+| `vocab add <term>` | Add a word you ran into anywhere. The skill drafts a definition and a real example; you fix it or accept it. |
+| `vocab ingest <source>` | Pull several words at once — from a URL, a file, or this conversation. The skill finds the candidates, drafts each one, and adds whichever you pick in one go. |
 | `vocab review` | Quiz on 5 terms, favouring ones you're shaky on. You write the definition from memory. |
 | `vocab gap` | The terms you keep missing, worst first. |
 | `vocab list --status=confused` | Filter by how well you know things. |
+| `vocab list --source=<match> --date=<date>` | Filter by where a word came from, or when you added it. Combine with `--status` and each other. |
+| `vocab flashcards` | Turn your vocabulary into flashcards — Markdown, an Anki deck, or a print-ready PDF. Takes the same `--source`, `--date`, and `--status` filters as `vocab list`. |
 | `vocab merge <a> <b>` | Two entries for the same idea become one, keeping your quiz history. |
 
 ### How a word's status changes
@@ -118,6 +123,33 @@ realise you've forgotten something. Getting back to mastered means earning it ag
 > **Why it works this way:** marking your own understanding is the thing people are
 > worst at judging. A word you *feel* solid on and a word you *can define from memory*
 > are different, and only the second one is measurable.
+
+### Pulling words in from outside your project
+
+`vocab ingest` reads whatever you point it at — a session, a URL, a file, or text you
+paste in — and finds the words and phrases worth keeping. It shows you what it found
+before adding anything, drafts a definition and a real example for each one, and you
+accept, edit, or drop them as a group. Nothing gets added silently.
+
+This is different from `vocab add`: `add` is one word you already have in mind; `ingest`
+is "here's a source, find what's in it."
+
+### Studying without the quiz
+
+`vocab review` is graded — the skill checks your answer against the real definition.
+`vocab flashcards` skips that: it exports your words so you can study however you want.
+
+- **Markdown** — plain text, front and back, readable anywhere.
+- **Anki deck (`.apkg`)** — import it into Anki and let its own spaced-repetition
+  scheduling take over.
+- **Print** — a PDF laid out for two-sided printing. Cut along the guides and each
+  card's word lines up with its definition on the back. The skill asks how your printer
+  handles two-sided pages before generating it, since guessing wrong misaligns every
+  card — print one test page before you commit a full deck to paper.
+
+None of the three feed back into your quiz history. They're a read of your vocabulary,
+not a learning event — `vocab review`'s grading stays the only thing that moves a word
+toward mastered.
 
 ---
 
