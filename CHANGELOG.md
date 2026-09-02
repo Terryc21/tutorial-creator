@@ -2,6 +2,21 @@
 
 All notable changes to `tutorial-creator` are documented here. This project adheres to [Semantic Versioning](https://semver.org/) and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Codex support.** The skill now documents Codex installation and `$tutorial-creator`
+  invocation, includes Codex UI metadata, and renders follow-up commands using the
+  active runtime's syntax.
+
+### Changed
+
+- Claude Code and Codex deliberately share the existing `.claude/` project state and
+  registry paths, preserving one tutorial history when users switch agents.
+- Skill frontmatter now keeps version and author under the portable `metadata` key so
+  it validates under the Agent Skills format while retaining the same information.
+
 ## [2.0.1] — 2026-08-09
 
 A documentation and correctness patch. No new features; the surfaces, entry points, and schemas are unchanged from 2.0.0. Every item below was found by an audit pass over the shipped spec.

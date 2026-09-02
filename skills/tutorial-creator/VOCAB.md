@@ -60,7 +60,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
    [skip]  cancel
    ```
    If user picks `show` or `edit`, route to that subcommand instead.
-3. **Draft the definition.** Use AskUserQuestion (or plain prompt) to gather:
+3. **Draft the definition.** Use the runtime's structured question tool or plain text to gather:
    - **Type** — best guess from a list (swift-keyword / swift-attribute / api / concept / pattern / idiom; or language-specific equivalents). Show 4 candidate types with one-line explanations; user picks one or types `other` to enter free-form.
    - **Definition** — AI drafts a 1-3 sentence definition based on the term and the user's project context (active language from config). Show the draft with this prompt:
      ```
@@ -98,7 +98,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
      ```
    - Write a 24h soft-stage marker file: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` containing the term name. Used by `vocab undo` (within 24h). The sentinel is the disambiguator that distinguishes standalone adds from tutorial-time adds; the latter are already captured by the session-log snapshot system in `SKILL.md` § Recovery and do NOT write a sentinel.
    - Regenerate VOCABULARY.md.
-   - Print confirmation: `Added "<term>" (status: new). Undo within 24h via: /skill tutorial-creator vocab undo`
+   - Print confirmation: `Added "<term>" (status: new). Undo within 24h via: <invoke> vocab undo` after rendering `<invoke>` for the current runtime.
 5. **On `edit`:** drop into editable interactive editor for the four AI-drafted fields, then return to step 4.
 6. **On `cancel`:** stop. No file written.
 
@@ -389,7 +389,7 @@ If `<term>` is ambiguous (multiple case-insensitive matches), show a numbered li
 ### Procedure
 
 1. Read vocabulary.yaml; find the term (case-insensitive).
-2. Show current values for editable fields; allow user to update each one. AskUserQuestion per field, or one big prompt with default-values pre-filled.
+2. Show current values for editable fields; allow user to update each one. Use a structured question per field, or one plain-text prompt with default values pre-filled.
 3. **Recompute status** — only if `--reset-mastery` flag was passed AND current status is `mastered`:
    - Set status to `reviewing`
    - Append no new test_history entry
@@ -618,7 +618,7 @@ If VOCABULARY.md doesn't exist (during `--import`): refuse with `No VOCABULARY.m
 
 ## `vocab undo`
 
-24-hour soft-stage reversal of the last *standalone* `vocab add` or `vocab ingest` (an invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`/skill tutorial-creator undo`); see `SKILL.md` § Recovery for that path.
+24-hour soft-stage reversal of the last *standalone* `vocab add` or `vocab ingest` (an invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`<invoke> undo`); see `SKILL.md` § Recovery for that path.
 
 ### Marker file shape
 
@@ -628,7 +628,7 @@ A `vocab add` marker contains one term name (single-term add). A `vocab ingest` 
 
 1. List soft-stage markers: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` files.
 2. Filter to those within 24 hours of now.
-3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use /skill tutorial-creator undo instead.)`
+3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use <invoke> undo instead.)` Render `<invoke>` for the current runtime before showing the message.
 4. **One marker:** show details — term name (single-add) or the full term list + count (ingest batch) — and when added; prompt confirm. On yes, remove the term(s) from vocabulary.yaml + delete the marker; regenerate VOCABULARY.md.
 5. **Multiple markers:** show a numbered list — each row labeled `<term>` for a single add or `<N> terms from vocab ingest (<source>)` for a batch — user picks which to undo (or `cancel`). Only one marker is undone per invocation; run `vocab undo` again for another.
 
@@ -636,7 +636,7 @@ Markers older than 24h are silently pruned at the start of any vocab subcommand.
 
 ### Why two undo paths
 
-Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROGRESS.md + VOCABULARY.md + tutorial-config.yaml are taken before the generation runs, and `/skill tutorial-creator undo` restores them. Standalone vocab adds don't get a snapshot (they're a single-line yaml change with no ripple effect), so the 24h sentinel is the simpler approach. Both surfaces are user-facing; the skill chooses which one applies based on whether a session yaml exists for the change.
+Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROGRESS.md + VOCABULARY.md + tutorial-config.yaml are taken before the generation runs, and `<invoke> undo` restores them. Standalone vocab adds don't get a snapshot (they're a single-line yaml change with no ripple effect), so the 24h sentinel is the simpler approach. Both surfaces are user-facing; the skill chooses which one applies based on whether a session yaml exists for the change.
 
 ---
 
@@ -700,7 +700,7 @@ Compare user's answer to the stored definition. Result is one of:
   - OR the answer is correct but for a *related* concept, not the term being tested
 - **`wrong`** — doesn't capture the concept, or contradicts it
 
-The grading is performed by Claude (the runtime LLM) at test time. When in doubt between `correct` and `partial`, prefer `partial`. When in doubt between `partial` and `wrong`, prefer `partial` (the user gets credit for trying).
+The grading is performed by the runtime LLM at test time. When in doubt between `correct` and `partial`, prefer `partial`. When in doubt between `partial` and `wrong`, prefer `partial` (the user gets credit for trying).
 
 ### Strict grading
 

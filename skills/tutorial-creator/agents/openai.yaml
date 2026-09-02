@@ -1,0 +1,4 @@
+interface:
+  display_name: "Tutorial Creator"
+  short_description: "Learn from code in your current project"
+  default_prompt: "Use $tutorial-creator to turn code from this project into a personalized lesson."
