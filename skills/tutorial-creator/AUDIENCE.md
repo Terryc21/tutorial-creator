@@ -30,7 +30,7 @@ Future audits may flag these as "missing"; they are deliberate choices for Path 
 1. **Read config.** `.claude/tutorial-config.yaml`. Required fields: `language`, `project_dir`. `experience_level` is read but the audience-facing render uses the audience answer (step 4) instead.
 2. **Receive topic + source.** The user provides both. If only one is provided, route them to entry [c] (synthesized example) for topic-only, or ask for a topic for source-only.
 3. **Read the source file.** Identify the line range that demonstrates the topic (use the same matching heuristic as SKILL.md Entry [c] step 3, but skip the candidate-ranking step; the user has already chosen the file).
-4. **Ask the four routing questions.** Via AskUserQuestion, in this order:
+4. **Ask the four routing questions.** Use the runtime's structured question tool or plain text, in this order:
    - **Audience:** beginner / intermediate / senior / mixed
    - **Honest-machine opt-in:** Y / N (asks "Append a section on what this article does NOT cover and what's still uncertain?")
    - **Length budget:** S / M / L / X (show the venue's word count for each tier, resolved from `venues/_schema.yaml` — that file is authoritative if it ever disagrees with a venue file's front-matter or calibration table)
@@ -44,7 +44,7 @@ Future audits may flag these as "missing"; they are deliberate choices for Path 
    - `length_budget` (one of S/M/L/X, with resolved word target + ceiling)
    - `honest_machine_optin` (boolean)
    - The user's `vocabulary.yaml` (for terminology alignment)
-6. **Write the artifact.** Save to a path the user picks (default: `./audience-artifacts/<venue>-<topic-slug>.md`). The skill does not insert the artifact into a venue's CMS or post it; the user does that step manually. Tell the user, in one line, that the artifact is not session-logged and `/skill tutorial-creator undo` will not revert it (that command reverts the last *tutorial* generation, a different file) — to remove it, delete the file directly. See `## Asymmetries with Path 1` for why Path 2 has no recovery hook.
+6. **Write the artifact.** Save to a path the user picks (default: `./audience-artifacts/<venue>-<topic-slug>.md`). The skill does not insert the artifact into a venue's CMS or post it; the user does that step manually. Tell the user, in one line, that the artifact is not session-logged and `<invoke> undo` will not revert it (that command reverts the last *tutorial* generation, a different file) — render `<invoke>` for the current runtime, and tell the user to delete the artifact directly if they want to remove it. See `## Asymmetries with Path 1` for why Path 2 has no recovery hook.
 
 ### Honesty rule
 

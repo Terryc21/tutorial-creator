@@ -20,8 +20,10 @@ Every command, setting, and option. If you just want to try the skill, the
 
 ## Commands
 
-Type `/skill tutorial-creator` on its own and the skill asks what you want. Everything
-below is a shortcut for people who already know.
+Invoke the skill with `/skill tutorial-creator` in Claude Code or `$tutorial-creator`
+in Codex. The examples below use the Claude Code spelling; in Codex, replace
+`/skill tutorial-creator` with `$tutorial-creator`. Invoke it without arguments and the
+skill asks what you want. Everything below is a shortcut for people who already know.
 
 ```
 /skill tutorial-creator                        # ask me what I want to do
@@ -203,7 +205,10 @@ The first time you run it, the skill asks five things:
 4. How experienced you are
 5. Which code you're learning from, if that's a different folder
 
-Your answers go in `.claude/tutorial-config.yaml`. Edit it any time.
+Your answers go in `.claude/tutorial-config.yaml`. Edit it any time. The same file is
+used from Claude Code and Codex, so switching agents preserves your tutorials,
+vocabulary, and progress. The directory name is retained for backward compatibility;
+Codex treats it as tutorial-creator data, not as Codex configuration.
 
 One thing to know: that file goes **in the project folder you chose**, which isn't
 necessarily the folder you were sitting in when you ran the command. The skill then

@@ -16,6 +16,8 @@ Works with Swift, TypeScript, Python, and Rust.
 
 ## Try it
 
+### Claude Code
+
 ```bash
 /plugin marketplace add Terryc21/tutorial-creator
 /plugin install tutorial-creator@tutorial-creator
@@ -25,6 +27,22 @@ Then, in any Claude Code session:
 
 ```
 /skill tutorial-creator
+```
+
+### Codex
+
+Clone the repository and link the skill folder into your personal Codex skills:
+
+```bash
+git clone https://github.com/Terryc21/tutorial-creator ~/src/tutorial-creator
+mkdir -p ~/.codex/skills
+ln -s ~/src/tutorial-creator/skills/tutorial-creator ~/.codex/skills/tutorial-creator
+```
+
+Then, in Codex:
+
+```
+$tutorial-creator
 ```
 
 Pick **"Write a tutorial for myself"**, then **"Topic + file"**, and point it at any file
@@ -42,17 +60,24 @@ won't find it.
 git clone https://github.com/Terryc21/tutorial-creator ~/src/tutorial-creator && ln -s ~/src/tutorial-creator/skills/tutorial-creator ~/.claude/skills/tutorial-creator
 ```
 
-For one project only, link into that project's skills folder instead:
+For one Claude Code project only, link into that project's skills folder instead:
 
 ```bash
 mkdir -p /path/to/project/.claude/skills && ln -s ~/src/tutorial-creator/skills/tutorial-creator /path/to/project/.claude/skills/tutorial-creator
 ```
 
+For one Codex project only, link into that project's agent skills folder instead:
+
+```bash
+mkdir -p /path/to/project/.agents/skills && ln -s ~/src/tutorial-creator/skills/tutorial-creator /path/to/project/.agents/skills/tutorial-creator
+```
+
 </details>
 
-**New to Claude Code?** A *skill* is a set of written instructions Claude Code knows how
-to follow. Type `/skill tutorial-creator` and it asks what you want, then does it. There
-is nothing to memorise — it walks you through every choice.
+**New to agent skills?** A *skill* is a set of written instructions an agent knows how
+to follow. Type `/skill tutorial-creator` in Claude Code or `$tutorial-creator` in Codex
+and it asks what you want, then does it. There is nothing to memorise — it walks you
+through every choice.
 
 ---
 

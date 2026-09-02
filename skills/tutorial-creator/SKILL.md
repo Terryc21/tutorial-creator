@@ -1,9 +1,10 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
-version: 2.0.1
-author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
+metadata:
+  version: "2.0.1"
+  author: "Terry Nyberg, Coffee & Code LLC"
 ---
 
 # tutorial-creator
@@ -14,35 +15,54 @@ Three surfaces, gateway-mediated:
 - **`vocab`** — manage vocabulary independent of lesson generation
 - **`status`** — inspect your learning state (read-only dashboard)
 
-The legacy v1.1 invocation (`/skill tutorial-creator <topic> <source>`) still works; it routes to writing-to-learn entry [b] (topic + file).
+## Runtime compatibility
+
+This skill supports Claude Code and Codex. At the start of every invocation, set
+`<invoke>` to the current runtime's syntax:
+
+- Claude Code: `/skill tutorial-creator`
+- Codex: `$tutorial-creator`
+
+Treat every `<invoke> ...` example below as an agent-facing command, not a shell command.
+When showing a command to the user, render the value of `<invoke>` rather than the
+placeholder. Use the runtime's structured question tool when one is available;
+otherwise ask the same question in plain text.
+
+The `.claude/tutorial-config.yaml`, `.claude/tutorial-sessions/`, and
+`~/.claude/tutorial-creator/registry.yaml` paths are shared tutorial-creator state for
+both runtimes. Keep these paths unchanged so an existing project retains one learning
+history when the user switches agents. In Codex, treat `.claude/` as application data,
+not as Codex configuration.
+
+The legacy v1.1 invocation (`<invoke> <topic> <source>`) still works; it routes to writing-to-learn entry [b] (topic + file).
 
 ## Usage
 
 ```
-/skill tutorial-creator                         # opens gateway question
-/skill tutorial-creator <topic> <source>        # legacy v1.1 path → entry [b]
-/skill tutorial-creator tutorial <args>         # tutorial surface
-/skill tutorial-creator vocab <subcommand>      # vocab surface
-/skill tutorial-creator status                  # status surface
-/skill tutorial-creator undo                    # revert last generation
-/skill tutorial-creator undo --session <id>     # revert a specific session (rare)
-/skill tutorial-creator renumber <old> <new>    # rename Day-N + rewrite cross-references
-/skill tutorial-creator --mode learn|audience|vocab|status [args]
+<invoke>                                        # opens gateway question
+<invoke> <topic> <source>                       # legacy v1.1 path → entry [b]
+<invoke> tutorial <args>                        # tutorial surface
+<invoke> vocab <subcommand>                     # vocab surface
+<invoke> status                                 # status surface
+<invoke> undo                                   # revert last generation
+<invoke> undo --session <id>                    # revert a specific session (rare)
+<invoke> renumber <old> <new>                   # rename Day-N + rewrite cross-references
+<invoke> --mode learn|audience|vocab|status [args]
                                                  # skip gateway, route directly
-/skill tutorial-creator open <path>             # register a tutorial-creator project
+<invoke> open <path>                            # register a tutorial-creator project
                                                  #  in ~/.claude/tutorial-creator/registry.yaml
                                                  #  so future invocations from any cwd find it
-/skill tutorial-creator open                    # list registered projects + pick one
+<invoke> open                                   # list registered projects + pick one
                                                  #  (sets it as the registry default)
-/skill tutorial-creator forget <path>           # remove a project from the registry
+<invoke> forget <path>                          # remove a project from the registry
                                                  #  (no filesystem changes; project files stay)
-/skill tutorial-creator --project-dir <path> [args]
+<invoke> --project-dir <path> [args]
                                                  # one-shot override; resolves config
                                                  #  from <path>/.claude/tutorial-config.yaml
                                                  #  instead of the default discovery rule
 ```
 
-**Where the project lives.** `.claude/tutorial-config.yaml` and `.claude/tutorial-sessions/` live in the **resolved project root**, not necessarily cwd. The skill walks a discovery chain on every invocation; see `## Project resolution`. This means you can keep a tutorial-creator project at `/Volumes/.../Tutorials/` and invoke `/skill tutorial-creator status` from any working directory and it Just Works — same mental model as `git status` walking up from cwd to find `.git/`.
+**Where the project lives.** `.claude/tutorial-config.yaml` and `.claude/tutorial-sessions/` live in the **resolved project root**, not necessarily cwd. The skill walks a discovery chain on every invocation; see `## Project resolution`. This means you can keep a tutorial-creator project at `/Volumes/.../Tutorials/` and invoke `<invoke> status` from any working directory and it Just Works — same mental model as `git status` walking up from cwd to find `.git/`.
 
 ## Routing logic
 
@@ -64,7 +84,7 @@ Every invocation runs through this dispatch:
 
 ### Gateway question
 
-Use AskUserQuestion (or plain-text prompt if AskUserQuestion is unavailable):
+Use the runtime's structured question tool (or a plain-text prompt if unavailable):
 
 ```
 What do you want to do?
@@ -124,7 +144,7 @@ Where does the tutorial start?
 [e] Documentation-grounded   — Apple Developer docs, RFCs, etc.
 ```
 
-After the entry letter is picked, the Path 2 flow runs four more AskUserQuestion prompts in this order, then hands off to a venue template:
+After the entry letter is picked, the Path 2 flow runs four more structured or plain-text prompts in this order, then hands off to a venue template:
 
 1. **Audience question.** Options: `beginner` / `intermediate` / `senior` / `mixed`. Drives in-voice content shifts (definitions vs. tradeoffs).
 2. **Honest-machine opt-in.** Y / N. When Y, the venue template appends a section on what the article does NOT cover (section name varies by venue; resolved from `venues/_schema.yaml#venues.<name>.honest_machine_section_name`).
@@ -215,7 +235,7 @@ Runs as step 0 of every invocation, before routing. Determines `$PROJECT_ROOT` �
 
 ### Discovery chain (highest precedence first)
 
-1. **`--project-dir <path>` flag.** If set on the invocation, treat `<path>` as `$PROJECT_ROOT` and stop. The path must be absolute or resolvable relative to cwd. If `<path>/.claude/tutorial-config.yaml` does not exist, the skill **does not** auto-create it from this flag — say `--project-dir <path> has no tutorial-creator config. Run "/skill tutorial-creator open <path>" first, or invoke from <path> to trigger first-run setup.` and stop. The `--project-dir` flag is for picking among already-set-up projects, not for bootstrapping new ones in unusual locations.
+1. **`--project-dir <path>` flag.** If set on the invocation, treat `<path>` as `$PROJECT_ROOT` and stop. The path must be absolute or resolvable relative to cwd. If `<path>/.claude/tutorial-config.yaml` does not exist, the skill **does not** auto-create it from this flag — say `--project-dir <path> has no tutorial-creator config. Run "<invoke> open <path>" first, or invoke from <path> to trigger first-run setup.` and stop. Render `<invoke>` for the current runtime before showing that message. The `--project-dir` flag is for picking among already-set-up projects, not for bootstrapping new ones in unusual locations.
 2. **Environment variable `TUTORIAL_CREATOR_PROJECT_DIR`.** If set and points to a directory with `.claude/tutorial-config.yaml`, use it as `$PROJECT_ROOT`. If the env var is set but the path is invalid, warn (`TUTORIAL_CREATOR_PROJECT_DIR=<path> doesn't have a tutorial-creator config; ignoring`) and fall through to the next step.
 3. **Cwd's `.claude/tutorial-config.yaml`.** If `./.claude/tutorial-config.yaml` exists in the current working directory, use cwd as `$PROJECT_ROOT`. This preserves backward compatibility with v1.1 / v2.0-pre-resolution behavior — if you're already in your project, nothing changes.
 4. **Ancestor walk from cwd.** Walk up from cwd one directory at a time until either: (a) a `.claude/tutorial-config.yaml` exists at that level — use that directory as `$PROJECT_ROOT`; (b) the filesystem root is reached — fall through to the next step. Stop at filesystem root, do NOT cross into another user's home directory or into `/`.
@@ -253,11 +273,11 @@ After successful resolution (steps 1–5), if the project is in the registry, up
 Registers a tutorial-creator project so the resolution chain finds it from any cwd. Two forms:
 
 ```
-/skill tutorial-creator open                    # interactive: list registered, pick + set as default
-/skill tutorial-creator open <path>             # add <path> to the registry
+<invoke> open                                   # interactive: list registered, pick + set as default
+<invoke> open <path>                            # add <path> to the registry
 ```
 
-**Form 1 — list and pick.** Read `~/.claude/tutorial-creator/registry.yaml`. If empty, say `No projects registered. Use "/skill tutorial-creator open <path>" to add one.` and stop. Otherwise, list registered projects with their `last_invoked` timestamps, ask the user to pick one, and write that project as the registry's `default`. Confirm: `Default set to <path>. Future invocations from any cwd will use this project unless you pass --project-dir.`
+**Form 1 — list and pick.** Read `~/.claude/tutorial-creator/registry.yaml`. If empty, say `No projects registered. Use "<invoke> open <path>" to add one.` and render `<invoke>` for the current runtime before showing the message, then stop. Otherwise, list registered projects with their `last_invoked` timestamps, ask the user to pick one, and write that project as the registry's `default`. Confirm: `Default set to <path>. Future invocations from any cwd will use this project unless you pass --project-dir.`
 
 **Form 2 — add a path.** Verify `<path>` exists and contains `.claude/tutorial-config.yaml`. If the config is missing, refuse: `<path> has no tutorial-creator config. Either run setup at <path> first by invoking the skill from there, or pass a path to an already-set-up project.` On success, append to the registry. If this is the first registered project, also write it as the `default`. Confirm: `Registered <path>. Now reachable from any cwd via the resolution chain.`
 
@@ -266,7 +286,7 @@ The `open` command does NOT create a config; it only registers an existing one. 
 ### `forget` command
 
 ```
-/skill tutorial-creator forget <path>
+<invoke> forget <path>
 ```
 
 Removes `<path>` from the registry. Filesystem changes: none. The project's files (`.claude/tutorial-config.yaml`, `tutorials_dir`, etc.) are untouched. If `<path>` was the default, the registry's `default` field is cleared. If `<path>` is not in the registry, say `<path> is not registered.` and stop.
@@ -277,7 +297,7 @@ Use `forget` when a project moves (`forget` the old path, `open` the new one) or
 
 The previous behavior (`tutorial-config.yaml` pinned to cwd) created the same hostility `git` would have if `.git/` only worked from the exact directory you ran `git init` in. Tutorial projects often outlive any single coding session — the user's tutorials live at `/Volumes/.../Tutorials/` for years; the codebase they're learning from changes weekly. The discovery chain decouples "where the learning artifacts live" from "where I happen to be running the skill from right now," same as `git` decouples the working tree from the .git directory location.
 
-The registry exists for the case where neither cwd nor an ancestor reveals a project. Without it, a user who keeps their tutorials at `~/Code/learn-rust/` and wants to invoke `/skill tutorial-creator status` from `~/`, `/tmp/`, or any other arbitrary cwd would have to type `--project-dir ~/Code/learn-rust` every time. The registry makes "I have one tutorial project" the zero-friction case.
+The registry exists for the case where neither cwd nor an ancestor reveals a project. Without it, a user who keeps their tutorials at `~/Code/learn-rust/` and wants to invoke `<invoke> status` from `~/`, `/tmp/`, or any other arbitrary cwd would have to type `--project-dir ~/Code/learn-rust` every time. The registry makes "I have one tutorial project" the zero-friction case.
 
 ### Cwd-relative paths in resolved configs
 
@@ -293,7 +313,7 @@ Triggered from `## Project resolution` step 6 (no project found anywhere in the 
 Welcome to tutorial-creator! Let's set up your learning environment.
 ```
 
-Ask via AskUserQuestion:
+Ask with the runtime's structured question tool, or a plain-text prompt:
 
 1. **Confirm the project root.** Default: cwd. Show the resolved cwd path verbatim, ask "Use this directory as your tutorial-creator project? [yes / pick different path / cancel]". If the user picks a different path, that becomes `$PROJECT_ROOT` for the rest of setup. Refuse paths that don't exist; refuse paths inside another already-registered project (would create nested configs).
 2. **Where should tutorials be saved?** Default: `$PROJECT_ROOT/tutorials/` (config written as `./tutorials/`, interpreted relative to `$PROJECT_ROOT`). User can pick an absolute path elsewhere if they want tutorial files outside the project root for some reason.
@@ -331,7 +351,7 @@ If yes, append an entry per SCHEMAS.md Schema 5. If this is the first registered
 
 ## Entry [b] — Tutorial Format (topic + file)
 
-When invoked as entry [b] (topic + file), produce a tutorial with these sections in this order. **This is also the legacy v1.1 invocation path** — when the user invokes `/skill tutorial-creator <topic> <source>` with two positional arguments and an existing source file, route here directly without the gateway question. The format is preserved verbatim from v1.1 so existing users see no behavior change.
+When invoked as entry [b] (topic + file), produce a tutorial with these sections in this order. **This is also the legacy v1.1 invocation path** — when the user invokes `<invoke> <topic> <source>` with two positional arguments and an existing source file, route here directly without the gateway question. The format is preserved verbatim from v1.1 so existing users see no behavior change.
 
 ### Before Writing
 
@@ -560,7 +580,7 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
 ### Procedure
 
 1. **Read config.** Need `language`, `project_dir` for the "how this applies to my codebase" mapping step.
-2. **Receive the source.** AskUserQuestion (or plain prompt):
+2. **Receive the source.** Use a structured question or plain-text prompt:
    ```
    Where's the external source?
    [1] URL
@@ -667,9 +687,9 @@ See `VOCAB.md` for the full procedure spec, state machine, and grading rules.
 Routes to `STATUS.md`. **Fully implemented.** Read-only dashboard. Invocation forms:
 
 ```
-/skill tutorial-creator status                  # direct invocation
-/skill tutorial-creator                         # gateway question, then [4]
-/skill tutorial-creator --mode status           # skip gateway, route directly
+<invoke> status                                 # direct invocation
+<invoke>                                        # gateway question, then [4]
+<invoke> --mode status                          # skip gateway, route directly
 ```
 
 The dashboard aggregates `tutorial-config.yaml`, `vocabulary.yaml`, the last 10 session logs, generated `Day*.md` files, and the active progression. It shows:
@@ -714,7 +734,7 @@ After tutorial generation writes successfully:
 If generation **fails** mid-write (e.g., the tool errors after some files have been modified but before all are):
 
 1. Do NOT write the session yaml. The session directory contains pre-write snapshots; without the yaml, the directory is orphaned but harmless and will be pruned by retention.
-2. Tell the user: `Generation failed mid-write. Pre-write snapshots are at .claude/tutorial-sessions/<session_id>/. Run "/skill tutorial-creator undo --session <session_id>" to manually revert.`
+2. Tell the user: `Generation failed mid-write. Pre-write snapshots are at .claude/tutorial-sessions/<session_id>/. Run "<invoke> undo --session <session_id>" to manually revert.` Render `<invoke>` for the current runtime before showing the message.
 
 ### Retention
 
@@ -730,8 +750,8 @@ Pruning is silent. Retention applies to session yamls; standalone vocab-add sent
 Reverts the most recent tutorial generation. Invoked as:
 
 ```
-/skill tutorial-creator undo                    # most recent session
-/skill tutorial-creator undo --session <id>     # specific session (rare; for orphaned mid-write recovery)
+<invoke> undo                                   # most recent session
+<invoke> undo --session <id>                    # specific session (rare; for orphaned mid-write recovery)
 ```
 
 #### Procedure
@@ -790,8 +810,8 @@ The session log is the single source of truth for what to revert. If it's missin
 Renames a Day-N tutorial file and rewrites every cross-reference. Supports whole-number days (`Day 8`) and half-step days (`Day 7.5`).
 
 ```
-/skill tutorial-creator renumber 8 7.5
-/skill tutorial-creator renumber 7.5 8
+<invoke> renumber 8 7.5
+<invoke> renumber 7.5 8
 ```
 
 #### Procedure
