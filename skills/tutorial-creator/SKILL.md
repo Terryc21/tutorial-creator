@@ -385,7 +385,19 @@ Run `## Recovery` § "Always-on: pre-write hook" first. Skip if `recovery_enable
 
 1. **Save** to `{tutorials_dir}/DayN-[Topic]-Annotated.md`
 2. **Update PROGRESS.md** — add Score Log row (day, date, file, test counts) and Concepts Mastery Checklist entries (`- [ ] [Concept name] (Day N)`).
-3. **Update VOCABULARY.md** — add new section `## Day N: [Topic]`; only genuinely new terms; update Cumulative Count.
+3. **Record the new vocabulary: vocabulary.yaml first, then VOCABULARY.md.** `vocab review`, `vocab list` and `vocab flashcards` read only the yaml, so a term that reaches only the view never shows up in them, and a later rebuild of the view drops it.
+   1. **Pick the new terms:** each term in this tutorial's Vocabulary table that has no entry in `{tutorials_dir}/vocabulary.yaml` (case-insensitive match on `term`, ignoring backticks). Terms already there are not re-added.
+   2. **Append one entry per new term** in the entry shape of `VOCAB.md` § `vocab add` step 4, with these values:
+      - `type`: from Schema 2's list, `concept` when nothing else fits. Required.
+      - `definition`: the tutorial's definition of the term.
+      - `first_encountered`: `source_file` is the annotated file; `context` is exactly `"Day N: [Topic]"`, the heading text of the view section in sub-step 4; `date` is today.
+      - `status: new`, `test_history: []`, `applied_test_history: []`, `notes: "First seen: Day N"`. `use_case` and `related_terms` are optional.
+
+      Add the entries after the last existing one and leave every existing entry byte-for-byte unchanged; re-serializing the file reformats entries the user has curated. If the file holds only `[]` (a new project), replace the `[]` with the entries. Tutorial-time adds write no soft-stage marker; `undo` reverts them with the rest of the session.
+   3. **Read vocabulary.yaml back.** If it no longer parses, restore the contents it had before the append and tell the user. Otherwise confirm that each new term is present with every Schema 2 required field (`term`, `type`, `definition`, `first_encountered` with its `context` and `date`, `status`, `test_history`, `applied_test_history`). For any term that is missing or incomplete, tell the user by name (`Not saved to vocabulary.yaml: <terms>. They won't appear in vocab review or vocab flashcards.`) and offer to append it again. Don't call the tutorial finished while any stay unsaved.
+   4. **Update VOCABULARY.md:** add a `## Day N: [Topic]` section holding the confirmed terms, placed after the last existing `## Day` section; add its Cumulative Count row at the matching position and recompute Running Total for the rows below it; set the `*Updated:*` line to today. Edit the view in place instead of regenerating it, so headings and Source lines that exist only in the view survive.
+
+   If `{tutorials_dir}/vocabulary.yaml` doesn't exist (a v1.1 project that hasn't run `vocab regen-md --import`), don't create it: a non-empty yaml makes that migration refuse to run. Do sub-step 4 only, and tell the user to run the migration, which imports these terms from the view.
 4. **Increment** `next_day` in config.
 5. **Run the post-write hook** (`## Recovery` § "Always-on: post-write hook") — populates and writes the session yaml, prunes old sessions per retention. Skipped if `recovery_enabled: false`.
 6. **Gap analysis** — review the new tutorial; if it depends on uncovered concepts, propose half-step bridge tutorials (e.g., Day 7.5) with topic, what they bridge, and why. Ask whether to create now or defer.
@@ -622,12 +634,13 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
    - **What I'd ask to verify:** 3-5 specific things the user would experiment with or test to confirm they understood correctly
    - **Post-Test:** harder questions that require applying the concept beyond what the source explicitly said
    - **Answer Key:** explanations for both tests
-   - **New Concepts Introduced:** standard table; concepts from the source feed `vocab add` automatically (skill confirms before writing each one)
+   - **New Concepts Introduced:** standard table; these concepts become vocabulary entries in step 10 (skill confirms before writing each one)
 9. **Before writing:** run `## Recovery` § "Always-on: pre-write hook" (snapshots + staged session yaml), unless `recovery_enabled: false`.
 10. **After writing:**
     - Save to `{tutorials_dir}/DayN-External-<SourceShort>-Annotated.md`
     - Update PROGRESS.md (Score Log row + concepts added)
-    - For each new concept, write a vocab entry (context: `external source`, source_file: empty, related_terms: extracted from the source if mentioned). These adds are tutorial-time; they go into the session's `vocab_added` list, not into the standalone sentinel system.
+    - Record each new concept per Entry [b] § "After Writing" step 3 (vocabulary.yaml first, then VOCABULARY.md), with three differences: `source_file` is empty; `related_terms` come from the source where it names them; `notes` is `"First seen: Day N -- Source: <URL or file path>"`, or for pasted content with no public URL, a short description of the source followed by `(pasted; no permalink)`. These adds are tutorial-time: they go into the session's `vocab_added` list, not into the standalone sentinel system.
+    - Increment `next_day` in config.
     - Run `## Recovery` § "Always-on: post-write hook" — populates the session yaml with `entry: external-source`, the source URL/path in a free-form note, the populated `vocab_added` list, and `output`.
 
 ### Honesty rule (cross-cutting)
@@ -707,7 +720,7 @@ Before any tutorial generation writes a file, the skill runs the **pre-write hoo
 
 After tutorial generation writes successfully:
 
-1. **Populate session record.** Set `output` to the generated tutorial's relative path. Set `vocab_added` to the list of terms added during this generation (deduped). Set `progress_updated` to whether PROGRESS.md was modified (always true for entries [a-e]; may be false for some Path 2 audience-facing modes).
+1. **Populate session record.** Set `output` to the generated tutorial's relative path. Set `vocab_added` from the file, not from intent: read `{tutorials_dir}/vocabulary.yaml` back and list, deduped, the terms this generation added that are present with every Schema 2 required field. Never log a term the file doesn't contain. If any term the generation should have saved is missing or incomplete, name each one to the user (`Not saved to vocabulary.yaml: <terms>`) and still write the session yaml in step 2, so the generation can be undone. Set `progress_updated` to whether PROGRESS.md was modified (always true for Path 1 entries [a]-[f]; Path 2 doesn't run this hook, per `AUDIENCE.md`).
 2. **Write the session yaml** to `.claude/tutorial-sessions/<session_id>.yaml`.
 3. **Prune old sessions** (retention rule below).
 

@@ -27,7 +27,7 @@ In the user's project (created at first run if missing):
 └── VOCABULARY.md         (generated view — never edit by hand)
 ```
 
-Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
+Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml` and is resolved against `$PROJECT_ROOT`, the directory that contains `.claude/`, never against `.claude/` itself (SKILL.md § "Cwd-relative paths in resolved configs"). With `tutorials_dir: ./`, the vocabulary lives at `$PROJECT_ROOT/vocabulary.yaml`.
 
 ## Subcommand reference
 
@@ -290,7 +290,7 @@ Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vo
 
 1. **Read vocabulary.yaml.**
 2. **Filter by status** if `--status` flag is set. Valid values: `new`, `reviewing`, `mastered`, `confused`. Invalid value → list all and warn.
-3. **Filter by source** if `--source=<match>` is set. Case-insensitive substring match against three fields, in order, first hit wins: `first_encountered.context`, `first_encountered.source_file`, `notes`. This covers every shape a source takes today — a `vocab ingest`/`vocab add` context string (e.g. `"session transcript, 2026-08-31"`, `"vocab ingest"`, `"external source"`), an in-project file path, or a URL folded into `notes` (per the `vocab ingest` procedure's citation handling, and Entry [f]'s `external source` context). `--source=stuffolio.app` matches a file-path source; `--source=iosweeklybrief.com` matches a URL folded into notes; `--source=session` matches any session-transcript ingest regardless of date.
+3. **Filter by source** if `--source=<match>` is set. Case-insensitive substring match against three fields, in order, first hit wins: `first_encountered.context`, `first_encountered.source_file`, `notes`. This covers every shape a source takes today — a `vocab ingest`/`vocab add` context string (e.g. `"session transcript, 2026-08-31"`, `"vocab ingest"`, `"external source"`), an in-project file path, or a URL folded into `notes` (per the `vocab ingest` procedure's citation handling, and the `Source:` note Entry [f] writes). `--source=stuffolio.app` matches a file-path source; `--source=iosweeklybrief.com` matches a URL folded into notes; `--source=session` matches any session-transcript ingest regardless of date.
 4. **Filter by date** if any of `--date`, `--date-from`, `--date-to` are set. Matches against `first_encountered.date`.
    - `--date=<YYYY-MM-DD>` — exact match only. Mutually exclusive with `--date-from`/`--date-to`; if both forms are passed, `--date` wins and the range flags are ignored with a warning: `--date and --date-from/--date-to both set; using --date, ignoring the range.`
    - `--date-from=<YYYY-MM-DD>` alone — everything on or after.
