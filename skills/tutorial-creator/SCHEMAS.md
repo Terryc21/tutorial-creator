@@ -5,7 +5,7 @@ or writes. SKILL.md, VOCAB.md, and STATUS.md all reference these schemas;
 when a schema changes, update this file first, then the surfaces that touch it.
 
 **Status:** v2.0 baseline. Versioned at the bottom of each schema.
-**Last updated:** 2026-05-10 (Phase 6.5: Schema 5 added for cross-project registry; `$PROJECT_ROOT` clarified throughout).
+**Last updated:** 2026-09-28 (Schema 2: a tutorial term's `context` is its Day's view heading, and `notes` records repeat rows; VOCABULARY.md is updated in place). Before that, 2026-05-10 (Phase 6.5: Schema 5 added for cross-project registry; `$PROJECT_ROOT` clarified throughout).
 
 ---
 
@@ -15,7 +15,7 @@ when a schema changes, update this file first, then the surfaces that touch it.
 |---|---|---|---|
 | `tutorial-config.yaml` | Per-project config (paths, language, level) | This file | User (created in setup) |
 | `vocabulary.yaml` | All vocabulary entries with status + test history | This file | Generated; user can edit via `vocab edit` |
-| `VOCABULARY.md` | Human-readable view of vocabulary.yaml | **Generated** from vocabulary.yaml | Never edit by hand |
+| `VOCABULARY.md` | Human-readable view of vocabulary.yaml | vocabulary.yaml for terms and definitions; this file for headings, Source lines, row order and repeat rows | Updated in place by the skill; rows follow the yaml |
 | `PROGRESS.md` | Progression tracker, score log, mastery checklist | This file | Generated; user can edit narrative sections |
 | `tutorial-sessions/<ts>.yaml` | Per-generation session record (for undo) | This file | Generated; never edit by hand |
 | `progressions/<lang>.yaml` | Built-in language progressions | This file (skill repo) | Skill author; users override via config |
@@ -31,7 +31,7 @@ $PROJECT_ROOT/
 │       └── <ISO-timestamp>.yaml
 └── {tutorials_dir}/                    (default: ./tutorials/)
     ├── PROGRESS.md
-    ├── VOCABULARY.md                   (generated view)
+    ├── VOCABULARY.md                   (readable view)
     ├── vocabulary.yaml                 (source of truth)
     └── DayN-<Topic>-Annotated.md       (generated tutorials)
 
@@ -88,7 +88,7 @@ v1.1 configs without `schema_version` are treated as v1. On first v2 invocation:
 ## Schema 2 — `vocabulary.yaml`
 
 The first-class vocabulary store. Replaces `VOCABULARY.md` as source of truth.
-`VOCABULARY.md` becomes a regenerable view.
+`VOCABULARY.md` becomes its readable view.
 
 ```yaml
 - term: "@MainActor"
@@ -100,7 +100,7 @@ The first-class vocabulary store. Replaces `VOCABULARY.md` as source of truth.
     guaranteed to run on the main thread, without manually dispatching.
   first_encountered:
     source_file: "Sources/Models/AppSchema.swift:42"
-    context: "Day 5 tutorial"
+    context: "Day 5: @MainActor and the Main Thread"
     date: "2026-04-01"
   status: reviewing
   test_history:
@@ -119,13 +119,13 @@ The first-class vocabulary store. Replaces `VOCABULARY.md` as source of truth.
 - `use_case` (optional, default `""`): string. Multi-line yaml block scalar (`|`) preferred. Answers "when/why would I reach for this" — a concrete scenario or worked example, distinct from the definition. **Added for the `vocab ingest` / `vocab flashcards` surfaces** (see VOCAB.md); existing entries from before this field existed simply have it empty, which is a valid, backward-compatible state — nothing reads it as required. `vocab add`'s interactive flow prompts for it as an optional field alongside `definition`.
 - `first_encountered` (required): object with three sub-fields:
   - `source_file` (string, may be empty): file path with optional `:line` suffix
-  - `context` (string): one of `"Day N tutorial"`, `"vocab add"`, `"review session"`, `"external source"`, `"vocab ingest"`, or free-form
+  - `context` (string): `"Day N: <Topic>"` for tutorial terms, the heading of that Day's section in VOCABULARY.md (this is how the view keeps a term under its Day); otherwise one of `"vocab add"`, `"review session"`, `"external source"`, `"vocab ingest"`, or free-form
   - `date` (string): ISO date `YYYY-MM-DD`
 - `status` (required): one of `new`, `reviewing`, `mastered`, `confused`. See state machine below.
 - `test_history` (required, may be empty list): list of test results from `vocab review` sessions. Each entry: `{ date, result, source }`. `result` is one of `correct`, `partial`, `wrong`.
 - `applied_test_history` (required, may be empty list): **reserved for UNFORGET S49** (post-test scoring). v2.0 leaves this empty. When S49 lands, tutorial post-test results that test this term get logged here, distinct from `test_history`.
 - `related_terms` (optional, default `[]`): list of strings; should be other terms in this file.
-- `notes` (optional, default `""`): free-form string. Multi-line block scalar OK.
+- `notes` (optional, default `""`): free-form string. Multi-line block scalar OK. Two line formats in it record **repeat rows** (the term shown again under a later Day in VOCABULARY.md): `Also seen in: Day N[, Day M ...]`, and a `Per-Day wording` block (a line starting `Per-Day wording`, then one `Day N: <wording>` line per Day) that also keeps the wording each of those rows used. `vocab merge` writes both; `vocab regen-md` reads them when it rebuilds the view from scratch.
 
 ### Status state machine
 
@@ -339,4 +339,4 @@ Phase 1 ships these schema definitions but no in-skill validator. Validation is 
 - `vocab doctor` — checks vocabulary.yaml for schema violations, dangling `related_terms` references, status/test_history inconsistency
 - `tutorial doctor` — checks tutorial-config.yaml + session logs
 
-Until then, the design relies on the skill itself producing schema-valid output and users not hand-editing yaml in ways that break the schema. `vocab regen-md` is a partial safety net: it regenerates the human-readable VOCABULARY.md from yaml, and crashes loudly if yaml is malformed.
+Until then, the design relies on the skill itself producing schema-valid output and users not hand-editing yaml in ways that break the schema. `vocab regen-md` is a partial safety net: it brings the human-readable VOCABULARY.md in step with the yaml, and fails loudly if the yaml is malformed.

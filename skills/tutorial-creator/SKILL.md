@@ -318,7 +318,7 @@ progression_override: null
 
 Create initial files (relative to `$PROJECT_ROOT`):
 - `{tutorials_dir}/PROGRESS.md` (template at end of this file)
-- `{tutorials_dir}/VOCABULARY.md` (regenerated view)
+- `{tutorials_dir}/VOCABULARY.md` (readable view)
 - `{tutorials_dir}/vocabulary.yaml` (empty list `[]`)
 
 If `$PROJECT_ROOT/.claude/` doesn't exist, create it.
@@ -395,7 +395,7 @@ Run `## Recovery` § "Always-on: pre-write hook" first. Skip if `recovery_enable
 
       Add the entries after the last existing one and leave every existing entry byte-for-byte unchanged; re-serializing the file reformats entries the user has curated. If the file holds only `[]` (a new project), replace the `[]` with the entries. Tutorial-time adds write no soft-stage marker; `undo` reverts them with the rest of the session.
    3. **Read vocabulary.yaml back.** If it no longer parses, restore the contents it had before the append and tell the user. Otherwise confirm that each new term is present with every Schema 2 required field (`term`, `type`, `definition`, `first_encountered` with its `context` and `date`, `status`, `test_history`, `applied_test_history`). For any term that is missing or incomplete, tell the user by name (`Not saved to vocabulary.yaml: <terms>. They won't appear in vocab review or vocab flashcards.`) and offer to append it again. Don't call the tutorial finished while any stay unsaved.
-   4. **Update VOCABULARY.md:** add a `## Day N: [Topic]` section holding the confirmed terms, placed after the last existing `## Day` section; add its Cumulative Count row at the matching position and recompute Running Total for the rows below it; set the `*Updated:*` line to today. Edit the view in place instead of regenerating it, so headings and Source lines that exist only in the view survive.
+   4. **Update VOCABULARY.md:** add a `## Day N: [Topic]` section holding the confirmed terms, placed after the last existing `## Day` section; add its Cumulative Count row at the matching position and recompute Running Total for the rows below it; set the `*Updated:*` line to today. This is the same in-place update `vocab regen-md` makes (`VOCAB.md`), so the rest of the view stays as it is.
 
    If `{tutorials_dir}/vocabulary.yaml` doesn't exist (a v1.1 project that hasn't run `vocab regen-md --import`), don't create it: a non-empty yaml makes that migration refuse to run. Do sub-step 4 only, and tell the user to run the migration, which imports these terms from the view.
 4. **Increment** `next_day` in config.
@@ -638,10 +638,16 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
 9. **Before writing:** run `## Recovery` § "Always-on: pre-write hook" (snapshots + staged session yaml), unless `recovery_enabled: false`.
 10. **After writing:**
     - Save to `{tutorials_dir}/DayN-External-<SourceShort>-Annotated.md`
-    - Update PROGRESS.md (Score Log row + concepts added)
+    - Update PROGRESS.md (Score Log row + concepts added). The first time a phase heading in the Concepts Mastery Checklist gains concepts from this source, add a one-line citation under it: `*Source: [<title>](<url>), <author>, <publication>, <date>*`, or for pasted content with no public URL, the source's description followed by `(pasted; no permalink)`. Don't repeat the line when a later Day adds more concepts from the same source under the same heading.
     - Record each new concept per Entry [b] § "After Writing" step 3 (vocabulary.yaml first, then VOCABULARY.md), with three differences: `source_file` is empty; `related_terms` come from the source where it names them; `notes` is `"First seen: Day N -- Source: <URL or file path>"`, or for pasted content with no public URL, a short description of the source followed by `(pasted; no permalink)`. These adds are tutorial-time: they go into the session's `vocab_added` list, not into the standalone sentinel system.
     - Increment `next_day` in config.
     - Run `## Recovery` § "Always-on: post-write hook" — populates the session yaml with `entry: external-source`, the source URL/path in a free-form note, the populated `vocab_added` list, and `output`.
+11. **Follow-up analysis.** Entry [f] does not reuse Entry [b]'s "Gap analysis" step, which proposes half-step bridge tutorials for uncovered *codebase-progression* concepts. That framing doesn't fit a source-grounded tutorial, and the tutorial already has a "What the source leaves out" section doing the adjacent job of recording gaps *within the source*. The two answer different questions and must not be conflated:
+    - "What the source leaves out" (step 8, written into the tutorial) = what *this source* doesn't cover: a permanent record, not a prompt for action.
+    - Follow-up analysis (this step, said to the user, not written into the tutorial) = does anything just surfaced warrant *more material*? Two triggers only:
+      - A concept in "What the source leaves out" is one the user's vocabulary already tracks as `confused` (cross-reference `vocab gap`'s list). That's a real, actionable gap, not a hypothetical one: offer a Day N.5 bridge tutorial through Entry [e] (gap-driven), like Entry [b]'s bridge offer.
+      - An item in "What I'd ask to verify" (step 8) is concrete and cheap enough to check right now (a specific compiler behavior, say, not "read the whole Swift concurrency proposal"): offer to verify it with a quick experiment, not a full tutorial.
+    - If neither trigger fires, say nothing. Don't manufacture a bridge-tutorial offer just because Entry [b] has that step; an external source's honest gaps are usually "things the source didn't cover," not "things the user needs taught next."
 
 ### Honesty rule (cross-cutting)
 
@@ -669,7 +675,7 @@ vocab gap                         # show "confused" terms ranked by staleness; f
 vocab flashcards [--status=<s>] [--source=<match>] [--date=<d>|--date-from=<d>|--date-to=<d>] [--count=N]
                                    #   export vocabulary as Markdown, Anki .apkg, or a duplex-print
                                    #   PDF; same filters as vocab list
-vocab regen-md [--import]         # regenerate VOCABULARY.md from yaml; --import migrates v1.1
+vocab regen-md [--import]         # bring VOCABULARY.md in step with the yaml; --import migrates v1.1
 vocab undo                        # revert last vocab add or vocab ingest (within 24h soft-stage)
 ```
 
@@ -896,16 +902,16 @@ Check off when you feel confident (not just "saw it once"):
 - [ ] (populated as tutorials are created)
 ```
 
-## VOCABULARY.md template (generated view)
+## VOCABULARY.md template
 
-Created on first run; regenerable from vocabulary.yaml:
+Created on first run. After that, commands update it in place instead of rebuilding it (`VOCAB.md` § `vocab regen-md`):
 
 ```markdown
 # Tutorial Vocabulary
 
 Terms introduced in each tutorial, in order of appearance.
 
-> Source of truth: `vocabulary.yaml` (this file is a generated view; do not edit by hand).
+> Source of truth: `vocabulary.yaml` for terms and definitions. Headings, Source lines and row order in this file are kept as written.
 
 ---
 
@@ -915,8 +921,10 @@ Terms introduced in each tutorial, in order of appearance.
 
 ## Cumulative Count
 
-| Day | New Terms | Running Total |
+| Section | New Terms | Running Total |
 |-----|-----------|---------------|
+
+Repeat rows (a term shown again under a later Day) are not counted as new.
 
 ---
 
