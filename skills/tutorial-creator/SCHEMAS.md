@@ -153,7 +153,7 @@ The `--strict` flag for `vocab review` upgrades to verbatim matching; `correct` 
 
 After every test_history append (and on `vocab merge`), recompute status:
 
-1. If test_history is empty → `new`
+1. If test_history is empty → leave status unchanged. New entries are created as `new`; entries migrated from v1.1 start at `reviewing` with no history, and a merge of two untested entries must not demote them.
 2. Else look at last 3 entries (or fewer if test_history is shorter):
    - All 3 are `correct` → `mastered`
    - 2+ of last 3 are `partial` or `wrong` → `confused`

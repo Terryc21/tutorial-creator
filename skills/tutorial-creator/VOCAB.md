@@ -29,6 +29,14 @@ In the user's project (created at first run if missing):
 
 Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml` and is resolved against `$PROJECT_ROOT`, the directory that contains `.claude/`, never against `.claude/` itself (SKILL.md § "Cwd-relative paths in resolved configs"). With `tutorials_dir: ./`, the vocabulary lives at `$PROJECT_ROOT/vocabulary.yaml`.
 
+## Writing vocabulary.yaml
+
+Every command that changes vocabulary.yaml writes it the same way, so the formatting the user has curated survives:
+
+1. **Change only the lines involved.** Append new entries after the last one; change a field by replacing that field's lines inside its entry; remove an entry by deleting its lines. Never load the whole file with a yaml library and write it back out: that restyles every entry (quoting, line wrapping, block scalars, key order) even when one field changed.
+2. **If the file holds only `[]`** (a new project), replace the `[]` with the new entries instead of appending after it.
+3. **Read the file back before reporting success.** If it no longer parses, or doesn't contain what the command meant to write, restore the bytes it had before the write and tell the user.
+
 ## Subcommand reference
 
 | Subcommand | Purpose |
@@ -37,7 +45,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml` and is resolve
 | `vocab ingest <source>` | Batch-extract terms + phrases from a source (session transcript, URL, file, memory files, pasted text); each gets a definition and use case, added with confirmation |
 | `vocab list [--status=<s>] [--source=<match>] [--date=…]` | Browse the full vocabulary, filterable by status, source, and/or date |
 | `vocab show <term>` | Full record for one term |
-| `vocab edit <term>` | Update fields (definition, use_case, type, related_terms, notes) |
+| `vocab edit <term>` | Update fields (definition, use_case, type, related_terms, notes) or rename the term |
 | `vocab merge <a> <b>` | Collapse duplicates |
 | `vocab review [--strict]` | Spaced-repetition test session |
 | `vocab gap` | Show terms with `status: confused`, ranked by staleness |
@@ -78,7 +86,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml` and is resolve
    - **Source file** — optional. User can paste a file path, optionally with `:line` suffix.
    - **Related terms** — AI suggests by scanning existing vocabulary.yaml for terms with similar tags, types, or vocabulary near the new term. User accepts, edits, or clears.
 4. **On confirm:**
-   - Append a new entry to vocabulary.yaml per Schema 2:
+   - Append a new entry to vocabulary.yaml per Schema 2 (§ Writing vocabulary.yaml):
      ```yaml
      - term: "<term>"
        type: <type>
@@ -169,7 +177,7 @@ Same as Entry [f] — see `SKILL.md` § "Entry [f] — External source" § "Acce
 
    Accept all as drafted? [y / edit <N> / drop <N> / cancel]
    ```
-7. **On confirm:** for each accepted term, append to vocabulary.yaml per Schema 2 (same shape as `vocab add` step 4), with:
+7. **On confirm:** for each accepted term, append to vocabulary.yaml per Schema 2 (same shape as `vocab add` step 4; § Writing vocabulary.yaml), with:
    - `first_encountered.context`: `"vocab ingest"` (or `"session transcript, <date>"` for a session source, per "Accepted source types" above)
    - `first_encountered.source_file`: the file path if the source was a file; empty for URL/paste/session sources (the source description lives in `notes` instead, since `source_file` is specifically for in-project file references)
    - `notes`: one line naming the source, e.g. `"Ingested from session transcript, 2026-08-31."` or `"Ingested from https://example.com/article."`
@@ -378,10 +386,10 @@ If `<term>` is ambiguous (multiple case-insensitive matches), show a numbered li
 - `related_terms`
 - `notes`
 - `first_encountered.source_file` (sometimes the user wants to update this when a better example surfaces)
+- `term` (renames the entry; see Procedure step 2)
 
 ### Non-editable fields
 
-- `term` — to rename, use `vocab merge <old> <new>` (which is technically a rename + merge if `<new>` already exists).
 - `status` — earned through tests. The only manual transition is via the `--reset-mastery` flag (see below).
 - `test_history` and `applied_test_history` — never user-editable. If a test result needs correction, edit the file by hand (and accept the consequences).
 - `first_encountered.context` and `first_encountered.date` — historical record; preserved.
@@ -390,12 +398,13 @@ If `<term>` is ambiguous (multiple case-insensitive matches), show a numbered li
 
 1. Read vocabulary.yaml; find the term (case-insensitive).
 2. Show current values for editable fields; allow user to update each one. AskUserQuestion per field, or one big prompt with default-values pre-filled.
+   - **Renaming (`term` changed):** refuse if another entry already has the new name (case-insensitive), and suggest `vocab merge <new> <old>`, which keeps the existing entry and folds this one into it. Otherwise also point every other entry's `related_terms` at the new name, and add `Renamed <date> from <old>.` to this entry's `notes`.
 3. **Recompute status** — only if `--reset-mastery` flag was passed AND current status is `mastered`:
    - Set status to `reviewing`
    - Append no new test_history entry
    - Print: `Reset mastered status for "<term>". Status now: reviewing. Mastered status will be re-earned through correct test results.`
-4. Write back to vocabulary.yaml.
-5. If `definition` changed, refresh the term's home row in VOCABULARY.md (§ `vocab regen-md` step 4). Nothing else `vocab edit` changes appears in the view.
+4. Write the changed fields back to vocabulary.yaml (§ Writing vocabulary.yaml).
+5. Update VOCABULARY.md in place: after a rename, rename every row of the term (its home row and any repeat rows); if `definition` changed, refresh its home row (§ `vocab regen-md` step 4). Nothing else `vocab edit` changes appears in the view.
 
 ### Refuse `--reset-mastery` on non-mastered
 
@@ -443,7 +452,7 @@ Used to collapse duplicates (`@Observable` and `Observable macro`) or to consoli
    - Union `related_terms`; remove `<term-a>` and `<term-b>` from the result if they appear (a term shouldn't be related to itself)
    - Concatenate `notes` with separator
    - **Recompute status** from the merged `test_history` (apply state-machine rules)
-   - Update target term's record; remove source term from yaml
+   - Update the target term's fields and delete the source term's lines from the yaml (§ Writing vocabulary.yaml)
    - Update any other vocabulary entries that reference `<term-b>` in their `related_terms` to point at `<term-a>` instead
    - Update VOCABULARY.md in place. Each row of `<term-b>` under a `## Day` heading becomes a repeat row of `<term-a>` (renamed, wording kept), unless that section already has a row of `<term-a>`, in which case drop it; remove any other row of `<term-b>`. For each Day that gained a repeat row, add `Also seen in: Day N` and that row's wording (in a `Per-Day wording` block) to the target's `notes`, per SCHEMAS.md Schema 2 § `notes`, so a rebuilt view keeps them. Recompute the Cumulative Count (§ `vocab regen-md` step 5).
 4. **On cancel:** stop. No file written.
@@ -523,7 +532,7 @@ Status changes:
 Next review available: in N days, or run vocab review again to re-pick.
 ```
 
-Save vocabulary.yaml. VOCABULARY.md stays as it is: a review changes only status and test history, and the view shows neither.
+Save vocabulary.yaml (§ Writing vocabulary.yaml). VOCABULARY.md stays as it is: a review changes only status and test history, and the view shows neither.
 
 ### Stop / skip semantics
 
@@ -641,7 +650,7 @@ A `vocab add` marker contains one term name (single-term add). A `vocab ingest` 
 1. List soft-stage markers: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` files.
 2. Filter to those within 24 hours of now.
 3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use /skill tutorial-creator undo instead.)`
-4. **One marker:** show details — term name (single-add) or the full term list + count (ingest batch) — and when added; prompt confirm. On yes, remove the term(s) from vocabulary.yaml + delete the marker; remove their rows from VOCABULARY.md, drop any section left without rows, and recompute the Cumulative Count (§ `vocab regen-md` step 5).
+4. **One marker:** show details — term name (single-add) or the full term list + count (ingest batch) — and when added; prompt confirm. On yes, delete the entries for the term(s) from vocabulary.yaml (§ Writing vocabulary.yaml) + delete the marker; remove their rows from VOCABULARY.md, drop any section left without rows, and recompute the Cumulative Count (§ `vocab regen-md` step 5).
 5. **Multiple markers:** show a numbered list — each row labeled `<term>` for a single add or `<N> terms from vocab ingest (<source>)` for a batch — user picks which to undo (or `cancel`). Only one marker is undone per invocation; run `vocab undo` again for another.
 
 Markers older than 24h are silently pruned at the start of any vocab subcommand.
@@ -671,7 +680,7 @@ new ──any test──► reviewing
 Run after every `test_history` append (in `vocab review`) and after every `vocab merge`.
 
 ```
-1. If test_history is empty:                    status = "new"
+1. If test_history is empty:                    status unchanged
 2. Else look at last 3 entries (or fewer if test_history shorter):
    a. If all 3 are "correct":                   status = "mastered"
    b. Else if 2 or more are "partial" or "wrong":  status = "confused"
@@ -679,6 +688,8 @@ Run after every `test_history` append (in `vocab review`) and after every `vocab
 3. Manual mastered -> reviewing override (via `vocab edit --reset-mastery`)
    wins until the next test result lands.
 ```
+
+Step 1 leaves status alone because an empty history is no evidence either way. New entries are created as `new`, and entries migrated from v1.1 start at `reviewing` with no history; without this rule, merging two untested entries would silently demote a `reviewing` term to `new`.
 
 ### Why no manual `mastered`
 
