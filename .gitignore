@@ -8,3 +8,7 @@
 # tutorial-creator runtime artifacts (should never be committed to the skill repo)
 .claude/tutorial-config.yaml
 .claude/tutorial-sessions/
+
+# Python caches (tools/)
+__pycache__/
+*.pyc
