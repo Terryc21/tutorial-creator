@@ -2,6 +2,34 @@
 
 All notable changes to `tutorial-creator` are documented here. This project adheres to [Semantic Versioning](https://semver.org/) and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.0] — 2026-09-29
+
+Adds batch vocabulary capture and flashcard export, and fixes several ways terms were lost or rewritten on their way into your vocabulary. Plugin installs stayed on 2.0.1 while these changes reached GitHub, because the plugin's version string didn't change. Updating the plugin now brings them in.
+
+### Added
+
+- **`vocab ingest <source>` adds many terms at once.** Give it a session transcript, a URL, a file, or pasted text. It drafts a definition and use case for each new term from how the source uses it, and you accept the batch in one confirmation instead of one prompt per term. `vocab undo` reverses the whole batch within 24 hours. It follows Entry [f]'s source rules: no guessing at a page it couldn't fetch, and no invented citation for pasted text.
+- **`vocab flashcards` exports your vocabulary for study outside the skill**, as Markdown, an Anki package (`.apkg`), or a print-ready PDF. The PDF is laid out for two-sided printing. It asks which way your printer flips the sheet, so that after cutting, each card's term backs onto its own definition, and it tells you to print and cut one test page before printing a whole deck. `--count=N` picks the terms most worth practicing. Exporting never changes vocabulary.yaml.
+- **Filter by source and date.** `vocab list` and `vocab flashcards` now take `--source=<match>`, `--date`, `--date-from`, and `--date-to` alongside `--status`, and the filters combine, so "flashcards from this article, from this week" is one command. The filters read fields every entry already has, so nothing needs migrating.
+- **An optional `use_case` field** on vocabulary entries says when you'd reach for a term, next to the definition that says what it is. It prints on the back of flashcards. Existing entries leave it empty.
+- **Entry [f] asks for a citation after a paste.** Pasted text used to reach the tutorial with no source, so nobody, including you later, could check the tutorial against it. The skill now asks for a public URL and puts it in the header without fetching it (the pasted text stays the content). If there is no URL, the tutorial says so instead of inventing one.
+- **Entry [f] cites its source in PROGRESS.md and ends with a follow-up check suited to outside material.** The first time a source adds concepts under a phase heading, a one-line citation goes under that heading. In place of Entry [b]'s bridge-tutorial proposals, the skill offers more material only when the source skipped a concept your vocabulary marks `confused`, or when a claim is cheap to verify on the spot. Otherwise it says nothing.
+
+### Changed
+
+- **The README was rewritten** for the people the skill is for. New examples show the opening screen, a Day 22 tutorial written from a real incident, and a print-ready flashcard deck.
+
+### Fixed
+
+- **Terms from new tutorials now reach vocabulary.yaml.** Entries [a] through [e] updated only VOCABULARY.md, a leftover from 1.1 when that file held the vocabulary, and Entry [f] didn't say which file to write. Those terms never showed up in `vocab review`, `vocab list`, or flashcards, and rebuilding the view dropped them. Every entry point now appends its new terms to vocabulary.yaml with all required fields, reads the file back, and names any term that didn't save before calling the tutorial finished.
+- **`vocab regen-md` updates VOCABULARY.md in place instead of rebuilding it.** Every vocab command that ended in a regen (`add`, `ingest`, `edit`, `merge`, `review`, `undo`) threw away what exists only in the view: section titles, Source lines, row order, and terms repeated under a later Day. Now it refreshes each term's definition from vocabulary.yaml, adds missing rows, and leaves the rest as written. A row whose term is no longer in vocabulary.yaml is listed for you to decide on, never removed silently, and when nothing needs changing the file is left byte-for-byte as it was. Each command now touches only its own rows, and `vocab review` doesn't touch the view at all. One thing still doesn't survive: a definition edited in VOCABULARY.md is replaced by the one in vocabulary.yaml, so change definitions with `vocab edit`.
+- **Older VOCABULARY.md files update cleanly.** `vocab regen-md` reads sections placed below the Cumulative Count table instead of adding their terms a second time, puts a new Day section among the others in day order, and matches rows written in bold or backticks instead of adding a plain duplicate beside them.
+- **Writes to vocabulary.yaml change only the lines involved.** `vocab edit`, `merge`, `review`, and `undo` didn't say how to save the file, which left a runtime free to reload and re-dump it. The data survived but the formatting didn't: on one real 4,638-line file, a default dump changed 8,161 diff lines. Each command now changes only its own lines, reads the file back, and restores it if the write failed.
+- **Terms can be renamed.** `vocab edit` sent renames to `vocab merge`, which refuses when the new name doesn't exist yet, so a rename had no working path. `vocab edit` now changes the term itself, updates `related_terms` references and the term's rows in VOCABULARY.md, and suggests a merge when the new name is already taken.
+- **Merging no longer demotes untested terms.** Merging two entries with no test history reset the result to `new`, so a `reviewing` term (where every term migrated from 1.1 starts) dropped back a step. With no test history, the status now stays as it was.
+- **Entry [f] advances the day counter**, so the tutorial after an external-source one no longer reuses its Day number.
+- **`tutorials_dir` resolves against the project root, never `.claude/`.** An ambiguous reading of the old wording once created a second vocabulary.yaml inside `.claude/`.
+
 ## [2.0.1] — 2026-08-09
 
 A documentation and correctness patch. No new features; the surfaces, entry points, and schemas are unchanged from 2.0.0. Every item below was found by an audit pass over the shipped spec.

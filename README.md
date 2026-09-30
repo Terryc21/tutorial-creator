@@ -155,13 +155,13 @@ Real generated output, checked in — not illustrations written by hand.
 - **[Lesson 16 — a stale captured value](skills/tutorial-creator/examples/Day16-CapturedSelfStaleness-Annotated.md)** — later. A real bug, and everything you'd need to never write it.
 - **[A React hook](skills/tutorial-creator/examples/useDebouncedValue-Annotated.md)** — the same shape in TypeScript, showing this isn't Swift-only.
 - **[Lesson 22 — verifying the whole path](skills/tutorial-creator/examples/Day22-VerifyingTheWholePath-Annotated.md)** — built from two failures instead of a file, with a *passing test suite* as the annotated source.
-- **[A print-ready flashcard deck](skills/tutorial-creator/examples/vocab-flashcards-print-example.pdf)** — Lesson 3's vocabulary, run through `vocab flashcards --print`. Print it two-sided, cut along the guides, and each card's question lines up with its answer on the flip side. The layout was test-printed and confirmed working on a deck built the same way.
+- **[A print-ready flashcard deck](skills/tutorial-creator/examples/vocab-flashcards-print-example.pdf)** — Lesson 3's vocabulary, exported by `vocab flashcards` in its print format. Print it two-sided, cut along the guides, and each card's question lines up with its answer on the flip side. The layout was test-printed and confirmed working on a deck built the same way.
 
 ---
 
 ## How solid is this?
 
-**v2.0.1.** The version 1 line ran through six months of daily use on a real Swift app
+**v2.1.0.** The version 1 line ran through six months of daily use on a real Swift app
 before the version 2 rewrite.
 
 **Best supported:** Swift and SwiftUI. Deepest coverage, and every bundled example.
