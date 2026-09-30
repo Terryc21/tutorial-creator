@@ -1,6 +1,6 @@
 # Vocab Surface — tutorial-creator v2
 
-**Status:** Shipped in v2.0.0. Full vocab surface with state machine, review, and gap radar.
+**Status:** Shipped in v2.0.0. Full vocab surface with word status tracking, review, and gap radar.
 **Loaded by:** `SKILL.md` when the user routes to `vocab <subcommand>` or chooses `[3]` from the gateway.
 **Source of truth for the schema:** `SCHEMAS.md` Schema 2 (`vocabulary.yaml`).
 
@@ -288,7 +288,7 @@ Do not omit this caveat even on repeat exports once "verified once" — a differ
 
 ### Why this doesn't write to vocabulary.yaml
 
-Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vocab review` (which appends to `test_history` and can change `status`), running `vocab flashcards` — or later studying the exported deck in Anki — does not feed back into tutorial-creator's own spaced-repetition state. Anki has its own SRS scheduling; tutorial-creator's `test_history` stays the source of truth for *this* skill's state machine. Keeping them separate avoids two systems fighting over one term's mastery state.
+Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vocab review` (which appends to `test_history` and can change `status`), running `vocab flashcards` — or later studying the exported deck in Anki — does not feed back into tutorial-creator's own spaced-repetition state. Anki has its own SRS scheduling; tutorial-creator's `test_history` stays the source of truth for the statuses *this* skill gives words. Keeping them separate avoids two systems fighting over one term's mastery state.
 
 ---
 
@@ -451,7 +451,7 @@ Used to collapse duplicates (`@Observable` and `Observable macro`) or to consoli
    - Concatenate `applied_test_history` similarly
    - Union `related_terms`; remove `<term-a>` and `<term-b>` from the result if they appear (a term shouldn't be related to itself)
    - Concatenate `notes` with separator
-   - **Recompute status** from the merged `test_history` (apply state-machine rules)
+   - **Recompute status** from the merged `test_history` (apply the rules in § How a word's status changes)
    - Update the target term's fields and delete the source term's lines from the yaml (§ Writing vocabulary.yaml)
    - Update any other vocabulary entries that reference `<term-b>` in their `related_terms` to point at `<term-a>` instead
    - Update VOCABULARY.md in place. Each row of `<term-b>` under a `## Day` heading becomes a repeat row of `<term-a>` (renamed, wording kept), unless that section already has a row of `<term-a>`, in which case drop it; remove any other row of `<term-b>`. For each Day that gained a repeat row, add `Also seen in: Day N` and that row's wording (in a `Per-Day wording` block) to the target's `notes`, per SCHEMAS.md Schema 2 § `notes`, so a rebuilt view keeps them. Recompute the Cumulative Count (§ `vocab regen-md` step 5).
@@ -514,7 +514,7 @@ For each selected term:
    - `date`: today
    - `result`: graded result
    - `source`: `vocab review` (or `vocab review --strict`)
-6. **Recompute status** per state machine.
+6. **Recompute status** using the rules in § How a word's status changes.
 
 ### After all terms
 
@@ -661,7 +661,7 @@ Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROG
 
 ---
 
-## State machine — full specification
+## How a word's status changes — full specification
 
 Per `SCHEMAS.md` Schema 2:
 
@@ -693,7 +693,7 @@ Step 1 leaves status alone because an empty history is no evidence either way. N
 
 ### Why no manual `mastered`
 
-The user can claim mastery, but the system can't validate it without test results. Allowing manual `mastered` introduces wishful thinking — terms that the user *thinks* they know but tests would prove otherwise. The state machine forces tests to be the gate, which keeps the `mastered` count honest.
+The user can claim mastery, but the system can't validate it without test results. Allowing manual `mastered` introduces wishful thinking — terms that the user *thinks* they know but tests would prove otherwise. The status rules force tests to be the gate, which keeps the `mastered` count honest.
 
 The one allowed manual transition is `mastered → reviewing` (the user notices they've forgotten something and demotes their own mastery). The reverse is not symmetric: getting back to mastered requires re-earning it through tests.
 

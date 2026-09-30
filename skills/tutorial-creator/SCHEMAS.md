@@ -121,13 +121,13 @@ The first-class vocabulary store. Replaces `VOCABULARY.md` as source of truth.
   - `source_file` (string, may be empty): file path with optional `:line` suffix
   - `context` (string): `"Day N: <Topic>"` for tutorial terms, the heading of that Day's section in VOCABULARY.md (this is how the view keeps a term under its Day); otherwise one of `"vocab add"`, `"review session"`, `"external source"`, `"vocab ingest"`, or free-form
   - `date` (string): ISO date `YYYY-MM-DD`
-- `status` (required): one of `new`, `reviewing`, `mastered`, `confused`. See state machine below.
+- `status` (required): one of `new`, `reviewing`, `mastered`, `confused`. See how a word's status changes, below.
 - `test_history` (required, may be empty list): list of test results from `vocab review` sessions. Each entry: `{ date, result, source }`. `result` is one of `correct`, `partial`, `wrong`.
 - `applied_test_history` (required, may be empty list): **reserved for UNFORGET S49** (post-test scoring). v2.0 leaves this empty. When S49 lands, tutorial post-test results that test this term get logged here, distinct from `test_history`.
 - `related_terms` (optional, default `[]`): list of strings; should be other terms in this file.
 - `notes` (optional, default `""`): free-form string. Multi-line block scalar OK. Two line formats in it record **repeat rows** (the term shown again under a later Day in VOCABULARY.md): `Also seen in: Day N[, Day M ...]`, and a `Per-Day wording` block (a line starting `Per-Day wording`, then one `Day N: <wording>` line per Day) that also keeps the wording each of those rows used. `vocab merge` writes both; `vocab regen-md` reads them when it rebuilds the view from scratch.
 
-### Status state machine
+### How a word's status changes
 
 Status is **earned through tests**, not user-editable directly. The only manual transition is `mastered → reviewing` (user can reset mastery via `vocab edit --reset-mastery <term>`).
 
