@@ -1,7 +1,7 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase, with line-by-line explanations and a quiz. Also keeps a vocabulary of terms you've learned (add, quiz, find gaps, export as flashcards), shows your learning progress, and helps you write about what you've learned for other readers as a Reddit post, blog post, book chapter, or documentation.
-version: 2.1.1
+version: 2.1.2
 author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
 ---

@@ -2,11 +2,17 @@
 
 All notable changes to `tutorial-creator` are documented here. This project adheres to [Semantic Versioning](https://semver.org/) and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [2.1.2] — 2026-09-30
 
 ### Fixed
 
 - **Flashcards no longer show "Example:" twice.** The back of a card puts an "Example:" label in front of a term's use case. Some use cases already contain their own "Example:", so those cards read "Example: ... Example: ...". When the use case already has one, the card now shows it as written.
+
+### Changed
+
+- **The plugin listing and the skill's own description use plainer words.** They now say what the skill does for you (lessons from your own files, a quiz, remembered vocabulary, flashcards, help writing for other readers) instead of how it is built.
+- **The command guide ([USAGE.md](USAGE.md)) reads more plainly, and four details now match the skill.** `vocab undo` undoes your last `vocab add` or `vocab ingest`, not any vocabulary change. Starts `[b]`, `[c]`, and `[f]` let you pick the topic and still record the lesson; they don't ignore your history. The page no longer says every example is Swift (the React hook example is TypeScript). `vocab add` and `vocab ingest` draft a note on when you'd use each word, not a code example.
+- **The skill's own notes describe how a word's status changes in everyday words**, instead of calling it a "state machine." Wording only; nothing works differently.
 
 ## [2.1.1] — 2026-09-30
 

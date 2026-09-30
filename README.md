@@ -167,7 +167,7 @@ All of these are real output from the skill, not samples written by hand.
 
 ## How solid is this?
 
-**Version 2.1.1.** Version 1 was used daily for six months on a real Swift app before the
+**Version 2.1.2.** Version 1 was used daily for six months on a real Swift app before the
 version 2 rewrite.
 
 **Best supported:** Swift and SwiftUI. Deepest coverage, and all but one of the examples.

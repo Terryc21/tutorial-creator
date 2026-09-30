@@ -1,6 +1,6 @@
 {
   "name": "tutorial-creator",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Turns files from your own project into lessons: what each line does, why it's written that way, and a quiz to check it stuck. Remembers the words you've learned and how well you know them, turns them into flashcards, and can help you write about what you've learned for other readers. Works with Swift, TypeScript, Python, and Rust.",
   "author": {
     "name": "Terry Nyberg"
