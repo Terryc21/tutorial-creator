@@ -204,7 +204,7 @@ Export vocabulary.yaml entries as flashcards, front = term, back = definition + 
 3. **Select count.** If `--count=N` is set, pick N terms prioritized the same way `vocab review`'s tier system does (confused/stale first — reviewing the gaps is more valuable practice than drilling what's already mastered), applied *within* the filtered set from step 2. Without `--count`, export every term matching the filter.
 4. **Build one card per term:**
    - **Front:** the term, verbatim.
-   - **Back:** `definition`, followed by a blank line, followed by `use_case` if non-empty (formatted as "Example: <use_case text>"). If `use_case` is empty for a term, the back is definition-only — do not fabricate a use case at export time; that's `vocab ingest`/`vocab edit`'s job, not export's.
+   - **Back:** `definition`, followed by a blank line, followed by `use_case` if non-empty labeled "Example: " unless the text already contains an `Example:` of its own, in which case show it as written (the writing-style guide, and terms sent from lexicon, put one inside `use_case`, and a card must never read "Example: ... Example: ..."). If `use_case` is empty for a term, the back is definition-only — do not fabricate a use case at export time; that's `vocab ingest`/`vocab edit`'s job, not export's.
 5. **Ask export format:**
    ```
    Exporting N cards. Format?
