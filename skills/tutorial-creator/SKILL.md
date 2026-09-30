@@ -681,7 +681,7 @@ vocab regen-md [--import]         # bring VOCABULARY.md in step with the yaml; -
 vocab undo                        # revert last vocab add or vocab ingest (within 24h soft-stage)
 ```
 
-See `VOCAB.md` for the full procedure spec, state machine, and grading rules.
+See `VOCAB.md` for the full procedure for each command, how a word's status changes, and the grading rules.
 
 ## Status surface
 
@@ -952,7 +952,7 @@ The phases below describe how v2.0 was built incrementally. See `CHANGELOG.md` a
 | 1 | Externalized progressions, schemas, vocab example | ✅ shipped |
 | 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped |
 | 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped |
-| 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped |
+| 4 | Full vocab surface (add, list, review, gap radar, word status tracking) | ✅ shipped |
 | 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
 | 5 | Status dashboard | ✅ shipped |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped |
