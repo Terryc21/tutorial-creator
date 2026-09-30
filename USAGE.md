@@ -20,39 +20,42 @@ Every command, setting, and option. If you just want to try the skill, the
 
 ## Commands
 
-Type `/skill tutorial-creator` on its own and the skill asks what you want. Everything
-below is a shortcut for people who already know.
+Type `/tutorial-creator:tutorial-creator` on its own and the skill asks what you want.
+Everything below is a shortcut for people who already know.
+
+If you installed the skill by hand instead of as a plugin, type `/tutorial-creator` wherever
+this page says `/tutorial-creator:tutorial-creator`.
 
 ```
-/skill tutorial-creator                        # ask me what I want to do
-/skill tutorial-creator vocab review           # quiz me on words I've learned
-/skill tutorial-creator vocab gap              # what am I getting wrong?
-/skill tutorial-creator status                 # how am I doing overall?
-/skill tutorial-creator --mode learn           # skip the menu, write me a lesson
-/skill tutorial-creator --mode audience        # skip the menu, write for others
+/tutorial-creator:tutorial-creator                        # ask me what I want to do
+/tutorial-creator:tutorial-creator vocab review           # quiz me on words I've learned
+/tutorial-creator:tutorial-creator vocab gap              # what am I getting wrong?
+/tutorial-creator:tutorial-creator status                 # how am I doing overall?
+/tutorial-creator:tutorial-creator --mode learn           # skip the menu, write me a lesson
+/tutorial-creator:tutorial-creator --mode audience        # skip the menu, write for others
 ```
 
 Working on more than one project:
 
 ```
-/skill tutorial-creator open <path>            # remember this project
-/skill tutorial-creator open                   # list projects, pick a default
-/skill tutorial-creator forget <path>          # stop remembering one
-/skill tutorial-creator --project-dir <path>   # use this project, just this once
+/tutorial-creator:tutorial-creator open <path>            # remember this project
+/tutorial-creator:tutorial-creator open                   # list projects, pick a default
+/tutorial-creator:tutorial-creator forget <path>          # stop remembering one
+/tutorial-creator:tutorial-creator --project-dir <path>   # use this project, just this once
 ```
 
 The old version 1.1 form still works and behaves like choosing "topic + file":
 
 ```
-/skill tutorial-creator [topic] [file]
+/tutorial-creator:tutorial-creator [topic] [file]
 ```
 
 ### By what you want to do
 
 | I want to… | Type this |
 |---|---|
-| Be walked through the choices | `/skill tutorial-creator` |
-| Write about a topic in a file I've picked | `/skill tutorial-creator <topic> <file>` |
+| Be walked through the choices | `/tutorial-creator:tutorial-creator` |
+| Write about a topic in a file I've picked | `/tutorial-creator:tutorial-creator <topic> <file>` |
 | Write about a topic, let the skill find the file | `--mode learn`, then pick **[c]** |
 | Write about a word I keep getting wrong | `--mode learn`, then pick **[e]** |
 | Turn a file into an article for other people | `--mode audience` |
@@ -155,7 +158,7 @@ toward mastered.
 
 ## Your learning dashboard
 
-`/skill tutorial-creator status` is read-only — it changes nothing, it just shows you:
+`/tutorial-creator:tutorial-creator status` shows you where you are and never changes anything:
 
 - Lessons written, the last one, your streak, what to do next
 - How many words are in each state
@@ -276,7 +279,7 @@ To teach in a different order, set `progression_override` in
 If you used version 1.1 and have a `VOCABULARY.md`, run this once:
 
 ```
-/skill tutorial-creator vocab regen-md --import
+/tutorial-creator:tutorial-creator vocab regen-md --import
 ```
 
 It converts your old file into the newer `vocabulary.yaml`. Imported words start at

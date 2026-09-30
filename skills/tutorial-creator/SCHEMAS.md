@@ -315,7 +315,7 @@ The registry is a single-writer file. The skill does not currently take a lock w
 
 ### Why not just walk to a known location?
 
-An earlier design considered "always look at `~/.claude/tutorial-creator/<project-name>/` for configs." The registry is a cleaner separation: configs stay with their projects (so a project moves with a `git mv` or `mv` of the project directory), and the registry is just a pointer table. Same separation `git` uses between `.git/` directories and a hypothetical `git config --global` registry — except `git` doesn't actually need a registry because it always operates on cwd. tutorial-creator does need one because invocations from arbitrary cwds are the common case (`/skill tutorial-creator status` from anywhere should work).
+An earlier design considered "always look at `~/.claude/tutorial-creator/<project-name>/` for configs." The registry is a cleaner separation: configs stay with their projects (so a project moves with a `git mv` or `mv` of the project directory), and the registry is just a pointer table. Same separation `git` uses between `.git/` directories and a hypothetical `git config --global` registry — except `git` doesn't actually need a registry because it always operates on cwd. tutorial-creator does need one because invocations from arbitrary cwds are the common case (`/tutorial-creator:tutorial-creator status` from anywhere should work).
 
 ### v1 → future migration
 

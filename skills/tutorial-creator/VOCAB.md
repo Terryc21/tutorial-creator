@@ -106,7 +106,7 @@ Every command that changes vocabulary.yaml writes it the same way, so the format
      ```
    - Write a 24h soft-stage marker file: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` containing the term name. Used by `vocab undo` (within 24h). The sentinel is the disambiguator that distinguishes standalone adds from tutorial-time adds; the latter are already captured by the session-log snapshot system in `SKILL.md` § Recovery and do NOT write a sentinel.
    - Add the term's row at the end of the `## Vocab add` section of VOCABULARY.md, creating that section after the last one if it doesn't exist yet, and recompute the Cumulative Count (§ `vocab regen-md` step 5).
-   - Print confirmation: `Added "<term>" (status: new). Undo within 24h via: /skill tutorial-creator vocab undo`
+   - Print confirmation: `Added "<term>" (status: new). Undo within 24h via: /tutorial-creator:tutorial-creator vocab undo`
 5. **On `edit`:** drop into editable interactive editor for the four AI-drafted fields, then return to step 4.
 6. **On `cancel`:** stop. No file written.
 
@@ -639,7 +639,7 @@ If VOCABULARY.md doesn't exist (during `--import`): refuse with `No VOCABULARY.m
 
 ## `vocab undo`
 
-24-hour soft-stage reversal of the last *standalone* `vocab add` or `vocab ingest` (an invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`/skill tutorial-creator undo`); see `SKILL.md` § Recovery for that path.
+24-hour soft-stage reversal of the last *standalone* `vocab add` or `vocab ingest` (an invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`/tutorial-creator:tutorial-creator undo`); see `SKILL.md` § Recovery for that path.
 
 ### Marker file shape
 
@@ -649,7 +649,7 @@ A `vocab add` marker contains one term name (single-term add). A `vocab ingest` 
 
 1. List soft-stage markers: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` files.
 2. Filter to those within 24 hours of now.
-3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use /skill tutorial-creator undo instead.)`
+3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use /tutorial-creator:tutorial-creator undo instead.)`
 4. **One marker:** show details — term name (single-add) or the full term list + count (ingest batch) — and when added; prompt confirm. On yes, delete the entries for the term(s) from vocabulary.yaml (§ Writing vocabulary.yaml) + delete the marker; remove their rows from VOCABULARY.md, drop any section left without rows, and recompute the Cumulative Count (§ `vocab regen-md` step 5).
 5. **Multiple markers:** show a numbered list — each row labeled `<term>` for a single add or `<N> terms from vocab ingest (<source>)` for a batch — user picks which to undo (or `cancel`). Only one marker is undone per invocation; run `vocab undo` again for another.
 
@@ -657,7 +657,7 @@ Markers older than 24h are silently pruned at the start of any vocab subcommand.
 
 ### Why two undo paths
 
-Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROGRESS.md + VOCABULARY.md + tutorial-config.yaml are taken before the generation runs, and `/skill tutorial-creator undo` restores them. Standalone vocab adds don't get a snapshot (they're a single-line yaml change with no ripple effect), so the 24h sentinel is the simpler approach. Both surfaces are user-facing; the skill chooses which one applies based on whether a session yaml exists for the change.
+Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROGRESS.md + VOCABULARY.md + tutorial-config.yaml are taken before the generation runs, and `/tutorial-creator:tutorial-creator undo` restores them. Standalone vocab adds don't get a snapshot (they're a single-line yaml change with no ripple effect), so the 24h sentinel is the simpler approach. Both surfaces are user-facing; the skill chooses which one applies based on whether a session yaml exists for the change.
 
 ---
 

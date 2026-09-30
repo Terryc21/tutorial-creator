@@ -2,6 +2,16 @@
 
 All notable changes to `tutorial-creator` are documented here. This project adheres to [Semantic Versioning](https://semver.org/) and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.1] — 2026-09-30
+
+### Fixed
+
+- **The command to start the skill now works.** The README, USAGE.md, and the skill's own messages said to type `/skill tutorial-creator`, which Claude Code doesn't recognize. If you installed tutorial-creator as a plugin, type `/tutorial-creator:tutorial-creator`. If you installed it by hand, type `/tutorial-creator`. You can also just ask in plain words. When the skill shows you a command, such as how to undo a change, it now uses the same form you started it with.
+
+### Changed
+
+- **The README uses plainer words** and corrects three details: the React hook example is TypeScript, not Swift; a word drops to confused when two of your last three answers are wrong or only half right; and pulling in vocabulary drafts a note on when you'd use each term, not a code example.
+
 ## [2.1.0] — 2026-09-29
 
 Two new ways to use the terms you're learning, and fixes for several ways terms went missing or got scrambled. If you use tutorial-creator as a plugin, updating didn't pick these changes up until this release, because the version number hadn't changed. Update the plugin to get them.
