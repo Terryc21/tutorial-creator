@@ -61,9 +61,9 @@ Then render the cold-start block below and **stop**. Do not render the dashboard
 
 ```
 You haven't shipped any tutorials yet. Start with:
-  <invoke>                                 # opens the gateway question
+  /tutorial-creator:tutorial-creator                  # opens the gateway question
 or
-  <invoke> <topic> <file>                  # legacy v1.1 invocation
+  /tutorial-creator:tutorial-creator <topic> <file>   # legacy v1.1 invocation
 ```
 
 ### 3. Compute aggregates
@@ -89,9 +89,9 @@ Tiebreak:
 
 - If `confused` count > 0, use (a).
 - Else if (b) produces a candidate, use (b).
-- Else render the all-caught-up line: `Suggested next lesson: All caught up. Try a question-led entry: <invoke> --mode learn → [d]`. Render `<invoke>` for the current runtime.
+- Else render the all-caught-up line: `Suggested next lesson: All caught up. Try a question-led entry: /tutorial-creator:tutorial-creator --mode learn → [d]`.
 
-If the chosen candidate's file scan returns no good match (zero files under 300 lines, or no files at all reference the term/concept), still render the suggestion but replace the candidate-file line with `Candidate file: (no obvious match — let the skill scan when you start)` and replace the action line with `Action: <invoke> <term-or-concept>`, rendering `<invoke>` for the current runtime.
+If the chosen candidate's file scan returns no good match (zero files under 300 lines, or no files at all reference the term/concept), still render the suggestion but replace the candidate-file line with `Candidate file: (no obvious match — let the skill scan when you start)` and replace the action line with `Action: /tutorial-creator:tutorial-creator <term-or-concept>`.
 
 ### 5. Render the dashboard
 
@@ -130,7 +130,7 @@ Gap radar
   Suggested next lesson:    <term-or-concept>
     Candidate file:         <path>
     Reason:                 <addressing your most-confused term | next concept in your progression>
-    Action:                 <invoke> <term-or-concept>
+    Action:                 /tutorial-creator:tutorial-creator <term-or-concept>
 ```
 
 Substitution rules:

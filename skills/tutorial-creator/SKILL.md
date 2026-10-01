@@ -1,9 +1,9 @@
 ---
 name: tutorial-creator
-description: Generate annotated code reading tutorials from your own codebase. Three surfaces - tutorial generation, vocabulary management, and learning-state inspection. Tracks vocabulary with status state machine, supports six writing-to-learn entry points and five audience-facing entry points.
+description: Generate annotated code reading tutorials from your own codebase, with line-by-line explanations and a quiz. Also keeps a vocabulary of terms you've learned (add, quiz, find gaps, export as flashcards), shows your learning progress, and helps you write about what you've learned for other readers as a Reddit post, blog post, book chapter, or documentation.
 license: Apache-2.0
 metadata:
-  version: "2.0.1"
+  version: "2.1.2"
   author: "Terry Nyberg, Coffee & Code LLC"
 ---
 
@@ -15,54 +15,41 @@ Three surfaces, gateway-mediated:
 - **`vocab`** — manage vocabulary independent of lesson generation
 - **`status`** — inspect your learning state (read-only dashboard)
 
+The legacy v1.1 argument form (`/tutorial-creator:tutorial-creator <topic> <source>`) still works; it routes to writing-to-learn entry [b] (topic + file).
+
+**Command form.** Installed as a plugin, the skill starts with `/tutorial-creator:tutorial-creator`. Installed by hand into a skills folder, it starts with `/tutorial-creator`. This spec writes every command in the plugin form. Whenever you show the user a command to type, use the form this skill was started with, whether the user typed it or it was loaded from a plain-words request.
+
 ## Runtime compatibility
 
-This skill supports Claude Code and Codex. At the start of every invocation, set
-`<invoke>` to the current runtime's syntax:
-
-- Claude Code: `/skill tutorial-creator`
-- Codex: `$tutorial-creator`
-
-Treat every `<invoke> ...` example below as an agent-facing command, not a shell command.
-When showing a command to the user, render the value of `<invoke>` rather than the
-placeholder. Use the runtime's structured question tool when one is available;
-otherwise ask the same question in plain text.
-
-The `.claude/tutorial-config.yaml`, `.claude/tutorial-sessions/`, and
-`~/.claude/tutorial-creator/registry.yaml` paths are shared tutorial-creator state for
-both runtimes. Keep these paths unchanged so an existing project retains one learning
-history when the user switches agents. In Codex, treat `.claude/` as application data,
-not as Codex configuration.
-
-The legacy v1.1 invocation (`<invoke> <topic> <source>`) still works; it routes to writing-to-learn entry [b] (topic + file).
+This skill also supports Codex. In Codex, invoke it as `$tutorial-creator`; render that form instead of the Claude Code command form in user-facing messages. Use the runtime's structured question tool when available, otherwise ask the same question in plain text. The existing `.claude/tutorial-config.yaml`, `.claude/tutorial-sessions/`, and `~/.claude/tutorial-creator/registry.yaml` locations are shared application data for both runtimes and must remain unchanged.
 
 ## Usage
 
 ```
-<invoke>                                        # opens gateway question
-<invoke> <topic> <source>                       # legacy v1.1 path → entry [b]
-<invoke> tutorial <args>                        # tutorial surface
-<invoke> vocab <subcommand>                     # vocab surface
-<invoke> status                                 # status surface
-<invoke> undo                                   # revert last generation
-<invoke> undo --session <id>                    # revert a specific session (rare)
-<invoke> renumber <old> <new>                   # rename Day-N + rewrite cross-references
-<invoke> --mode learn|audience|vocab|status [args]
-                                                 # skip gateway, route directly
-<invoke> open <path>                            # register a tutorial-creator project
-                                                 #  in ~/.claude/tutorial-creator/registry.yaml
-                                                 #  so future invocations from any cwd find it
-<invoke> open                                   # list registered projects + pick one
-                                                 #  (sets it as the registry default)
-<invoke> forget <path>                          # remove a project from the registry
-                                                 #  (no filesystem changes; project files stay)
-<invoke> --project-dir <path> [args]
-                                                 # one-shot override; resolves config
-                                                 #  from <path>/.claude/tutorial-config.yaml
-                                                 #  instead of the default discovery rule
+/tutorial-creator:tutorial-creator                         # opens gateway question
+/tutorial-creator:tutorial-creator <topic> <source>        # legacy v1.1 path → entry [b]
+/tutorial-creator:tutorial-creator tutorial <args>         # tutorial surface
+/tutorial-creator:tutorial-creator vocab <subcommand>      # vocab surface
+/tutorial-creator:tutorial-creator status                  # status surface
+/tutorial-creator:tutorial-creator undo                    # revert last generation
+/tutorial-creator:tutorial-creator undo --session <id>     # revert a specific session (rare)
+/tutorial-creator:tutorial-creator renumber <old> <new>    # rename Day-N + rewrite cross-references
+/tutorial-creator:tutorial-creator --mode learn|audience|vocab|status [args]
+                                                            # skip gateway, route directly
+/tutorial-creator:tutorial-creator open <path>             # register a tutorial-creator project
+                                                            #  in ~/.claude/tutorial-creator/registry.yaml
+                                                            #  so future invocations from any cwd find it
+/tutorial-creator:tutorial-creator open                    # list registered projects + pick one
+                                                            #  (sets it as the registry default)
+/tutorial-creator:tutorial-creator forget <path>           # remove a project from the registry
+                                                            #  (no filesystem changes; project files stay)
+/tutorial-creator:tutorial-creator --project-dir <path> [args]
+                                                            # one-shot override; resolves config
+                                                            #  from <path>/.claude/tutorial-config.yaml
+                                                            #  instead of the default discovery rule
 ```
 
-**Where the project lives.** `.claude/tutorial-config.yaml` and `.claude/tutorial-sessions/` live in the **resolved project root**, not necessarily cwd. The skill walks a discovery chain on every invocation; see `## Project resolution`. This means you can keep a tutorial-creator project at `/Volumes/.../Tutorials/` and invoke `<invoke> status` from any working directory and it Just Works — same mental model as `git status` walking up from cwd to find `.git/`.
+**Where the project lives.** `.claude/tutorial-config.yaml` and `.claude/tutorial-sessions/` live in the **resolved project root**, not necessarily cwd. The skill walks a discovery chain on every invocation; see `## Project resolution`. This means you can keep a tutorial-creator project at `/Volumes/.../Tutorials/` and invoke `/tutorial-creator:tutorial-creator status` from any working directory and it Just Works — same mental model as `git status` walking up from cwd to find `.git/`.
 
 ## Routing logic
 
@@ -84,7 +71,7 @@ Every invocation runs through this dispatch:
 
 ### Gateway question
 
-Use the runtime's structured question tool (or a plain-text prompt if unavailable):
+Use AskUserQuestion (or plain-text prompt if AskUserQuestion is unavailable):
 
 ```
 What do you want to do?
@@ -144,7 +131,7 @@ Where does the tutorial start?
 [e] Documentation-grounded   — Apple Developer docs, RFCs, etc.
 ```
 
-After the entry letter is picked, the Path 2 flow runs four more structured or plain-text prompts in this order, then hands off to a venue template:
+After the entry letter is picked, the Path 2 flow runs four more AskUserQuestion prompts in this order, then hands off to a venue template:
 
 1. **Audience question.** Options: `beginner` / `intermediate` / `senior` / `mixed`. Drives in-voice content shifts (definitions vs. tradeoffs).
 2. **Honest-machine opt-in.** Y / N. When Y, the venue template appends a section on what the article does NOT cover (section name varies by venue; resolved from `venues/_schema.yaml#venues.<name>.honest_machine_section_name`).
@@ -235,7 +222,7 @@ Runs as step 0 of every invocation, before routing. Determines `$PROJECT_ROOT` �
 
 ### Discovery chain (highest precedence first)
 
-1. **`--project-dir <path>` flag.** If set on the invocation, treat `<path>` as `$PROJECT_ROOT` and stop. The path must be absolute or resolvable relative to cwd. If `<path>/.claude/tutorial-config.yaml` does not exist, the skill **does not** auto-create it from this flag — say `--project-dir <path> has no tutorial-creator config. Run "<invoke> open <path>" first, or invoke from <path> to trigger first-run setup.` and stop. Render `<invoke>` for the current runtime before showing that message. The `--project-dir` flag is for picking among already-set-up projects, not for bootstrapping new ones in unusual locations.
+1. **`--project-dir <path>` flag.** If set on the invocation, treat `<path>` as `$PROJECT_ROOT` and stop. The path must be absolute or resolvable relative to cwd. If `<path>/.claude/tutorial-config.yaml` does not exist, the skill **does not** auto-create it from this flag — say `--project-dir <path> has no tutorial-creator config. Run "/tutorial-creator:tutorial-creator open <path>" first, or invoke from <path> to trigger first-run setup.` and stop. The `--project-dir` flag is for picking among already-set-up projects, not for bootstrapping new ones in unusual locations.
 2. **Environment variable `TUTORIAL_CREATOR_PROJECT_DIR`.** If set and points to a directory with `.claude/tutorial-config.yaml`, use it as `$PROJECT_ROOT`. If the env var is set but the path is invalid, warn (`TUTORIAL_CREATOR_PROJECT_DIR=<path> doesn't have a tutorial-creator config; ignoring`) and fall through to the next step.
 3. **Cwd's `.claude/tutorial-config.yaml`.** If `./.claude/tutorial-config.yaml` exists in the current working directory, use cwd as `$PROJECT_ROOT`. This preserves backward compatibility with v1.1 / v2.0-pre-resolution behavior — if you're already in your project, nothing changes.
 4. **Ancestor walk from cwd.** Walk up from cwd one directory at a time until either: (a) a `.claude/tutorial-config.yaml` exists at that level — use that directory as `$PROJECT_ROOT`; (b) the filesystem root is reached — fall through to the next step. Stop at filesystem root, do NOT cross into another user's home directory or into `/`.
@@ -273,11 +260,11 @@ After successful resolution (steps 1–5), if the project is in the registry, up
 Registers a tutorial-creator project so the resolution chain finds it from any cwd. Two forms:
 
 ```
-<invoke> open                                   # interactive: list registered, pick + set as default
-<invoke> open <path>                            # add <path> to the registry
+/tutorial-creator:tutorial-creator open                    # interactive: list registered, pick + set as default
+/tutorial-creator:tutorial-creator open <path>             # add <path> to the registry
 ```
 
-**Form 1 — list and pick.** Read `~/.claude/tutorial-creator/registry.yaml`. If empty, say `No projects registered. Use "<invoke> open <path>" to add one.` and render `<invoke>` for the current runtime before showing the message, then stop. Otherwise, list registered projects with their `last_invoked` timestamps, ask the user to pick one, and write that project as the registry's `default`. Confirm: `Default set to <path>. Future invocations from any cwd will use this project unless you pass --project-dir.`
+**Form 1 — list and pick.** Read `~/.claude/tutorial-creator/registry.yaml`. If empty, say `No projects registered. Use "/tutorial-creator:tutorial-creator open <path>" to add one.` and stop. Otherwise, list registered projects with their `last_invoked` timestamps, ask the user to pick one, and write that project as the registry's `default`. Confirm: `Default set to <path>. Future invocations from any cwd will use this project unless you pass --project-dir.`
 
 **Form 2 — add a path.** Verify `<path>` exists and contains `.claude/tutorial-config.yaml`. If the config is missing, refuse: `<path> has no tutorial-creator config. Either run setup at <path> first by invoking the skill from there, or pass a path to an already-set-up project.` On success, append to the registry. If this is the first registered project, also write it as the `default`. Confirm: `Registered <path>. Now reachable from any cwd via the resolution chain.`
 
@@ -286,7 +273,7 @@ The `open` command does NOT create a config; it only registers an existing one. 
 ### `forget` command
 
 ```
-<invoke> forget <path>
+/tutorial-creator:tutorial-creator forget <path>
 ```
 
 Removes `<path>` from the registry. Filesystem changes: none. The project's files (`.claude/tutorial-config.yaml`, `tutorials_dir`, etc.) are untouched. If `<path>` was the default, the registry's `default` field is cleared. If `<path>` is not in the registry, say `<path> is not registered.` and stop.
@@ -297,7 +284,7 @@ Use `forget` when a project moves (`forget` the old path, `open` the new one) or
 
 The previous behavior (`tutorial-config.yaml` pinned to cwd) created the same hostility `git` would have if `.git/` only worked from the exact directory you ran `git init` in. Tutorial projects often outlive any single coding session — the user's tutorials live at `/Volumes/.../Tutorials/` for years; the codebase they're learning from changes weekly. The discovery chain decouples "where the learning artifacts live" from "where I happen to be running the skill from right now," same as `git` decouples the working tree from the .git directory location.
 
-The registry exists for the case where neither cwd nor an ancestor reveals a project. Without it, a user who keeps their tutorials at `~/Code/learn-rust/` and wants to invoke `<invoke> status` from `~/`, `/tmp/`, or any other arbitrary cwd would have to type `--project-dir ~/Code/learn-rust` every time. The registry makes "I have one tutorial project" the zero-friction case.
+The registry exists for the case where neither cwd nor an ancestor reveals a project. Without it, a user who keeps their tutorials at `~/Code/learn-rust/` and wants to invoke `/tutorial-creator:tutorial-creator status` from `~/`, `/tmp/`, or any other arbitrary cwd would have to type `--project-dir ~/Code/learn-rust` every time. The registry makes "I have one tutorial project" the zero-friction case.
 
 ### Cwd-relative paths in resolved configs
 
@@ -313,7 +300,7 @@ Triggered from `## Project resolution` step 6 (no project found anywhere in the 
 Welcome to tutorial-creator! Let's set up your learning environment.
 ```
 
-Ask with the runtime's structured question tool, or a plain-text prompt:
+Ask via AskUserQuestion:
 
 1. **Confirm the project root.** Default: cwd. Show the resolved cwd path verbatim, ask "Use this directory as your tutorial-creator project? [yes / pick different path / cancel]". If the user picks a different path, that becomes `$PROJECT_ROOT` for the rest of setup. Refuse paths that don't exist; refuse paths inside another already-registered project (would create nested configs).
 2. **Where should tutorials be saved?** Default: `$PROJECT_ROOT/tutorials/` (config written as `./tutorials/`, interpreted relative to `$PROJECT_ROOT`). User can pick an absolute path elsewhere if they want tutorial files outside the project root for some reason.
@@ -338,7 +325,7 @@ progression_override: null
 
 Create initial files (relative to `$PROJECT_ROOT`):
 - `{tutorials_dir}/PROGRESS.md` (template at end of this file)
-- `{tutorials_dir}/VOCABULARY.md` (regenerated view)
+- `{tutorials_dir}/VOCABULARY.md` (readable view)
 - `{tutorials_dir}/vocabulary.yaml` (empty list `[]`)
 
 If `$PROJECT_ROOT/.claude/` doesn't exist, create it.
@@ -351,7 +338,7 @@ If yes, append an entry per SCHEMAS.md Schema 5. If this is the first registered
 
 ## Entry [b] — Tutorial Format (topic + file)
 
-When invoked as entry [b] (topic + file), produce a tutorial with these sections in this order. **This is also the legacy v1.1 invocation path** — when the user invokes `<invoke> <topic> <source>` with two positional arguments and an existing source file, route here directly without the gateway question. The format is preserved verbatim from v1.1 so existing users see no behavior change.
+When invoked as entry [b] (topic + file), produce a tutorial with these sections in this order. **This is also the legacy v1.1 invocation path** — when the user invokes `/tutorial-creator:tutorial-creator <topic> <source>` with two positional arguments and an existing source file, route here directly without the gateway question. The format is preserved verbatim from v1.1 so existing users see no behavior change.
 
 ### Before Writing
 
@@ -405,7 +392,19 @@ Run `## Recovery` § "Always-on: pre-write hook" first. Skip if `recovery_enable
 
 1. **Save** to `{tutorials_dir}/DayN-[Topic]-Annotated.md`
 2. **Update PROGRESS.md** — add Score Log row (day, date, file, test counts) and Concepts Mastery Checklist entries (`- [ ] [Concept name] (Day N)`).
-3. **Update VOCABULARY.md** — add new section `## Day N: [Topic]`; only genuinely new terms; update Cumulative Count.
+3. **Record the new vocabulary: vocabulary.yaml first, then VOCABULARY.md.** `vocab review`, `vocab list` and `vocab flashcards` read only the yaml, so a term that reaches only the view never shows up in them, and a later rebuild of the view drops it.
+   1. **Pick the new terms:** each term in this tutorial's Vocabulary table that has no entry in `{tutorials_dir}/vocabulary.yaml` (case-insensitive match on `term`, ignoring backticks). Terms already there are not re-added.
+   2. **Append one entry per new term** in the entry shape of `VOCAB.md` § `vocab add` step 4, with these values:
+      - `type`: from Schema 2's list, `concept` when nothing else fits. Required.
+      - `definition`: the tutorial's definition of the term.
+      - `first_encountered`: `source_file` is the annotated file; `context` is exactly `"Day N: [Topic]"`, the heading text of the view section in sub-step 4; `date` is today.
+      - `status: new`, `test_history: []`, `applied_test_history: []`, `notes: "First seen: Day N"`. `use_case` and `related_terms` are optional.
+
+      Add the entries after the last existing one and leave every existing entry byte-for-byte unchanged; re-serializing the file reformats entries the user has curated. If the file holds only `[]` (a new project), replace the `[]` with the entries. Tutorial-time adds write no soft-stage marker; `undo` reverts them with the rest of the session.
+   3. **Read vocabulary.yaml back.** If it no longer parses, restore the contents it had before the append and tell the user. Otherwise confirm that each new term is present with every Schema 2 required field (`term`, `type`, `definition`, `first_encountered` with its `context` and `date`, `status`, `test_history`, `applied_test_history`). For any term that is missing or incomplete, tell the user by name (`Not saved to vocabulary.yaml: <terms>. They won't appear in vocab review or vocab flashcards.`) and offer to append it again. Don't call the tutorial finished while any stay unsaved.
+   4. **Update VOCABULARY.md:** add a `## Day N: [Topic]` section holding the confirmed terms, placed after the last existing `## Day` section; add its Cumulative Count row at the matching position and recompute Running Total for the rows below it; set the `*Updated:*` line to today. This is the same in-place update `vocab regen-md` makes (`VOCAB.md`), so the rest of the view stays as it is.
+
+   If `{tutorials_dir}/vocabulary.yaml` doesn't exist (a v1.1 project that hasn't run `vocab regen-md --import`), don't create it: a non-empty yaml makes that migration refuse to run. Do sub-step 4 only, and tell the user to run the migration, which imports these terms from the view.
 4. **Increment** `next_day` in config.
 5. **Run the post-write hook** (`## Recovery` § "Always-on: post-write hook") — populates and writes the session yaml, prunes old sessions per retention. Skipped if `recovery_enabled: false`.
 6. **Gap analysis** — review the new tutorial; if it depends on uncovered concepts, propose half-step bridge tutorials (e.g., Day 7.5) with topic, what they bridge, and why. Ask whether to create now or defer.
@@ -580,7 +579,7 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
 ### Procedure
 
 1. **Read config.** Need `language`, `project_dir` for the "how this applies to my codebase" mapping step.
-2. **Receive the source.** Use a structured question or plain-text prompt:
+2. **Receive the source.** AskUserQuestion (or plain prompt):
    ```
    Where's the external source?
    [1] URL
@@ -642,13 +641,20 @@ This entry is the writing-to-learn equivalent of "synthesizing notes after a mee
    - **What I'd ask to verify:** 3-5 specific things the user would experiment with or test to confirm they understood correctly
    - **Post-Test:** harder questions that require applying the concept beyond what the source explicitly said
    - **Answer Key:** explanations for both tests
-   - **New Concepts Introduced:** standard table; concepts from the source feed `vocab add` automatically (skill confirms before writing each one)
+   - **New Concepts Introduced:** standard table; these concepts become vocabulary entries in step 10 (skill confirms before writing each one)
 9. **Before writing:** run `## Recovery` § "Always-on: pre-write hook" (snapshots + staged session yaml), unless `recovery_enabled: false`.
 10. **After writing:**
     - Save to `{tutorials_dir}/DayN-External-<SourceShort>-Annotated.md`
-    - Update PROGRESS.md (Score Log row + concepts added)
-    - For each new concept, write a vocab entry (context: `external source`, source_file: empty, related_terms: extracted from the source if mentioned). These adds are tutorial-time; they go into the session's `vocab_added` list, not into the standalone sentinel system.
+    - Update PROGRESS.md (Score Log row + concepts added). The first time a phase heading in the Concepts Mastery Checklist gains concepts from this source, add a one-line citation under it: `*Source: [<title>](<url>), <author>, <publication>, <date>*`, or for pasted content with no public URL, the source's description followed by `(pasted; no permalink)`. Don't repeat the line when a later Day adds more concepts from the same source under the same heading.
+    - Record each new concept per Entry [b] § "After Writing" step 3 (vocabulary.yaml first, then VOCABULARY.md), with three differences: `source_file` is empty; `related_terms` come from the source where it names them; `notes` is `"First seen: Day N -- Source: <URL or file path>"`, or for pasted content with no public URL, a short description of the source followed by `(pasted; no permalink)`. These adds are tutorial-time: they go into the session's `vocab_added` list, not into the standalone sentinel system.
+    - Increment `next_day` in config.
     - Run `## Recovery` § "Always-on: post-write hook" — populates the session yaml with `entry: external-source`, the source URL/path in a free-form note, the populated `vocab_added` list, and `output`.
+11. **Follow-up analysis.** Entry [f] does not reuse Entry [b]'s "Gap analysis" step, which proposes half-step bridge tutorials for uncovered *codebase-progression* concepts. That framing doesn't fit a source-grounded tutorial, and the tutorial already has a "What the source leaves out" section doing the adjacent job of recording gaps *within the source*. The two answer different questions and must not be conflated:
+    - "What the source leaves out" (step 8, written into the tutorial) = what *this source* doesn't cover: a permanent record, not a prompt for action.
+    - Follow-up analysis (this step, said to the user, not written into the tutorial) = does anything just surfaced warrant *more material*? Two triggers only:
+      - A concept in "What the source leaves out" is one the user's vocabulary already tracks as `confused` (cross-reference `vocab gap`'s list). That's a real, actionable gap, not a hypothetical one: offer a Day N.5 bridge tutorial through Entry [e] (gap-driven), like Entry [b]'s bridge offer.
+      - An item in "What I'd ask to verify" (step 8) is concrete and cheap enough to check right now (a specific compiler behavior, say, not "read the whole Swift concurrency proposal"): offer to verify it with a quick experiment, not a full tutorial.
+    - If neither trigger fires, say nothing. Don't manufacture a bridge-tutorial offer just because Entry [b] has that step; an external source's honest gaps are usually "things the source didn't cover," not "things the user needs taught next."
 
 ### Honesty rule (cross-cutting)
 
@@ -676,20 +682,20 @@ vocab gap                         # show "confused" terms ranked by staleness; f
 vocab flashcards [--status=<s>] [--source=<match>] [--date=<d>|--date-from=<d>|--date-to=<d>] [--count=N]
                                    #   export vocabulary as Markdown, Anki .apkg, or a duplex-print
                                    #   PDF; same filters as vocab list
-vocab regen-md [--import]         # regenerate VOCABULARY.md from yaml; --import migrates v1.1
+vocab regen-md [--import]         # bring VOCABULARY.md in step with the yaml; --import migrates v1.1
 vocab undo                        # revert last vocab add or vocab ingest (within 24h soft-stage)
 ```
 
-See `VOCAB.md` for the full procedure spec, state machine, and grading rules.
+See `VOCAB.md` for the full procedure for each command, how a word's status changes, and the grading rules.
 
 ## Status surface
 
 Routes to `STATUS.md`. **Fully implemented.** Read-only dashboard. Invocation forms:
 
 ```
-<invoke> status                                 # direct invocation
-<invoke>                                        # gateway question, then [4]
-<invoke> --mode status                          # skip gateway, route directly
+/tutorial-creator:tutorial-creator status                  # direct invocation
+/tutorial-creator:tutorial-creator                         # gateway question, then [4]
+/tutorial-creator:tutorial-creator --mode status           # skip gateway, route directly
 ```
 
 The dashboard aggregates `tutorial-config.yaml`, `vocabulary.yaml`, the last 10 session logs, generated `Day*.md` files, and the active progression. It shows:
@@ -727,14 +733,14 @@ Before any tutorial generation writes a file, the skill runs the **pre-write hoo
 
 After tutorial generation writes successfully:
 
-1. **Populate session record.** Set `output` to the generated tutorial's relative path. Set `vocab_added` to the list of terms added during this generation (deduped). Set `progress_updated` to whether PROGRESS.md was modified (always true for entries [a-e]; may be false for some Path 2 audience-facing modes).
+1. **Populate session record.** Set `output` to the generated tutorial's relative path. Set `vocab_added` from the file, not from intent: read `{tutorials_dir}/vocabulary.yaml` back and list, deduped, the terms this generation added that are present with every Schema 2 required field. Never log a term the file doesn't contain. If any term the generation should have saved is missing or incomplete, name each one to the user (`Not saved to vocabulary.yaml: <terms>`) and still write the session yaml in step 2, so the generation can be undone. Set `progress_updated` to whether PROGRESS.md was modified (always true for Path 1 entries [a]-[f]; Path 2 doesn't run this hook, per `AUDIENCE.md`).
 2. **Write the session yaml** to `.claude/tutorial-sessions/<session_id>.yaml`.
 3. **Prune old sessions** (retention rule below).
 
 If generation **fails** mid-write (e.g., the tool errors after some files have been modified but before all are):
 
 1. Do NOT write the session yaml. The session directory contains pre-write snapshots; without the yaml, the directory is orphaned but harmless and will be pruned by retention.
-2. Tell the user: `Generation failed mid-write. Pre-write snapshots are at .claude/tutorial-sessions/<session_id>/. Run "<invoke> undo --session <session_id>" to manually revert.` Render `<invoke>` for the current runtime before showing the message.
+2. Tell the user: `Generation failed mid-write. Pre-write snapshots are at .claude/tutorial-sessions/<session_id>/. Run "/tutorial-creator:tutorial-creator undo --session <session_id>" to manually revert.`
 
 ### Retention
 
@@ -750,8 +756,8 @@ Pruning is silent. Retention applies to session yamls; standalone vocab-add sent
 Reverts the most recent tutorial generation. Invoked as:
 
 ```
-<invoke> undo                                   # most recent session
-<invoke> undo --session <id>                    # specific session (rare; for orphaned mid-write recovery)
+/tutorial-creator:tutorial-creator undo                    # most recent session
+/tutorial-creator:tutorial-creator undo --session <id>     # specific session (rare; for orphaned mid-write recovery)
 ```
 
 #### Procedure
@@ -810,8 +816,8 @@ The session log is the single source of truth for what to revert. If it's missin
 Renames a Day-N tutorial file and rewrites every cross-reference. Supports whole-number days (`Day 8`) and half-step days (`Day 7.5`).
 
 ```
-<invoke> renumber 8 7.5
-<invoke> renumber 7.5 8
+/tutorial-creator:tutorial-creator renumber 8 7.5
+/tutorial-creator:tutorial-creator renumber 7.5 8
 ```
 
 #### Procedure
@@ -903,16 +909,16 @@ Check off when you feel confident (not just "saw it once"):
 - [ ] (populated as tutorials are created)
 ```
 
-## VOCABULARY.md template (generated view)
+## VOCABULARY.md template
 
-Created on first run; regenerable from vocabulary.yaml:
+Created on first run. After that, commands update it in place instead of rebuilding it (`VOCAB.md` § `vocab regen-md`):
 
 ```markdown
 # Tutorial Vocabulary
 
 Terms introduced in each tutorial, in order of appearance.
 
-> Source of truth: `vocabulary.yaml` (this file is a generated view; do not edit by hand).
+> Source of truth: `vocabulary.yaml` for terms and definitions. Headings, Source lines and row order in this file are kept as written.
 
 ---
 
@@ -922,8 +928,10 @@ Terms introduced in each tutorial, in order of appearance.
 
 ## Cumulative Count
 
-| Day | New Terms | Running Total |
+| Section | New Terms | Running Total |
 |-----|-----------|---------------|
+
+Repeat rows (a term shown again under a later Day) are not counted as new.
 
 ---
 
@@ -949,7 +957,7 @@ The phases below describe how v2.0 was built incrementally. See `CHANGELOG.md` a
 | 1 | Externalized progressions, schemas, vocab example | ✅ shipped |
 | 2 | Surfaces split, gateway question, --mode flag, stubs | ✅ shipped |
 | 3a/b/c | Writing-to-learn entries [a] daily, [b] topic+file, [c] topic-only | ✅ shipped |
-| 4 | Full vocab surface (add, list, review, gap radar, state machine) | ✅ shipped |
+| 4 | Full vocab surface (add, list, review, gap radar, word status tracking) | ✅ shipped |
 | 3d/e/f | Writing-to-learn entries [d] question, [e] gap, [f] external | ✅ shipped |
 | 5 | Status dashboard | ✅ shipped |
 | 6 | Recovery (undo, renumber, 24h soft-stage) | ✅ shipped |

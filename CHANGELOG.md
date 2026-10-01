@@ -6,16 +6,57 @@ All notable changes to `tutorial-creator` are documented here. This project adhe
 
 ### Added
 
-- **Codex support.** The skill now documents Codex installation and `$tutorial-creator`
-  invocation, includes Codex UI metadata, and renders follow-up commands using the
-  active runtime's syntax.
+- **Codex support.** The skill documents Codex installation and `$tutorial-creator` invocation while sharing the existing learning-history paths with Claude Code.
+
+## [2.1.2] — 2026-09-30
+
+### Fixed
+
+- **Flashcards no longer show "Example:" twice.** The back of a card puts an "Example:" label in front of a term's use case. Some use cases already contain their own "Example:", so those cards read "Example: ... Example: ...". When the use case already has one, the card now shows it as written.
 
 ### Changed
 
-- Claude Code and Codex deliberately share the existing `.claude/` project state and
-  registry paths, preserving one tutorial history when users switch agents.
-- Skill frontmatter now keeps version and author under the portable `metadata` key so
-  it validates under the Agent Skills format while retaining the same information.
+- **The plugin listing and the skill's own description use plainer words.** They now say what the skill does for you (lessons from your own files, a quiz, remembered vocabulary, flashcards, help writing for other readers) instead of how it is built.
+- **The command guide ([USAGE.md](USAGE.md)) reads more plainly, and four details now match the skill.** `vocab undo` undoes your last `vocab add` or `vocab ingest`, not any vocabulary change. Starts `[b]`, `[c]`, and `[f]` let you pick the topic and still record the lesson; they don't ignore your history. The page no longer says every example is Swift (the React hook example is TypeScript). `vocab add` and `vocab ingest` draft a note on when you'd use each word, not a code example.
+- **The skill's own notes describe how a word's status changes in everyday words**, instead of calling it a "state machine." Wording only; nothing works differently.
+
+## [2.1.1] — 2026-09-30
+
+### Fixed
+
+- **The command to start the skill now works.** The README, USAGE.md, and the skill's own messages said to type `/skill tutorial-creator`, which Claude Code doesn't recognize. If you installed tutorial-creator as a plugin, type `/tutorial-creator:tutorial-creator`. If you installed it by hand, type `/tutorial-creator`. You can also just ask in plain words. When the skill shows you a command, such as how to undo a change, it now uses the same form you started it with.
+
+### Changed
+
+- **The README uses plainer words** and corrects three details: the React hook example is TypeScript, not Swift; a word drops to confused when two of your last three answers are wrong or only half right; and pulling in vocabulary drafts a note on when you'd use each term, not a code example.
+
+## [2.1.0] — 2026-09-29
+
+Two new ways to use the terms you're learning, and fixes for several ways terms went missing or got scrambled. If you use tutorial-creator as a plugin, updating didn't pick these changes up until this release, because the version number hadn't changed. Update the plugin to get them.
+
+### Added
+
+- **`vocab ingest <source>` adds many terms at once.** Point it at a chat session, a web page, a file, or text you paste. It finds the terms worth learning, writes what each one means and when you'd use it, and lets you approve them all in one step instead of one at a time. `vocab undo` removes the whole batch within 24 hours. It follows the same rules as option `[f]`: it won't guess at a page it couldn't open, and it won't make up a source for pasted text.
+- **`vocab flashcards` turns your vocabulary into flashcards**, as a text file, a deck for the Anki flashcard app (`.apkg`), or a PDF you print on both sides and cut into cards. The PDF asks how your printer flips the page, so each card's front and back line up after cutting, and it reminds you to print one test page first. `--count=N` picks the terms you most need to practice. Making flashcards never changes your vocabulary.
+- **Choose which terms to list or study.** `vocab list` and `vocab flashcards` take `--source=` plus part of a source's name, to get only the terms from, say, one article. They also take `--date`, `--date-from`, and `--date-to` for terms from certain days. You can use them together. Your existing terms already have this information, so nothing needs converting.
+- **Each term can say when you'd use it** (`use_case`), next to what it means. It shows on the back of your flashcards. Terms you already have simply leave it blank.
+- **Pasted text keeps its source.** When you build a lesson from pasted text (option `[f]`), the skill asks where the text came from and puts that link at the top of the lesson, without re-downloading it. If there's no link, the lesson says so instead of making one up.
+- **Lessons from outside sources note their source in your progress file**, and suggest a follow-up only when there's a clear reason: the source skipped a term your vocabulary marks as confused, or a claim is quick to check.
+
+### Changed
+
+- **The README was rewritten** for the people the skill is for, with new examples: the opening menu, a lesson built from a real problem, and a printable flashcard deck.
+
+### Fixed
+
+- **Terms from your lessons now show up everywhere.** Lessons made with options `[a]` through `[e]` saved their new terms only to `VOCABULARY.md`, left over from version 1.1, and option `[f]` didn't say where to save them. So quizzes, lists, and flashcards never saw those terms. Now every lesson saves its terms to `vocabulary.yaml`, checks that they saved, and tells you by name if any didn't.
+- **`VOCABULARY.md` keeps your layout.** `vocab regen-md`, and the commands that run it (`add`, `ingest`, `edit`, `merge`, `review`, `undo`), used to rebuild the whole file, throwing away your section titles, source notes, the order of your terms, and terms repeated under a later day. Now they change only what needs changing, and if nothing needs changing, the file isn't touched. If a term appears in `VOCABULARY.md` but not in your vocabulary, the skill asks what to do instead of deleting it. Definitions still come from `vocabulary.yaml`, so change those with `vocab edit`.
+- **Older `VOCABULARY.md` files update without duplicates**, including ones with sections below the count table or terms written in bold or code style. A new day's section goes in day order.
+- **Saving your vocabulary no longer reformats the whole file.** The data was always kept, but one save could change thousands of lines that should have stayed the same. Now only the lines that changed are touched, and a failed save is undone.
+- **You can rename a term.** `vocab edit` used to send you to `vocab merge`, which only works when the new name already exists. Now `vocab edit` renames the term everywhere it appears, and suggests a merge if the new name is taken.
+- **Combining two terms keeps their progress.** `vocab merge` no longer sends an untested term from reviewing back to new.
+- **Lessons from outside sources (option `[f]`) move you to the next day**, so your following lesson doesn't reuse the same day number.
+- **Your vocabulary file stays in your tutorials folder**, never inside the hidden `.claude/` folder. Unclear wording once led to a second copy there.
 
 ## [2.0.1] — 2026-08-09
 

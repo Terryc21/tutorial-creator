@@ -10,7 +10,7 @@
 
 ## What you're looking at
 
-Invoking `/skill tutorial-creator` with no arguments opens the gateway question — four surfaces,
+Invoking `/tutorial-creator:tutorial-creator` with no arguments opens the gateway question — four surfaces,
 pick one. That part is fixed and documented in `SKILL.md` § "Gateway question".
 
 What this example shows is the gateway rendered **at the end of a working session**, where the
@@ -95,7 +95,7 @@ the session's own findings in context when the gateway fires. If you want it, th
 1. Invoke the gateway **at the end of substantive work**, not the start of a fresh session.
 2. Have the findings **written down with numbers** — a ledger row, an incident file, a commit
    body. Prose recollection produces vague candidates.
-3. Ask for the gateway plainly (`/skill tutorial-creator`), rather than jumping straight to a
+3. Ask for the gateway plainly (`/tutorial-creator:tutorial-creator`), rather than jumping straight to a
    surface with `--mode`. Skipping the gateway skips this.
 
 Invoked cold in a fresh session, the same command shows the four options and nothing else. That

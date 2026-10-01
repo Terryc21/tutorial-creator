@@ -1,7 +1,7 @@
 # Using tutorial-creator
 
 Every command, setting, and option. If you just want to try the skill, the
-[README](README.md) is enough — start there and come back when you need a detail.
+[README](README.md) is enough. Start there and come back when you need a detail.
 
 **Contents**
 
@@ -20,47 +20,50 @@ Every command, setting, and option. If you just want to try the skill, the
 
 ## Commands
 
-Invoke the skill with `/skill tutorial-creator` in Claude Code or `$tutorial-creator`
-in Codex. The examples below use the Claude Code spelling; in Codex, replace
-`/skill tutorial-creator` with `$tutorial-creator`. Invoke it without arguments and the
-skill asks what you want. Everything below is a shortcut for people who already know.
+Type `/tutorial-creator:tutorial-creator` on its own and the skill asks what you want.
+Everything below is a shortcut for people who already know.
+
+If you installed the skill by hand instead of as a plugin, type `/tutorial-creator` wherever
+this page says `/tutorial-creator:tutorial-creator`.
+
+In Codex, invoke the skill as `$tutorial-creator`; use that form in place of the Claude Code command shown below.
 
 ```
-/skill tutorial-creator                        # ask me what I want to do
-/skill tutorial-creator vocab review           # quiz me on words I've learned
-/skill tutorial-creator vocab gap              # what am I getting wrong?
-/skill tutorial-creator status                 # how am I doing overall?
-/skill tutorial-creator --mode learn           # skip the menu, write me a lesson
-/skill tutorial-creator --mode audience        # skip the menu, write for others
+/tutorial-creator:tutorial-creator                        # ask me what I want to do
+/tutorial-creator:tutorial-creator vocab review           # quiz me on words I've learned
+/tutorial-creator:tutorial-creator vocab gap              # what am I getting wrong?
+/tutorial-creator:tutorial-creator status                 # how am I doing overall?
+/tutorial-creator:tutorial-creator --mode learn           # skip the menu, write me a lesson
+/tutorial-creator:tutorial-creator --mode audience        # skip the menu, write for others
 ```
 
 Working on more than one project:
 
 ```
-/skill tutorial-creator open <path>            # remember this project
-/skill tutorial-creator open                   # list projects, pick a default
-/skill tutorial-creator forget <path>          # stop remembering one
-/skill tutorial-creator --project-dir <path>   # use this project, just this once
+/tutorial-creator:tutorial-creator open <path>            # remember this project
+/tutorial-creator:tutorial-creator open                   # list projects, pick a default
+/tutorial-creator:tutorial-creator forget <path>          # stop remembering one
+/tutorial-creator:tutorial-creator --project-dir <path>   # use this project, just this once
 ```
 
 The old version 1.1 form still works and behaves like choosing "topic + file":
 
 ```
-/skill tutorial-creator [topic] [file]
+/tutorial-creator:tutorial-creator [topic] [file]
 ```
 
 ### By what you want to do
 
 | I want to… | Type this |
 |---|---|
-| Be walked through the choices | `/skill tutorial-creator` |
-| Write about a topic in a file I've picked | `/skill tutorial-creator <topic> <file>` |
+| Be walked through the choices | `/tutorial-creator:tutorial-creator` |
+| Write about a topic in a file I've picked | `/tutorial-creator:tutorial-creator <topic> <file>` |
 | Write about a topic, let the skill find the file | `--mode learn`, then pick **[c]** |
 | Write about a word I keep getting wrong | `--mode learn`, then pick **[e]** |
 | Turn a file into an article for other people | `--mode audience` |
 | Be quizzed on what I've learned | `vocab review` |
 | Pull several words in from a source, not one at a time | `vocab ingest <source>` |
-| Get flashcards — Markdown, Anki, or print — from my vocabulary | `vocab flashcards` |
+| Get flashcards (a text file, an Anki deck, or printable cards) from my vocabulary | `vocab flashcards` |
 | See what I'm confused about | `vocab gap` |
 | See my overall progress | `status` |
 | Work on a different project than the folder I'm in | `--project-dir <path>` |
@@ -73,7 +76,7 @@ You don't need a topic and a file ready. Pick whichever of these matches your si
 
 | Start from | Pick this when |
 |---|---|
-| **[a] What's next for me** | You want the next thing in your learning sequence |
+| **[a] What's next for me** | You want the next topic in the skill's planned order |
 | **[b] A topic and a file** | You know both already |
 | **[c] Just a topic** | You know the topic; let the skill find a good file |
 | **[d] A question** | You're stuck ("why does my fetch return nothing?") |
@@ -81,7 +84,7 @@ You don't need a topic and a file ready. Pick whichever of these matches your si
 | **[f] Notes I've collected** | A doc, post, video, or past session you want to pull together |
 
 **How [c] picks a file.** It looks for a file that teaches well, not the file with the
-most examples — a short file with two clear cases beats a long one with twelve scattered
+most examples: a short file with two clear cases beats a long one with twelve scattered
 through it. You see the candidates and choose. If nothing in your project is a decent
 example, the skill says so and offers to write a small made-up one instead of quietly
 settling for a bad file.
@@ -101,13 +104,13 @@ The skill keeps a list of terms you've met, and how well you know each one.
 
 | Command | What it does |
 |---|---|
-| `vocab add <term>` | Add a word you ran into anywhere. The skill drafts a definition and a real example; you fix it or accept it. |
-| `vocab ingest <source>` | Pull several words at once — from a URL, a file, or this conversation. The skill finds the candidates, drafts each one, and adds whichever you pick in one go. |
-| `vocab review` | Quiz on 5 terms, favouring ones you're shaky on. You write the definition from memory. |
+| `vocab add <term>` | Add a word you ran into anywhere. The skill drafts a definition and a note on when you'd use it; you fix them or accept them. |
+| `vocab ingest <source>` | Pull in several words at once from a web page, a file, or this conversation. The skill finds the candidates, drafts each one, and adds whichever you pick in one go. |
+| `vocab review` | Quiz on 5 terms, favoring ones you're shaky on. You write the definition from memory. |
 | `vocab gap` | The terms you keep missing, worst first. |
 | `vocab list --status=confused` | Filter by how well you know things. |
-| `vocab list --source=<match> --date=<date>` | Filter by where a word came from, or when you added it. Combine with `--status` and each other. |
-| `vocab flashcards` | Turn your vocabulary into flashcards — Markdown, an Anki deck, or a print-ready PDF. Takes the same `--source`, `--date`, and `--status` filters as `vocab list`. |
+| `vocab list --source=<match> --date=<date>` | Filter by where a word came from, or when you added it. You can combine these with each other and with `--status`. |
+| `vocab flashcards` | Turn your vocabulary into flashcards: a text file, an Anki deck, or a PDF you can print. Takes the same `--source`, `--date`, and `--status` filters as `vocab list`. |
 | `vocab merge <a> <b>` | Two entries for the same idea become one, keeping your quiz history. |
 
 ### How a word's status changes
@@ -115,12 +118,13 @@ The skill keeps a list of terms you've met, and how well you know each one.
 Four states: **new → reviewing → mastered**, with **confused** for ones giving you
 trouble.
 
-**You don't set these yourself — you earn them by taking the quiz.** Three correct
-answers in a row gets you to mastered. Two wrong or partial out of your last three drops
-you to confused.
+**You don't set these yourself. You earn them by taking the quiz.** Three correct
+answers in a row moves a word to mastered. If two of your last three answers are wrong
+or only half right, it drops to confused.
 
 The one thing you *can* change by hand is mastered back to reviewing, for when you
-realise you've forgotten something. Getting back to mastered means earning it again.
+realize you've forgotten something. Use `vocab edit <term> --reset-mastery`. Getting
+back to mastered means earning it again.
 
 > **Why it works this way:** marking your own understanding is the thing people are
 > worst at judging. A word you *feel* solid on and a word you *can define from memory*
@@ -128,42 +132,42 @@ realise you've forgotten something. Getting back to mastered means earning it ag
 
 ### Pulling words in from outside your project
 
-`vocab ingest` reads whatever you point it at — a session, a URL, a file, or text you
-paste in — and finds the words and phrases worth keeping. It shows you what it found
-before adding anything, drafts a definition and a real example for each one, and you
-accept, edit, or drop them as a group. Nothing gets added silently.
+`vocab ingest` reads a chat session, a web page, a file, or text you paste in, and finds
+the words and phrases worth keeping. It shows you what it found before adding anything,
+drafts a definition and a note on when you'd use each one, and you accept, edit, or drop
+them as a group. Nothing gets added silently.
 
 This is different from `vocab add`: `add` is one word you already have in mind; `ingest`
 is "here's a source, find what's in it."
 
 ### Studying without the quiz
 
-`vocab review` is graded — the skill checks your answer against the real definition.
-`vocab flashcards` skips that: it exports your words so you can study however you want.
+`vocab review` is graded: the skill checks your answer against the real definition.
+`vocab flashcards` skips that and just exports your words, so you can study however you
+want.
 
-- **Markdown** — plain text, front and back, readable anywhere.
-- **Anki deck (`.apkg`)** — import it into Anki and let its own spaced-repetition
-  scheduling take over.
-- **Print** — a PDF laid out for two-sided printing. Cut along the guides and each
+- **Text file (Markdown):** front and back, readable anywhere.
+- **Anki deck (`.apkg`):** import it into Anki, a flashcard app, and let Anki decide when
+  to show you each card again.
+- **Print:** a PDF laid out for two-sided printing. Cut along the guides and each
   card's word lines up with its definition on the back. The skill asks how your printer
-  handles two-sided pages before generating it, since guessing wrong misaligns every
-  card — print one test page before you commit a full deck to paper.
+  handles two-sided pages before making it, since guessing wrong misaligns every card.
+  Print one test page before you commit a full deck to paper.
 
-None of the three feed back into your quiz history. They're a read of your vocabulary,
-not a learning event — `vocab review`'s grading stays the only thing that moves a word
-toward mastered.
+None of these change your quiz history, even when you study the cards. Only
+`vocab review` moves a word toward mastered.
 
 ---
 
 ## Your learning dashboard
 
-`/skill tutorial-creator status` is read-only — it changes nothing, it just shows you:
+`/tutorial-creator:tutorial-creator status` shows you where you are and never changes anything:
 
 - Lessons written, the last one, your streak, what to do next
 - How many words are in each state
 - Words you haven't been quizzed on in over two weeks
 - Your top few problem words
-- A suggested next lesson, based on both your gaps and your sequence
+- A suggested next lesson, based on your problem words and where you are in the planned order
 
 ---
 
@@ -181,7 +185,8 @@ documentation.
 1. **Who's reading?** Beginner, intermediate, senior, or mixed. Beginners get more setup
    and definitions; senior readers get tradeoffs and alternatives.
 2. **Say what it doesn't cover?** Yes adds a section naming the limits of what you wrote.
-3. **How long?** Small, medium, large, or extra — each venue has its own word targets.
+3. **How long?** Small, medium, large, or extra. Each place you publish has its own word
+   targets.
 4. **Where's it going?** Picks the writing style.
 
 | Publishing to | Reads like |
@@ -191,7 +196,7 @@ documentation.
 | `apple-developer-article` | Reference documentation, lots of code, no "I" |
 | `medium` | Magazine essay, strong opening, light on headings |
 | `blog` | Personal and conversational, dated, code where the story needs it |
-| `repo-doc` | Terse README or runbook, summary first, minimal prose |
+| `repo-doc` | Short README or how-to page, summary first, minimal prose |
 
 ---
 
@@ -205,10 +210,7 @@ The first time you run it, the skill asks five things:
 4. How experienced you are
 5. Which code you're learning from, if that's a different folder
 
-Your answers go in `.claude/tutorial-config.yaml`. Edit it any time. The same file is
-used from Claude Code and Codex, so switching agents preserves your tutorials,
-vocabulary, and progress. The directory name is retained for backward compatibility;
-Codex treats it as tutorial-creator data, not as Codex configuration.
+Your answers go in `.claude/tutorial-config.yaml`. Edit it any time.
 
 One thing to know: that file goes **in the project folder you chose**, which isn't
 necessarily the folder you were sitting in when you ran the command. The skill then
@@ -232,30 +234,30 @@ Full details of the search order live in `SKILL.md`, under "Project resolution."
 ### Starting fresh vs. building on what you've done
 
 **By default the skill remembers everything.** Before writing a new lesson it reads your
-progress, your vocabulary, and your earlier lessons. That's the whole point — lesson 16
+progress, your vocabulary, and your earlier lessons. That's the whole point: lesson 16
 knows what lessons 1 through 15 covered, and afterwards it checks whether the new lesson
 depended on anything you were never taught.
 
-Two ways to opt out:
+If you'd rather not build on it:
 
 - **Start over completely:** delete or rename `.claude/tutorial-config.yaml`,
   `PROGRESS.md`, and `vocabulary.yaml`. The skill treats the project as brand new.
-- **Just this one lesson:** starts **[b]**, **[c]**, and **[f]** can write a standalone
-  lesson. They still record the results afterwards, they just don't let your history
-  constrain what they write.
+- **Choose this lesson's topic yourself:** with starts **[b]**, **[c]**, and **[f]**, you
+  pick what to learn instead of following the planned order. The skill still records the
+  lesson afterwards.
 
 ---
 
 ## Undoing things
 
-| Command | Undoes |
+| Command | What it does |
 |---|---|
-| `undo` | The last lesson it wrote |
-| `vocab undo` | A vocabulary change, up to 24 hours after |
+| `undo` | Undoes the last lesson it wrote |
+| `vocab undo` | Undoes your last `vocab add` or `vocab ingest`, up to 24 hours after |
 | `renumber <old> <new>` | Renumbers a lesson and fixes every reference to it |
 
-Every lesson it writes is logged, and the four files it changes are backed up first, so
-`undo` is a clean revert rather than a guess.
+Before writing a lesson, the skill backs up the four files it's about to change, so
+`undo` puts them back exactly as they were.
 
 ---
 
@@ -268,8 +270,10 @@ Every lesson it writes is logged, and the four files it changes are backed up fi
 | **Python / Django** | Utilities → Models → Views → Serializers → Middleware → Testing |
 | **Rust** | Ownership → Traits → Error handling → Async → Unsafe → Architecture |
 
-Swift is the most developed — the bundled examples and the demo project are Swift. The
-other three have working sequences, but the examples you can read are Swift only.
+Swift is the most developed: all but one of the examples are Swift. TypeScript, Python,
+and Rust each have a planned order of topics that works, and the
+[React hook example](skills/tutorial-creator/examples/useDebouncedValue-Annotated.md) shows
+what a TypeScript lesson looks like.
 
 To teach in a different order, set `progression_override` in
 `.claude/tutorial-config.yaml`.
@@ -281,7 +285,7 @@ To teach in a different order, set `progression_override` in
 If you used version 1.1 and have a `VOCABULARY.md`, run this once:
 
 ```
-/skill tutorial-creator vocab regen-md --import
+/tutorial-creator:tutorial-creator vocab regen-md --import
 ```
 
 It converts your old file into the newer `vocabulary.yaml`. Imported words start at

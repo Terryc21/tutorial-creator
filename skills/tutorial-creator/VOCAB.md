@@ -1,6 +1,6 @@
 # Vocab Surface — tutorial-creator v2
 
-**Status:** Shipped in v2.0.0. Full vocab surface with state machine, review, and gap radar.
+**Status:** Shipped in v2.0.0. Full vocab surface with word status tracking, review, and gap radar.
 **Loaded by:** `SKILL.md` when the user routes to `vocab <subcommand>` or chooses `[3]` from the gateway.
 **Source of truth for the schema:** `SCHEMAS.md` Schema 2 (`vocabulary.yaml`).
 
@@ -24,10 +24,18 @@ In the user's project (created at first run if missing):
 ```
 {tutorials_dir}/
 ├── vocabulary.yaml       (source of truth — Schema 2)
-└── VOCABULARY.md         (generated view — never edit by hand)
+└── VOCABULARY.md         (readable view; its rows follow the yaml)
 ```
 
-Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
+Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml` and is resolved against `$PROJECT_ROOT`, the directory that contains `.claude/`, never against `.claude/` itself (SKILL.md § "Cwd-relative paths in resolved configs"). With `tutorials_dir: ./`, the vocabulary lives at `$PROJECT_ROOT/vocabulary.yaml`.
+
+## Writing vocabulary.yaml
+
+Every command that changes vocabulary.yaml writes it the same way, so the formatting the user has curated survives:
+
+1. **Change only the lines involved.** Append new entries after the last one; change a field by replacing that field's lines inside its entry; remove an entry by deleting its lines. Never load the whole file with a yaml library and write it back out: that restyles every entry (quoting, line wrapping, block scalars, key order) even when one field changed.
+2. **If the file holds only `[]`** (a new project), replace the `[]` with the new entries instead of appending after it.
+3. **Read the file back before reporting success.** If it no longer parses, or doesn't contain what the command meant to write, restore the bytes it had before the write and tell the user.
 
 ## Subcommand reference
 
@@ -37,12 +45,12 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
 | `vocab ingest <source>` | Batch-extract terms + phrases from a source (session transcript, URL, file, memory files, pasted text); each gets a definition and use case, added with confirmation |
 | `vocab list [--status=<s>] [--source=<match>] [--date=…]` | Browse the full vocabulary, filterable by status, source, and/or date |
 | `vocab show <term>` | Full record for one term |
-| `vocab edit <term>` | Update fields (definition, use_case, type, related_terms, notes) |
+| `vocab edit <term>` | Update fields (definition, use_case, type, related_terms, notes) or rename the term |
 | `vocab merge <a> <b>` | Collapse duplicates |
 | `vocab review [--strict]` | Spaced-repetition test session |
 | `vocab gap` | Show terms with `status: confused`, ranked by staleness |
 | `vocab flashcards [--status=<s>] [--source=<match>] [--date=…] [--count=N]` | Export vocabulary.yaml as Markdown, Anki `.apkg`, or a duplex-print PDF; same filters as `vocab list` |
-| `vocab regen-md` | Regenerate VOCABULARY.md from vocabulary.yaml |
+| `vocab regen-md` | Bring VOCABULARY.md in step with vocabulary.yaml |
 | `vocab undo` | Revert last `vocab add` or `vocab ingest` (within 24h soft-stage; Phase 6 wires the broader undo) |
 
 ---
@@ -60,7 +68,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
    [skip]  cancel
    ```
    If user picks `show` or `edit`, route to that subcommand instead.
-3. **Draft the definition.** Use the runtime's structured question tool or plain text to gather:
+3. **Draft the definition.** Use the runtime's structured question tool (or plain text) to gather:
    - **Type** — best guess from a list (swift-keyword / swift-attribute / api / concept / pattern / idiom; or language-specific equivalents). Show 4 candidate types with one-line explanations; user picks one or types `other` to enter free-form.
    - **Definition** — AI drafts a 1-3 sentence definition based on the term and the user's project context (active language from config). Show the draft with this prompt:
      ```
@@ -78,7 +86,7 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
    - **Source file** — optional. User can paste a file path, optionally with `:line` suffix.
    - **Related terms** — AI suggests by scanning existing vocabulary.yaml for terms with similar tags, types, or vocabulary near the new term. User accepts, edits, or clears.
 4. **On confirm:**
-   - Append a new entry to vocabulary.yaml per Schema 2:
+   - Append a new entry to vocabulary.yaml per Schema 2 (§ Writing vocabulary.yaml):
      ```yaml
      - term: "<term>"
        type: <type>
@@ -97,15 +105,15 @@ Where `{tutorials_dir}` comes from `.claude/tutorial-config.yaml`.
        notes: ""
      ```
    - Write a 24h soft-stage marker file: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` containing the term name. Used by `vocab undo` (within 24h). The sentinel is the disambiguator that distinguishes standalone adds from tutorial-time adds; the latter are already captured by the session-log snapshot system in `SKILL.md` § Recovery and do NOT write a sentinel.
-   - Regenerate VOCABULARY.md.
-   - Print confirmation: `Added "<term>" (status: new). Undo within 24h via: <invoke> vocab undo` after rendering `<invoke>` for the current runtime.
+   - Add the term's row at the end of the `## Vocab add` section of VOCABULARY.md, creating that section after the last one if it doesn't exist yet, and recompute the Cumulative Count (§ `vocab regen-md` step 5).
+   - Print confirmation: `Added "<term>" (status: new). Undo within 24h via: /tutorial-creator:tutorial-creator vocab undo`
 5. **On `edit`:** drop into editable interactive editor for the four AI-drafted fields, then return to step 4.
 6. **On `cancel`:** stop. No file written.
 
 ### Error handling
 
 - If user provides a `source_file` path that doesn't exist in the project, warn but allow (user might be referring to an external file).
-- If `vocabulary.yaml` is malformed (yaml parse error), refuse to write. Tell the user: `vocabulary.yaml is malformed: <error>. Run vocab regen-md or fix manually.` Do not corrupt the file with a partial append.
+- If `vocabulary.yaml` is malformed (yaml parse error), refuse to write. Tell the user: `vocabulary.yaml is malformed: <error>. Fix the file by hand; vocab regen-md reads the same file, so it can't repair it.` Do not corrupt the file with a partial append.
 
 ---
 
@@ -169,12 +177,12 @@ Same as Entry [f] — see `SKILL.md` § "Entry [f] — External source" § "Acce
 
    Accept all as drafted? [y / edit <N> / drop <N> / cancel]
    ```
-7. **On confirm:** for each accepted term, append to vocabulary.yaml per Schema 2 (same shape as `vocab add` step 4), with:
+7. **On confirm:** for each accepted term, append to vocabulary.yaml per Schema 2 (same shape as `vocab add` step 4; § Writing vocabulary.yaml), with:
    - `first_encountered.context`: `"vocab ingest"` (or `"session transcript, <date>"` for a session source, per "Accepted source types" above)
    - `first_encountered.source_file`: the file path if the source was a file; empty for URL/paste/session sources (the source description lives in `notes` instead, since `source_file` is specifically for in-project file references)
    - `notes`: one line naming the source, e.g. `"Ingested from session transcript, 2026-08-31."` or `"Ingested from https://example.com/article."`
    - Write **one** 24h soft-stage marker covering the whole batch (not one per term) — `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` containing the list of added term names. `vocab undo` on this marker reverts the entire batch as a unit, matching the "one ingest = one undoable action" mental model.
-   - Regenerate VOCABULARY.md.
+   - Add a `## Vocab ingest: <source title>` section to VOCABULARY.md after the last section: a `*Source: <citation>*` line (a Markdown link for a URL; `session transcript, <date>` for a session; for pasted text with no public URL, a short description followed by `(pasted; no permalink)`), then one row per accepted term. Recompute the Cumulative Count (§ `vocab regen-md` step 5).
 8. **On `none` or `cancel`:** stop. No file written.
 
 ### Honesty rules (cross-cutting, inherited from Entry [f])
@@ -196,7 +204,7 @@ Export vocabulary.yaml entries as flashcards, front = term, back = definition + 
 3. **Select count.** If `--count=N` is set, pick N terms prioritized the same way `vocab review`'s tier system does (confused/stale first — reviewing the gaps is more valuable practice than drilling what's already mastered), applied *within* the filtered set from step 2. Without `--count`, export every term matching the filter.
 4. **Build one card per term:**
    - **Front:** the term, verbatim.
-   - **Back:** `definition`, followed by a blank line, followed by `use_case` if non-empty (formatted as "Example: <use_case text>"). If `use_case` is empty for a term, the back is definition-only — do not fabricate a use case at export time; that's `vocab ingest`/`vocab edit`'s job, not export's.
+   - **Back:** `definition`, followed by a blank line, followed by `use_case` if non-empty labeled "Example: " unless the text already contains an `Example:` of its own, in which case show it as written (the writing-style guide, and terms sent from lexicon, put one inside `use_case`, and a card must never read "Example: ... Example: ..."). If `use_case` is empty for a term, the back is definition-only — do not fabricate a use case at export time; that's `vocab ingest`/`vocab edit`'s job, not export's.
 5. **Ask export format:**
    ```
    Exporting N cards. Format?
@@ -280,7 +288,7 @@ Do not omit this caveat even on repeat exports once "verified once" — a differ
 
 ### Why this doesn't write to vocabulary.yaml
 
-Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vocab review` (which appends to `test_history` and can change `status`), running `vocab flashcards` — or later studying the exported deck in Anki — does not feed back into tutorial-creator's own spaced-repetition state. Anki has its own SRS scheduling; tutorial-creator's `test_history` stays the source of truth for *this* skill's state machine. Keeping them separate avoids two systems fighting over one term's mastery state.
+Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vocab review` (which appends to `test_history` and can change `status`), running `vocab flashcards` — or later studying the exported deck in Anki — does not feed back into tutorial-creator's own spaced-repetition state. Anki has its own SRS scheduling; tutorial-creator's `test_history` stays the source of truth for the statuses *this* skill gives words. Keeping them separate avoids two systems fighting over one term's mastery state.
 
 ---
 
@@ -290,7 +298,7 @@ Flashcard export is a *read* of the vocabulary, not a learning event. Unlike `vo
 
 1. **Read vocabulary.yaml.**
 2. **Filter by status** if `--status` flag is set. Valid values: `new`, `reviewing`, `mastered`, `confused`. Invalid value → list all and warn.
-3. **Filter by source** if `--source=<match>` is set. Case-insensitive substring match against three fields, in order, first hit wins: `first_encountered.context`, `first_encountered.source_file`, `notes`. This covers every shape a source takes today — a `vocab ingest`/`vocab add` context string (e.g. `"session transcript, 2026-08-31"`, `"vocab ingest"`, `"external source"`), an in-project file path, or a URL folded into `notes` (per the `vocab ingest` procedure's citation handling, and Entry [f]'s `external source` context). `--source=stuffolio.app` matches a file-path source; `--source=iosweeklybrief.com` matches a URL folded into notes; `--source=session` matches any session-transcript ingest regardless of date.
+3. **Filter by source** if `--source=<match>` is set. Case-insensitive substring match against three fields, in order, first hit wins: `first_encountered.context`, `first_encountered.source_file`, `notes`. This covers every shape a source takes today — a `vocab ingest`/`vocab add` context string (e.g. `"session transcript, 2026-08-31"`, `"vocab ingest"`, `"external source"`), an in-project file path, or a URL folded into `notes` (per the `vocab ingest` procedure's citation handling, and the `Source:` note Entry [f] writes). `--source=stuffolio.app` matches a file-path source; `--source=iosweeklybrief.com` matches a URL folded into notes; `--source=session` matches any session-transcript ingest regardless of date.
 4. **Filter by date** if any of `--date`, `--date-from`, `--date-to` are set. Matches against `first_encountered.date`.
    - `--date=<YYYY-MM-DD>` — exact match only. Mutually exclusive with `--date-from`/`--date-to`; if both forms are passed, `--date` wins and the range flags are ignored with a warning: `--date and --date-from/--date-to both set; using --date, ignoring the range.`
    - `--date-from=<YYYY-MM-DD>` alone — everything on or after.
@@ -378,10 +386,10 @@ If `<term>` is ambiguous (multiple case-insensitive matches), show a numbered li
 - `related_terms`
 - `notes`
 - `first_encountered.source_file` (sometimes the user wants to update this when a better example surfaces)
+- `term` (renames the entry; see Procedure step 2)
 
 ### Non-editable fields
 
-- `term` — to rename, use `vocab merge <old> <new>` (which is technically a rename + merge if `<new>` already exists).
 - `status` — earned through tests. The only manual transition is via the `--reset-mastery` flag (see below).
 - `test_history` and `applied_test_history` — never user-editable. If a test result needs correction, edit the file by hand (and accept the consequences).
 - `first_encountered.context` and `first_encountered.date` — historical record; preserved.
@@ -389,13 +397,14 @@ If `<term>` is ambiguous (multiple case-insensitive matches), show a numbered li
 ### Procedure
 
 1. Read vocabulary.yaml; find the term (case-insensitive).
-2. Show current values for editable fields; allow user to update each one. Use a structured question per field, or one plain-text prompt with default values pre-filled.
+2. Show current values for editable fields; allow user to update each one. AskUserQuestion per field, or one big prompt with default-values pre-filled.
+   - **Renaming (`term` changed):** refuse if another entry already has the new name (case-insensitive), and suggest `vocab merge <new> <old>`, which keeps the existing entry and folds this one into it. Otherwise also point every other entry's `related_terms` at the new name, and add `Renamed <date> from <old>.` to this entry's `notes`.
 3. **Recompute status** — only if `--reset-mastery` flag was passed AND current status is `mastered`:
    - Set status to `reviewing`
    - Append no new test_history entry
    - Print: `Reset mastered status for "<term>". Status now: reviewing. Mastered status will be re-earned through correct test results.`
-4. Write back to vocabulary.yaml.
-5. Regenerate VOCABULARY.md.
+4. Write the changed fields back to vocabulary.yaml (§ Writing vocabulary.yaml).
+5. Update VOCABULARY.md in place: after a rename, rename every row of the term (its home row and any repeat rows); if `definition` changed, refresh its home row (§ `vocab regen-md` step 4). Nothing else `vocab edit` changes appears in the view.
 
 ### Refuse `--reset-mastery` on non-mastered
 
@@ -442,10 +451,10 @@ Used to collapse duplicates (`@Observable` and `Observable macro`) or to consoli
    - Concatenate `applied_test_history` similarly
    - Union `related_terms`; remove `<term-a>` and `<term-b>` from the result if they appear (a term shouldn't be related to itself)
    - Concatenate `notes` with separator
-   - **Recompute status** from the merged `test_history` (apply state-machine rules)
-   - Update target term's record; remove source term from yaml
+   - **Recompute status** from the merged `test_history` (apply the rules in § How a word's status changes)
+   - Update the target term's fields and delete the source term's lines from the yaml (§ Writing vocabulary.yaml)
    - Update any other vocabulary entries that reference `<term-b>` in their `related_terms` to point at `<term-a>` instead
-   - Regenerate VOCABULARY.md
+   - Update VOCABULARY.md in place. Each row of `<term-b>` under a `## Day` heading becomes a repeat row of `<term-a>` (renamed, wording kept), unless that section already has a row of `<term-a>`, in which case drop it; remove any other row of `<term-b>`. For each Day that gained a repeat row, add `Also seen in: Day N` and that row's wording (in a `Per-Day wording` block) to the target's `notes`, per SCHEMAS.md Schema 2 § `notes`, so a rebuilt view keeps them. Recompute the Cumulative Count (§ `vocab regen-md` step 5).
 4. **On cancel:** stop. No file written.
 
 ### Edge case: merging into a `mastered` target
@@ -505,7 +514,7 @@ For each selected term:
    - `date`: today
    - `result`: graded result
    - `source`: `vocab review` (or `vocab review --strict`)
-6. **Recompute status** per state machine.
+6. **Recompute status** using the rules in § How a word's status changes.
 
 ### After all terms
 
@@ -523,7 +532,7 @@ Status changes:
 Next review available: in N days, or run vocab review again to re-pick.
 ```
 
-Save vocabulary.yaml; regenerate VOCABULARY.md.
+Save vocabulary.yaml (§ Writing vocabulary.yaml). VOCABULARY.md stays as it is: a review changes only status and test history, and the view shows neither.
 
 ### Stop / skip semantics
 
@@ -572,18 +581,30 @@ If no confused terms: `No confused vocabulary right now. Run vocab review to tes
 
 ## `vocab regen-md [--import]`
 
-Regenerate `VOCABULARY.md` from `vocabulary.yaml`. Used as a manual safety net after editing yaml by hand, or as a one-time migration from v1.1.
+Brings `VOCABULARY.md` in step with `vocabulary.yaml`. Run it after editing the yaml by hand, or with `--import` as a one-time migration from v1.1.
 
 ### Without `--import` (default)
 
-1. Read vocabulary.yaml.
-2. Generate VOCABULARY.md per the template in SKILL.md ("VOCABULARY.md template (generated view)"), grouping terms by `first_encountered.context`:
-   - Group 1: terms with context starting `Day N tutorial` (sorted by day number)
-   - Group 2: terms with context `vocab add` (sorted by date added)
-   - Group 3: terms with context `vocab review` (rare; means added during a review session)
-   - Group 4: terms with context `external source` or `vocab ingest` or starting `session transcript` (sorted by date) — these three all mean "batch-ingested from a non-project source" and share a group; the distinction between them lives in each term's `notes` field, not the grouping
-3. Write VOCABULARY.md atomically (write to `.tmp` file, then rename).
-4. Print: `Regenerated VOCABULARY.md from N terms in vocabulary.yaml.`
+Updates the view **in place**. The yaml decides which terms appear and what each definition says; the view keeps its own section headings, Source lines, row order and repeat rows. When nothing has changed, the file is left byte-for-byte as it was.
+
+1. Read vocabulary.yaml. If VOCABULARY.md doesn't exist, build it from scratch (below) and stop.
+2. Parse VOCABULARY.md into sections: a `## ` heading, any lines before its table (such as a `*Source: ...*` line), then its `| Term | Quick Definition |` rows. Every `## ` heading other than `## Cumulative Count` starts a section wherever it sits, including below the Cumulative Count table, where older tutorial runs appended new sections; leave such sections where they are. Leave everything above the first section, and each section's lines after its table, as they are.
+3. **Match rows to entries.** A row belongs to the entry whose `term` it shows, ignoring case, backticks and `**` bold markers (older views wrote some terms in bold or backticks, and matching them exactly would add a second row for each). An entry's **home row** is its row under the section whose heading equals its `first_encountered.context` (case-insensitive); failing that, its row under the `## Day N` section whose day number matches the day the context starts with; failing that, its first row. Its other rows are **repeat rows**: the term shown again under a later Day.
+4. **Update rows.**
+   - **Refresh** each home row's definition from the yaml `definition`, collapsed to one line with `|` escaped. Leave repeat rows' wording alone.
+   - **Add** a row for each entry that has none, at the end of the section step 3 would look for its home row in. If there is no such section, create one headed by the context with its first letter capitalized (`vocab add` becomes `## Vocab add`). A `Day N` section goes among the Day sections in day order; any other goes after the last section.
+   - **Ask about orphans.** Never remove a row silently just because its term has no entry in the yaml: that is how a term that reached only the view gets lost. List those rows and ask, per row or for all: `[remove]` from the view, `[add]` to vocabulary.yaml (the row's definition as `definition`, its section heading as `context`, other fields as in `vocab add` step 4), or `[keep]`.
+   - Drop any section left without rows, along with its heading and Source line.
+5. **Recompute `## Cumulative Count`:** one row per section, in file order. `New Terms` counts the section's home rows and `Running Total` accumulates them. Label a Day section by its day number and any other section by its heading after the first `: `. The last Running Total must equal the number of entries in vocabulary.yaml; if it doesn't, name the entries that have no home row.
+6. If anything changed, set the `*Updated:*` line to today and write the file atomically (write to `.tmp`, then rename).
+7. Print what changed, e.g. `VOCABULARY.md: 2 rows added, 1 definition refreshed ("closure"), 0 removed.`, or `VOCABULARY.md already matches vocabulary.yaml.`
+
+**Building from scratch** happens only when VOCABULARY.md is missing (a new project, or the file was deleted). Start from the template in SKILL.md, then:
+
+- One section per Day, headed by its terms' `context`, in day order. After those, one section per other context, ordered by each context's earliest `first_encountered.date`.
+- Within a Day section, rows follow the Vocabulary table in that Day's tutorial (`{tutorials_dir}/DayN-*.md`; an Entry [f] tutorial's is titled "Concepts from the source") for the terms it lists, matching terms without regard to case or backticks. The rest follow their order in vocabulary.yaml.
+- Repeat rows come from `notes` (SCHEMAS.md Schema 2 § `notes`): one row under each Day that an `Also seen in:` line or the `Per-Day wording` block names, other than the term's own Day. Word it from the block when the block has that Day, and from the definition otherwise. Repeat rows go after the section's home rows.
+- Source lines exist only in the view, so a rebuilt view has none. Say so when printing the result.
 
 ### With `--import`
 
@@ -597,7 +618,7 @@ One-time migration from v1.1 Markdown table to v2 yaml. Used by users who shippe
    - `definition`: cell 2 (single-line; user can polish later)
    - `type`: heuristic (swift-keyword if matches the Swift keyword list at the bottom of this file; else `concept`)
    - `first_encountered.source_file`: empty (not recoverable from v1.1 Markdown)
-   - `first_encountered.context`: `Day <N> tutorial` (from section header)
+   - `first_encountered.context`: the section heading without its `## ` (e.g. `Day 3: Your First View`), which keeps each term attached to its section
    - `first_encountered.date`: looked up from PROGRESS.md Score Log row for Day N if available; else today
    - `status`: `reviewing` (no test history exists in v1.1)
    - `test_history`: `[]`
@@ -605,7 +626,7 @@ One-time migration from v1.1 Markdown table to v2 yaml. Used by users who shippe
    - `related_terms`: `[]`
    - `notes`: `Migrated from v1.1 VOCABULARY.md.`
 5. Write vocabulary.yaml.
-6. Regenerate VOCABULARY.md (without `--import` this time, to verify the round-trip).
+6. Run `vocab regen-md` without `--import` to check the round-trip.
 7. Print: `Migrated N terms from VOCABULARY.md to vocabulary.yaml. Review with: vocab list`.
 
 ### Error handling
@@ -618,7 +639,7 @@ If VOCABULARY.md doesn't exist (during `--import`): refuse with `No VOCABULARY.m
 
 ## `vocab undo`
 
-24-hour soft-stage reversal of the last *standalone* `vocab add` or `vocab ingest` (an invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`<invoke> undo`); see `SKILL.md` § Recovery for that path.
+24-hour soft-stage reversal of the last *standalone* `vocab add` or `vocab ingest` (an invocation that wasn't part of a tutorial generation). Tutorial-time vocab adds are reverted by the broader session-log undo (`/tutorial-creator:tutorial-creator undo`); see `SKILL.md` § Recovery for that path.
 
 ### Marker file shape
 
@@ -628,19 +649,19 @@ A `vocab add` marker contains one term name (single-term add). A `vocab ingest` 
 
 1. List soft-stage markers: `<tutorials_dir>/vocabulary.yaml.add-<ISO-timestamp>` files.
 2. Filter to those within 24 hours of now.
-3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use <invoke> undo instead.)` Render `<invoke>` for the current runtime before showing the message.
-4. **One marker:** show details — term name (single-add) or the full term list + count (ingest batch) — and when added; prompt confirm. On yes, remove the term(s) from vocabulary.yaml + delete the marker; regenerate VOCABULARY.md.
+3. **No markers in window:** `No vocab add or vocab ingest to undo within the last 24 hours. (For tutorial-time adds, use /tutorial-creator:tutorial-creator undo instead.)`
+4. **One marker:** show details — term name (single-add) or the full term list + count (ingest batch) — and when added; prompt confirm. On yes, delete the entries for the term(s) from vocabulary.yaml (§ Writing vocabulary.yaml) + delete the marker; remove their rows from VOCABULARY.md, drop any section left without rows, and recompute the Cumulative Count (§ `vocab regen-md` step 5).
 5. **Multiple markers:** show a numbered list — each row labeled `<term>` for a single add or `<N> terms from vocab ingest (<source>)` for a batch — user picks which to undo (or `cancel`). Only one marker is undone per invocation; run `vocab undo` again for another.
 
 Markers older than 24h are silently pruned at the start of any vocab subcommand.
 
 ### Why two undo paths
 
-Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROGRESS.md + VOCABULARY.md + tutorial-config.yaml are taken before the generation runs, and `<invoke> undo` restores them. Standalone vocab adds don't get a snapshot (they're a single-line yaml change with no ripple effect), so the 24h sentinel is the simpler approach. Both surfaces are user-facing; the skill chooses which one applies based on whether a session yaml exists for the change.
+Tutorial generation is reversible as a unit: snapshots of vocabulary.yaml + PROGRESS.md + VOCABULARY.md + tutorial-config.yaml are taken before the generation runs, and `/tutorial-creator:tutorial-creator undo` restores them. Standalone vocab adds don't get a snapshot (they're a single-line yaml change with no ripple effect), so the 24h sentinel is the simpler approach. Both surfaces are user-facing; the skill chooses which one applies based on whether a session yaml exists for the change.
 
 ---
 
-## State machine — full specification
+## How a word's status changes — full specification
 
 Per `SCHEMAS.md` Schema 2:
 
@@ -659,7 +680,7 @@ new ──any test──► reviewing
 Run after every `test_history` append (in `vocab review`) and after every `vocab merge`.
 
 ```
-1. If test_history is empty:                    status = "new"
+1. If test_history is empty:                    status unchanged
 2. Else look at last 3 entries (or fewer if test_history shorter):
    a. If all 3 are "correct":                   status = "mastered"
    b. Else if 2 or more are "partial" or "wrong":  status = "confused"
@@ -668,9 +689,11 @@ Run after every `test_history` append (in `vocab review`) and after every `vocab
    wins until the next test result lands.
 ```
 
+Step 1 leaves status alone because an empty history is no evidence either way. New entries are created as `new`, and entries migrated from v1.1 start at `reviewing` with no history; without this rule, merging two untested entries would silently demote a `reviewing` term to `new`.
+
 ### Why no manual `mastered`
 
-The user can claim mastery, but the system can't validate it without test results. Allowing manual `mastered` introduces wishful thinking — terms that the user *thinks* they know but tests would prove otherwise. The state machine forces tests to be the gate, which keeps the `mastered` count honest.
+The user can claim mastery, but the system can't validate it without test results. Allowing manual `mastered` introduces wishful thinking — terms that the user *thinks* they know but tests would prove otherwise. The status rules force tests to be the gate, which keeps the `mastered` count honest.
 
 The one allowed manual transition is `mastered → reviewing` (the user notices they've forgotten something and demotes their own mastery). The reverse is not symmetric: getting back to mastered requires re-earning it through tests.
 
@@ -700,7 +723,7 @@ Compare user's answer to the stored definition. Result is one of:
   - OR the answer is correct but for a *related* concept, not the term being tested
 - **`wrong`** — doesn't capture the concept, or contradicts it
 
-The grading is performed by the runtime LLM at test time. When in doubt between `correct` and `partial`, prefer `partial`. When in doubt between `partial` and `wrong`, prefer `partial` (the user gets credit for trying).
+The grading is performed by Claude (the runtime LLM) at test time. When in doubt between `correct` and `partial`, prefer `partial`. When in doubt between `partial` and `wrong`, prefer `partial` (the user gets credit for trying).
 
 ### Strict grading
 
@@ -714,24 +737,25 @@ The strict mode exists for users who want to drill verbatim definitions (e.g., p
 
 ## Round-trip with VOCABULARY.md
 
-`VOCABULARY.md` is **always** a generated view of `vocabulary.yaml`. v2 never reads from VOCABULARY.md as a source. Operations that modify yaml always regenerate the Markdown view at the end:
+`vocabulary.yaml` is the source of truth for which terms exist and what they mean. `VOCABULARY.md` is the readable view, and it also holds what the yaml doesn't: section headings, Source lines, the order of rows, and repeat rows. Operations that change the yaml update the view in place, touching only the rows they affect:
 
-- `vocab add` → regen
-- `vocab edit` → regen
-- `vocab merge` → regen
-- `vocab review` → regen (status changes invalidate the old view)
-- `vocab undo` → regen
-- `vocab regen-md` → explicit regen
+- `vocab add` → adds a row under `## Vocab add`
+- `vocab ingest` → adds a `## Vocab ingest: <source>` section with its Source line
+- `vocab edit` → refreshes the term's home row, if `definition` changed
+- `vocab merge` → turns the merged-away term's Day rows into repeat rows of the kept term
+- `vocab undo` → removes the undone terms' rows
+- `vocab regen-md` → brings every row in step at once
+- Tutorial generation → adds the tutorial's `## Day N` section (`SKILL.md` § Entry [b] "After Writing" step 3)
 
-Read-only operations don't touch the Markdown:
+`vocab review` doesn't touch the view: it changes status and test history, and the view shows neither. Read-only operations don't touch it either:
 
 - `vocab list` — reads yaml directly
 - `vocab show` — reads yaml directly
 - `vocab gap` — reads yaml directly
 
-If a user edits `vocabulary.yaml` by hand (legitimate use case), they should run `vocab regen-md` afterwards to keep the Markdown in sync. The skill doesn't auto-detect yaml changes; that would require filesystem watching, which is out of scope.
+If a user edits `vocabulary.yaml` by hand (legitimate use case), they should run `vocab regen-md` afterwards to bring the view in step. The skill doesn't auto-detect yaml changes; that would require filesystem watching, which is out of scope.
 
-If a user edits `VOCABULARY.md` by hand, those edits will be lost on the next regen. Refuse to support this case; the Markdown is generated.
+If a user edits `VOCABULARY.md` by hand, changes to headings, Source lines and row order are kept. A home row's definition is refreshed from the yaml at the next `vocab regen-md`, so change definitions with `vocab edit` instead.
 
 ---
 

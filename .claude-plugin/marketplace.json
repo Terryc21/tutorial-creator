@@ -1,16 +1,16 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "tutorial-creator",
-  "description": "Generate annotated code-reading tutorials from your own codebase — three surfaces (tutorial / vocab / status), writing-to-learn entries, and audience-facing venue templates",
+  "description": "Learn from the code you're already writing: lessons from your own project's files, a quiz on the words you've met, and help turning what you've learned into posts and articles.",
   "owner": {
     "name": "Terry Nyberg"
   },
   "plugins": [
     {
       "name": "tutorial-creator",
-      "version": "2.0.1",
+      "version": "2.1.2",
       "source": "./",
-      "description": "Generate personalized, annotated code-reading tutorials from your own codebase. Three surfaces (tutorial generation, vocabulary management, learning-state inspection), six writing-to-learn entry points, and five audience-facing entry points. Tracks vocabulary with a status state machine.",
+      "description": "Turns files from your own project into lessons: what each line does, why it's written that way, and a quiz to check it stuck. Remembers the words you've learned and how well you know them, turns them into flashcards, and can help you write about what you've learned for other readers. Works with Swift, TypeScript, Python, and Rust.",
       "author": {
         "name": "Terry Nyberg"
       },
