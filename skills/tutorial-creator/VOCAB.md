@@ -68,7 +68,7 @@ Every command that changes vocabulary.yaml writes it the same way, so the format
    [skip]  cancel
    ```
    If user picks `show` or `edit`, route to that subcommand instead.
-3. **Draft the definition.** Use AskUserQuestion (or plain prompt) to gather:
+3. **Draft the definition.** Use the runtime's structured question tool (or plain text) to gather:
    - **Type** — best guess from a list (swift-keyword / swift-attribute / api / concept / pattern / idiom; or language-specific equivalents). Show 4 candidate types with one-line explanations; user picks one or types `other` to enter free-form.
    - **Definition** — AI drafts a 1-3 sentence definition based on the term and the user's project context (active language from config). Show the draft with this prompt:
      ```

@@ -30,6 +30,18 @@ Then, in any Claude Code session, type:
 Or ask in plain words, like "make me a tutorial from this file." Claude Code can start the
 skill on its own when your request matches what it does.
 
+### Codex
+
+Clone the repository and link the skill folder into your personal Codex skills directory:
+
+```bash
+git clone https://github.com/Terryc21/tutorial-creator ~/src/tutorial-creator
+mkdir -p ~/.codex/skills
+ln -s ~/src/tutorial-creator/skills/tutorial-creator ~/.codex/skills/tutorial-creator
+```
+
+Then invoke it in Codex with `$tutorial-creator`.
+
 Pick **"Write a tutorial for myself"**, then **"Topic + file"**, and point it at any file
 you've worked on recently. About ten minutes later you have a real lesson.
 
@@ -53,11 +65,13 @@ mkdir -p /path/to/project/.claude/skills && ln -s ~/src/tutorial-creator/skills/
 
 Installed this way, you start it with the shorter `/tutorial-creator`.
 
+For one Codex project only, link the same skill into `/path/to/project/.agents/skills/tutorial-creator`.
+
 </details>
 
-**New to Claude Code?** A *skill* is a set of written instructions Claude Code knows how
+**New to agent skills?** A *skill* is a set of written instructions an agent knows how
 to follow. Type `/tutorial-creator:tutorial-creator` and it asks what you want, then does
-it. You don't need to memorize anything. It walks you through every choice.
+it. In Codex, type `$tutorial-creator`. You don't need to memorize anything. It walks you through every choice.
 
 ---
 

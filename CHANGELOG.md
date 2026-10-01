@@ -2,6 +2,12 @@
 
 All notable changes to `tutorial-creator` are documented here. This project adheres to [Semantic Versioning](https://semver.org/) and the format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **Codex support.** The skill documents Codex installation and `$tutorial-creator` invocation while sharing the existing learning-history paths with Claude Code.
+
 ## [2.1.2] — 2026-09-30
 
 ### Fixed

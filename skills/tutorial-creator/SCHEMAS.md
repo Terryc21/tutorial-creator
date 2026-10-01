@@ -7,6 +7,8 @@ when a schema changes, update this file first, then the surfaces that touch it.
 **Status:** v2.0 baseline. Versioned at the bottom of each schema.
 **Last updated:** 2026-09-28 (Schema 2: a tutorial term's `context` is its Day's view heading, and `notes` records repeat rows; VOCABULARY.md is updated in place). Before that, 2026-05-10 (Phase 6.5: Schema 5 added for cross-project registry; `$PROJECT_ROOT` clarified throughout).
 
+The `.claude/` locations below are established tutorial-creator data paths shared by Claude Code and Codex. Their names remain unchanged so both runtimes update the same learning history.
+
 ---
 
 ## Files at a glance
