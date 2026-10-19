@@ -220,3 +220,7 @@ though a note about how it went on a non-Swift project is worth more.
 [![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-FFDD00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://www.buymeacoffee.com/stuffolio)
 
 Apache 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+## Privacy
+
+tutorial-creator collects no data of its own. It has no server, no accounts, no telemetry and no analytics, and it sends nothing to its author. It reads the source files you choose and writes tutorials, a project config and session notes (`.claude/tutorial-config.yaml` and `.claude/tutorial-sessions/`) in your project, plus a project registry at `~/.claude/tutorial-creator/registry.yaml`. If you give it a web page as a source, it fetches that page using Claude's web fetch tool; otherwise it makes no network requests. Anything it saves stays on your own machine. What you ask it to read is processed by Claude in your own session, under your own Anthropic terms and settings. Anthropic's plugin directory may show the author aggregate install counts; those come from the directory, not from the plugin.
