@@ -26,6 +26,8 @@ Everything below is a shortcut for people who already know.
 If you installed the skill by hand instead of as a plugin, type `/tutorial-creator` wherever
 this page says `/tutorial-creator:tutorial-creator`.
 
+In Codex, invoke the skill as `$tutorial-creator`; use that form in place of the Claude Code command shown below.
+
 ```
 /tutorial-creator:tutorial-creator                        # ask me what I want to do
 /tutorial-creator:tutorial-creator vocab review           # quiz me on words I've learned

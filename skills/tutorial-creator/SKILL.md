@@ -1,9 +1,10 @@
 ---
 name: tutorial-creator
 description: Generate annotated code reading tutorials from your own codebase, with line-by-line explanations and a quiz. Also keeps a vocabulary of terms you've learned (add, quiz, find gaps, export as flashcards), shows your learning progress, and helps you write about what you've learned for other readers as a Reddit post, blog post, book chapter, or documentation.
-version: 2.1.2
-author: Terry Nyberg, Coffee & Code LLC
 license: Apache-2.0
+metadata:
+  version: "2.1.2"
+  author: "Terry Nyberg, Coffee & Code LLC"
 ---
 
 # tutorial-creator
@@ -17,6 +18,10 @@ Three surfaces, gateway-mediated:
 The legacy v1.1 argument form (`/tutorial-creator:tutorial-creator <topic> <source>`) still works; it routes to writing-to-learn entry [b] (topic + file).
 
 **Command form.** Installed as a plugin, the skill starts with `/tutorial-creator:tutorial-creator`. Installed by hand into a skills folder, it starts with `/tutorial-creator`. This spec writes every command in the plugin form. Whenever you show the user a command to type, use the form this skill was started with, whether the user typed it or it was loaded from a plain-words request.
+
+## Runtime compatibility
+
+This skill also supports Codex. In Codex, invoke it as `$tutorial-creator`; render that form instead of the Claude Code command form in user-facing messages. Use the runtime's structured question tool when available, otherwise ask the same question in plain text. The existing `.claude/tutorial-config.yaml`, `.claude/tutorial-sessions/`, and `~/.claude/tutorial-creator/registry.yaml` locations are shared application data for both runtimes and must remain unchanged.
 
 ## Usage
 
